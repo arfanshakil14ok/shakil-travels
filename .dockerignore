@@ -1,0 +1,38 @@
+# Dependencies and runtime caches
+node_modules
+.next
+.git
+.gitignore
+
+# Environment files with potential secrets (Injected via Docker at runtime)
+.env
+.env.*
+.env*.local
+.env.production
+.env.staging
+
+# Embedded database runtime data and backup snapshots
+.postgres_data
+.pgdata
+backup
+backups
+*.dump
+*.sql.gz
+
+# Test coverage and debug logs
+coverage
+.nyc_output
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Uploaded documents
+uploads/*
+!uploads/.gitkeep
+uploads/private/*
+!uploads/private/.gitkeep
+
+# Documentation
+README.md
+docs

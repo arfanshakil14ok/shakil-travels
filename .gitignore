@@ -1,0 +1,83 @@
+# ==============================================================================
+# SHAKIL GLOBAL RECRUITMENT — PRODUCTION GITIGNORE
+# ==============================================================================
+
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# Next.js build output
+.next/
+out/
+build/
+dist/
+
+# Testing & Coverage
+coverage/
+.nyc_output/
+*.lcov
+
+# Debug logs
+*.log
+*.log*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment files (CRITICAL: NEVER commit real production secrets)
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+# Local storage & uploaded applicant documents (NEVER commit user documents)
+uploads/
+uploads/*
+!uploads/.gitkeep
+uploads/private/*
+!uploads/private/.gitkeep
+public/uploads/
+public/uploads/*
+!public/uploads/.gitkeep
+
+# Embedded database runtime data & snapshots
+.postgres_data/
+.pgdata/
+backup/
+backups/
+backups/*
+*.dump
+*.sql.gz
+*.tar
+
+# OS & Editor files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.pem
+*.key
+*.cert
+*.crt
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# TypeScript build & caching
+*.tsbuildinfo
+next-env.d.ts
+.turbo/
+.eslintcache

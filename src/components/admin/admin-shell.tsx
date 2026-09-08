@@ -1,0 +1,47 @@
+'use client';
+
+import React, { useState } from 'react';
+import { AdminSidebar } from './admin-sidebar';
+import { AdminTopbar } from './admin-topbar';
+import { cn } from '@/lib/utils';
+import type { AuthUser } from '@/types';
+
+export interface AdminShellProps {
+  user: AuthUser | null;
+  children: React.ReactNode;
+}
+
+export const AdminShell: React.FC<AdminShellProps> = ({ user, children }) => {
+  const [isSidebarOpenMobile, setIsSidebarOpenMobile] = useState(false);
+  const [isSidebarCollapsedDesktop, setIsSidebarCollapsedDesktop] = useState(false);
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex">
+      {/* Admin Sidebar */}
+      <AdminSidebar
+        isOpen={isSidebarOpenMobile}
+        onClose={() => setIsSidebarOpenMobile(false)}
+        isCollapsed={isSidebarCollapsedDesktop}
+      />
+
+      {/* Main Content Area */}
+      <div
+        className={cn(
+          'flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out',
+          isSidebarCollapsedDesktop ? 'lg:pl-20' : 'lg:pl-64'
+        )}
+      >
+        <AdminTopbar
+          user={user}
+          onToggleSidebarMobile={() => setIsSidebarOpenMobile(!isSidebarOpenMobile)}
+          onToggleSidebarDesktop={() => setIsSidebarCollapsedDesktop(!isSidebarCollapsedDesktop)}
+          isCollapsed={isSidebarCollapsedDesktop}
+        />
+
+        <main className="flex-1 p-4 sm:p-6 md:p-8 max-w-7xl w-full mx-auto animate-in fade-in duration-200">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+};
