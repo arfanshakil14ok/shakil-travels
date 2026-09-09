@@ -16,7 +16,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({ user, children }) => {
   const [isSidebarCollapsedDesktop, setIsSidebarCollapsedDesktop] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-slate-50 flex print:bg-white print:block">
       {/* Admin Sidebar */}
       <AdminSidebar
         isOpen={isSidebarOpenMobile}
@@ -28,7 +28,8 @@ export const AdminShell: React.FC<AdminShellProps> = ({ user, children }) => {
       <div
         className={cn(
           'flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out',
-          isSidebarCollapsedDesktop ? 'lg:pl-20' : 'lg:pl-64'
+          isSidebarCollapsedDesktop ? 'lg:pl-20' : 'lg:pl-64',
+          'print:pl-0 print:p-0'
         )}
       >
         <AdminTopbar
@@ -38,7 +39,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({ user, children }) => {
           isCollapsed={isSidebarCollapsedDesktop}
         />
 
-        <main className="flex-1 p-4 sm:p-6 md:p-8 max-w-7xl w-full mx-auto animate-in fade-in duration-200">
+        <main className="flex-1 p-4 sm:p-6 md:p-8 max-w-7xl w-full mx-auto animate-in fade-in duration-200 print:p-0 print:m-0 print:max-w-none">
           {children}
         </main>
       </div>

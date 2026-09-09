@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { verifyApplicantPassword, createPortalToken, setPortalCookie, calculateProfileCompletion } from '@/lib/portal-auth';
+import {
+  verifyApplicantPassword,
+  createPortalToken,
+  setPortalCookie,
+  attachPortalCookie,
+  calculateProfileCompletion,
+} from '@/lib/portal-auth';
 import { z } from 'zod';
 
 const loginSchema = z.object({
@@ -83,7 +89,7 @@ export async function POST(request: NextRequest) {
 
     const completion = calculateProfileCompletion(applicant);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: 'Logged in successfully',
       data: {
@@ -97,6 +103,8 @@ export async function POST(request: NextRequest) {
         },
       },
     });
+
+    return attachPortalCookie(response, token);
   } catch (error: any) {
     console.error('Portal login error:', error);
     return NextResponse.json(

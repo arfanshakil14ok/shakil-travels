@@ -164,7 +164,7 @@ export default function PipelinePage() {
               <option value="ALL">All Overseas Jobs (Global View)</option>
               {jobsList.map((j) => (
                 <option key={j.id} value={j.id}>
-                  {j.title} ({j.jobCode}) — {j.country?.name} [{j.vacancies} vacancies]
+                  {j.title} ({j.jobCode}) — {j.country?.name || 'Country not assigned'} [{j.vacancyCount ?? j.vacancies ?? 1} vacancies]
                 </option>
               ))}
             </select>
@@ -260,17 +260,26 @@ export default function PipelinePage() {
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <div className="flex items-center gap-2">
                             <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-700 text-xs overflow-hidden shrink-0">
-                              {app.applicant.profilePhoto ? (
-                                <img src={app.applicant.profilePhoto} alt={app.applicant.fullName} className="w-full h-full object-cover" />
+                              {app.applicant?.profilePhoto ? (
+                                <img
+                                  src={app.applicant.profilePhoto}
+                                  alt={app.applicant?.fullName || 'Candidate'}
+                                  className="w-full h-full object-cover"
+                                />
                               ) : (
-                                app.applicant.fullName.substring(0, 2).toUpperCase()
+                                ((app.applicant?.fullName || 'NA').substring(0, 2)).toUpperCase()
                               )}
                             </div>
                             <div>
-                              <Link href={`/admin/applications/${app.id}`} className="font-semibold text-xs text-slate-900 hover:text-primary-600 line-clamp-1">
-                                {app.applicant.fullName}
+                              <Link
+                                href={`/admin/applications/${app.id}`}
+                                className="font-semibold text-xs text-slate-900 hover:text-primary-600 line-clamp-1"
+                              >
+                                {app.applicant?.fullName || 'Applicant unavailable'}
                               </Link>
-                              <span className="text-[10px] text-slate-400 font-mono">{app.applicant.applicantNumber}</span>
+                              <span className="text-[10px] text-slate-400 font-mono">
+                                {app.applicant?.applicantNumber || '—'}
+                              </span>
                             </div>
                           </div>
 
@@ -289,17 +298,23 @@ export default function PipelinePage() {
 
                         {/* Job & Destination Flag */}
                         <div className="text-[11px] text-slate-600 mb-2 bg-slate-50 p-1.5 rounded border border-slate-100">
-                          <div className="font-medium text-slate-800 truncate">{app.job.title}</div>
+                          <div className="font-medium text-slate-800 truncate">
+                            {app.job?.title || 'Job information unavailable'}
+                          </div>
                           <div className="text-slate-500 flex items-center gap-1 mt-0.5">
-                            {app.job.country.flag && <span>{app.job.country.flag}</span>}
-                            <span>{app.job.country.name}</span>
+                            {(app.job?.country?.flag || app.country?.flag) && (
+                              <span>{app.job?.country?.flag || app.country?.flag}</span>
+                            )}
+                            <span>
+                              {app.job?.country?.name || app.country?.name || 'Country not assigned'}
+                            </span>
                           </div>
                         </div>
 
                         {/* Card Footer: Assigned & Next Action */}
                         <div className="flex items-center justify-between text-[10px] pt-2 border-t border-slate-100">
                           <span className="text-slate-400 truncate max-w-[120px]">
-                            {app.assignedTo ? app.assignedTo.name : 'Unassigned'}
+                            {app.assignedTo?.name || app.assignedStaff?.name || 'Unassigned'}
                           </span>
 
                           <div className="flex items-center gap-1">

@@ -7,14 +7,16 @@ import {
   CheckCircle2,
   Clock,
   ExternalLink,
-  RefreshCw,
   Check,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/context/language-context';
+import { EmptyState } from '@/components/ui/empty-state';
+import { LoadingState } from '@/components/ui/loading-state';
 import { useToast } from '@/components/ui/toast';
 
 export default function PortalNotificationsPage() {
   const { success, error } = useToast();
+  const { language, t } = useLanguage();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -46,7 +48,7 @@ export default function PortalNotificationsPage() {
       });
       const data = await res.json();
       if (data.success) {
-        success('All marked as read');
+        success(t('সকল নোটিফিকেশন পড়া হয়েছে।', 'All marked as read'));
         fetchNotifs();
       }
     } catch {
@@ -70,41 +72,45 @@ export default function PortalNotificationsPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <Bell className="w-7 h-7 text-primary" />
-            Notifications & Alerts
+          <div className="flex items-center gap-2">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-semibold border border-slate-200">
+              {t('বার্তা ও এলার্ট', 'Alerts & Notices')}
+            </span>
+          </div>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight mt-1">
+            {t('নোটিফিকেশন ও জরুরি নোটিশ', 'Notifications & Operational Alerts')}
           </h1>
-          <p className="text-xs text-muted-foreground mt-1">
-            Official operational notices, interview reminders, document approvals, and visa status changes.
+          <p className="text-xs text-slate-500 mt-0.5">
+            {t(
+              'সাক্ষাৎকারের সময়সূচি, নথি যাচাই অনুমোদন এবং ভিসা সংক্রান্ত তাৎক্ষণিক আপডেট।',
+              'Official operational notices, interview reminders, document approvals, and visa status changes.'
+            )}
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
+
+        <button
           onClick={handleMarkAllAsRead}
           disabled={loading || notifications.every((n) => n.isRead)}
+          className="h-9 px-3.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-800 font-semibold text-xs flex items-center gap-1.5 transition-colors disabled:opacity-50 shrink-0 cursor-pointer"
         >
-          <Check className="w-4 h-4 mr-1.5" />
-          Mark all as read
-        </Button>
+          <Check className="w-3.5 h-3.5" />
+          <span>{t('সব পড়া হিসেবে চিহ্নিত করুন', 'Mark all as read')}</span>
+        </button>
       </div>
 
       {/* Notifications List */}
       {loading ? (
-        <div className="py-16 text-center text-muted-foreground">
-          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2 text-primary" />
-          Loading alerts...
-        </div>
+        <LoadingState text={t('নোটিফিকেশন লোড হচ্ছে...', 'Loading alerts and notices...')} />
       ) : notifications.length === 0 ? (
-        <div className="text-center py-16 bg-card border border-border rounded-2xl p-6">
-          <Bell className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
-          <h3 className="font-semibold text-base text-foreground">No notifications yet</h3>
-          <p className="text-xs text-muted-foreground mt-1">
-            Important updates regarding your applications and documents will appear here.
-          </p>
-        </div>
+        <EmptyState
+          title={t('কোনো নতুন নোটিফিকেশন নেই', 'No notifications yet')}
+          description={t(
+            'আপনার আবেদন, সাক্ষাৎকার বা নথিপত্র সম্পর্কিত কোনো নতুন তথ্য এলে এখানে দেখতে পাবেন।',
+            'Important updates regarding your applications, interview schedules, and documents will appear here.'
+          )}
+        />
       ) : (
         <div className="space-y-3">
           {notifications.map((n) => (
@@ -112,38 +118,44 @@ export default function PortalNotificationsPage() {
               key={n.id}
               className={`p-4 rounded-xl border transition-all flex items-start justify-between gap-4 ${
                 n.isRead
-                  ? 'bg-card border-border'
-                  : 'bg-primary/5 border-primary/20 shadow-sm'
+                  ? 'bg-white border-slate-200/90 shadow-2xs'
+                  : 'bg-slate-50/90 border-slate-300 shadow-xs'
               }`}
             >
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <h4 className="font-semibold text-sm text-foreground">{n.title}</h4>
+                  <h4 className="font-semibold text-xs sm:text-sm text-slate-900">
+                    {n.title}
+                  </h4>
                   {!n.isRead && (
-                    <span className="w-2 h-2 rounded-full bg-primary" />
+                    <span className="w-2 h-2 rounded-full bg-slate-900 shrink-0" />
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground whitespace-pre-wrap">{n.message}</p>
-                <div className="text-[10px] text-muted-foreground flex items-center gap-1 mt-2">
+                <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap">
+                  {n.message}
+                </p>
+                <div className="text-[10px] text-slate-400 flex items-center gap-1 mt-2">
                   <Clock className="w-3 h-3" />
-                  {new Date(n.createdAt).toLocaleString()}
+                  <span>{new Date(n.createdAt).toLocaleString()}</span>
                 </div>
               </div>
 
               <div className="flex flex-col items-end gap-2 shrink-0">
                 {n.link && (
-                  <Link href={n.link}>
-                    <Button size="sm" variant="outline" className="text-xs h-8">
-                      View <ExternalLink className="w-3 h-3 ml-1" />
-                    </Button>
+                  <Link
+                    href={n.link}
+                    className="h-7 px-2.5 rounded border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-semibold inline-flex items-center gap-1 transition-colors"
+                  >
+                    <span>{t('দেখুন', 'View')}</span>
+                    <ExternalLink className="w-3 h-3" />
                   </Link>
                 )}
                 {!n.isRead && (
                   <button
                     onClick={() => handleMarkOne(n.id)}
-                    className="text-[11px] text-primary hover:underline"
+                    className="text-[11px] font-semibold text-slate-600 hover:text-slate-900 underline cursor-pointer"
                   >
-                    Mark read
+                    {t('পড়া হয়েছে', 'Mark read')}
                   </button>
                 )}
               </div>

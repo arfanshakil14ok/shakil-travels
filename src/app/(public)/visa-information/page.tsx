@@ -8,9 +8,10 @@ import {
   ArrowRight,
   ExternalLink,
   ShieldCheck,
-  Search,
 } from 'lucide-react';
+import Image from 'next/image';
 import prisma from '@/lib/prisma';
+import { getCountryFlagUrl } from '@/lib/image-constants';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
@@ -70,7 +71,14 @@ export default async function VisaInformationPublicPage() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl">{visa.country?.flag || '🌐'}</span>
+                      <div className="relative w-5 h-3.5 rounded-xs overflow-hidden shadow-xs border border-slate-200 flex-shrink-0">
+                        <Image
+                          src={getCountryFlagUrl(visa.country?.code)}
+                          alt={visa.country?.name || 'Country flag'}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
                       <span className="font-semibold text-slate-800 text-sm">{visa.country?.name}</span>
                     </div>
                     <Badge variant="outline" size="sm">{visa.visaType.replace(/_/g, ' ')}</Badge>

@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
     const jobId = searchParams.get('jobId');
     const applicantId = searchParams.get('applicantId');
     const employerId = searchParams.get('employerId');
+    const countryId = searchParams.get('countryId');
     const assignedToId = searchParams.get('assignedToId');
     const priority = searchParams.get('priority');
     const sortBy = searchParams.get('sortBy') || 'createdAt';
@@ -24,39 +25,80 @@ export async function GET(request: NextRequest) {
 
     const where: any = {};
 
+    const andConditions: any[] = [];
+
     if (search) {
-      where.OR = [
-        { applicationNumber: { contains: search, mode: 'insensitive' } },
-        { applicant: { fullName: { contains: search, mode: 'insensitive' } } },
-        { applicant: { applicantNumber: { contains: search, mode: 'insensitive' } } },
-        { applicant: { passportNumber: { contains: search, mode: 'insensitive' } } },
-        { job: { title: { contains: search, mode: 'insensitive' } } },
-        { job: { jobCode: { contains: search, mode: 'insensitive' } } },
-      ];
+      andConditions.push({
+        OR: [
+          { applicationNumber: { contains: search, mode: 'insensitive' } },
+          { applicationCode: { contains: search, mode: 'insensitive' } },
+          { applicant: { fullName: { contains: search, mode: 'insensitive' } } },
+          { applicant: { applicantNumber: { contains: search, mode: 'insensitive' } } },
+          { applicant: { passportNumber: { contains: search, mode: 'insensitive' } } },
+          { job: { title: { contains: search, mode: 'insensitive' } } },
+          { job: { jobCode: { contains: search, mode: 'insensitive' } } },
+          { job: { employer: { companyName: { contains: search, mode: 'insensitive' } } } },
+          { job: { country: { name: { contains: search, mode: 'insensitive' } } } },
+          { employer: { companyName: { contains: search, mode: 'insensitive' } } },
+          { country: { name: { contains: search, mode: 'insensitive' } } },
+        ],
+      });
     }
 
     if (status && status !== 'ALL') {
-      where.currentStatus = status;
+      andConditions.push({
+        OR: [
+          { currentStatus: status },
+          { status: status },
+        ],
+      });
     }
 
     if (jobId && jobId !== 'ALL') {
-      where.jobId = jobId;
+      andConditions.push({ jobId });
     }
 
     if (applicantId && applicantId !== 'ALL') {
-      where.applicantId = applicantId;
+      andConditions.push({ applicantId });
     }
 
     if (employerId && employerId !== 'ALL') {
-      where.job = { ...where.job, employerId };
+      if (employerId === 'UNASSIGNED') {
+        andConditions.push({
+          AND: [
+            { employerId: null },
+            { job: { employerId: null } },
+          ],
+        });
+      } else {
+        andConditions.push({
+          OR: [
+            { employerId },
+            { job: { employerId } },
+          ],
+        });
+      }
+    }
+
+    if (countryId && countryId !== 'ALL') {
+      andConditions.push({
+        OR: [
+          { countryId },
+          { job: { countryId } },
+        ],
+      });
     }
 
     if (assignedToId && assignedToId !== 'ALL') {
-      where.assignedToId = assignedToId;
+      andConditions.push({ assignedStaffId: assignedToId });
     }
 
     if (priority && priority !== 'ALL') {
-      where.priority = priority;
+      andConditions.push({ priority });
+    }
+
+    if (andConditions.length > 0) {
+      where.AND = andConditions;
     }
 
     const [total, items] = await Promise.all([
@@ -92,6 +134,8 @@ export async function GET(request: NextRequest) {
               country: { select: { id: true, name: true, flag: true, code: true } },
             },
           },
+          employer: { select: { id: true, companyName: true } },
+          country: { select: { id: true, name: true, flag: true, code: true } },
           assignedStaff: {
             select: { id: true, name: true, email: true },
           },
@@ -106,13 +150,32 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
-    const formattedItems = items.map((item: any) => ({
-      ...item,
-      assignedTo: item.assignedStaff,
-      vacancies: item.job?.vacancyCount,
-      salaryAmount: item.job?.salaryMin,
-      salaryCurrency: item.job?.currency,
-    }));
+    const formattedItems = items.map((item: any) => {
+      const employer = item.job?.employer || item.employer || null;
+      const country = item.job?.country || item.country || null;
+
+      return {
+        ...item,
+        currentStatus: item.currentStatus || item.status || 'SUBMITTED',
+        status: item.status || item.currentStatus || 'SUBMITTED',
+        applicationNumber: item.applicationNumber || item.applicationCode || item.id,
+        applicationCode: item.applicationCode || item.applicationNumber || item.id,
+        job: item.job
+          ? {
+              ...item.job,
+              employer,
+              country,
+              vacancies: item.job.vacancyCount,
+            }
+          : null,
+        employer,
+        country,
+        assignedTo: item.assignedStaff || null,
+        vacancies: item.job?.vacancyCount ?? 0,
+        salaryAmount: item.job?.salaryMin ?? null,
+        salaryCurrency: item.job?.currency ?? 'BDT',
+      };
+    });
 
     return NextResponse.json({
       success: true,
@@ -183,18 +246,26 @@ export async function POST(request: NextRequest) {
     if (!job) {
       return NextResponse.json({ success: false, error: 'Job not found' }, { status: 404 });
     }
+    if (job.status === 'CLOSED' || job.status === 'EXPIRED') {
+      return NextResponse.json(
+        { success: false, error: 'This job vacancy is no longer open for recruitment.' },
+        { status: 400 }
+      );
+    }
 
     // Generate unique sequential business ID: SGR-APP-2026-XXXXXX
     const applicationNumber = await generateFormattedId(prisma, 'application');
 
     const application = await prisma.$transaction(async (tx) => {
-      const stage = (data as any).appliedStage || 'APPLIED';
+      const stage = (data as any).appliedStage || (data as any).status || 'SUBMITTED';
       const created = await tx.application.create({
         data: {
           applicationCode: applicationNumber,
           applicationNumber,
           applicantId: data.applicantId,
           jobId: data.jobId,
+          employerId: job.employerId || null,
+          countryId: job.countryId || null,
           currentStage: stage,
           status: stage,
           priority: data.priority || 'MEDIUM',
@@ -204,7 +275,9 @@ export async function POST(request: NextRequest) {
         },
         include: {
           applicant: { select: { id: true, fullName: true, applicantNumber: true } },
-          job: { select: { id: true, title: true, jobCode: true } },
+          job: { select: { id: true, title: true, jobCode: true, employerId: true, countryId: true } },
+          employer: { select: { id: true, companyName: true } },
+          country: { select: { id: true, name: true } },
         },
       });
 
@@ -230,8 +303,8 @@ export async function POST(request: NextRequest) {
       entityId: application.id,
       newValue: {
         applicationNumber: application.applicationNumber,
-        applicantName: application.applicant.fullName,
-        jobTitle: application.job.title,
+        applicantName: application.applicant?.fullName,
+        jobTitle: application.job?.title,
         status: application.status,
       },
     });

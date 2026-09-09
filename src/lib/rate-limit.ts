@@ -77,3 +77,8 @@ export function checkRateLimit(
     remaining: res.remaining,
   };
 }
+
+export function resetRateLimit(key: string): void {
+  cache.delete(key);
+}
+

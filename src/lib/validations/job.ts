@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const jobSchema = z.object({
+export const jobBaseSchema = z.object({
   title: z.string().min(3, 'Job title must be at least 3 characters'),
   slug: z.string().optional(),
   countryId: z.string().min(1, 'Destination country is required'),
@@ -29,7 +29,20 @@ export const jobSchema = z.object({
   featured: z.boolean().default(false),
 });
 
-export type JobInput = z.infer<typeof jobSchema>;
+export const jobSchema = jobBaseSchema.refine(
+  (data) => {
+    if (data.status === 'PUBLISHED') {
+      return Boolean(data.employerId && data.employerId.trim().length > 0);
+    }
+    return true;
+  },
+  {
+    message: 'An employer must be assigned before publishing a job vacancy. / চাকরি প্রকাশ করার পূর্বে নিয়োগকর্তা নির্বাচন বাধ্যতামূলক।',
+    path: ['employerId'],
+  }
+);
+
+export type JobInput = z.infer<typeof jobBaseSchema>;
 
 export const publicJobApplicationSchema = z.object({
   jobId: z.string().min(1, 'Job is required'),

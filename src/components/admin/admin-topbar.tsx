@@ -38,7 +38,7 @@ export const AdminTopbar: React.FC<AdminTopbarProps> = ({
   };
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200/80 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs">
+    <header className="h-16 bg-white border-b border-slate-200/80 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs print:hidden">
       {/* Left side: Toggles & Global Search */}
       <div className="flex items-center gap-3 flex-1 max-w-xl">
         {/* Mobile Toggle */}

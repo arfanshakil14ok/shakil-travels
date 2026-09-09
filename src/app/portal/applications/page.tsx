@@ -8,14 +8,14 @@ import {
   MapPin,
   Calendar,
   ChevronRight,
-  RefreshCw,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
+  ArrowRight,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/context/language-context';
+import { EmptyState } from '@/components/ui/empty-state';
+import { LoadingState } from '@/components/ui/loading-state';
 
 export default function PortalApplicationsListPage() {
+  const { language, t } = useLanguage();
   const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,79 +37,94 @@ export default function PortalApplicationsListPage() {
   }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <FileCheck2 className="w-7 h-7 text-primary" />
-            My Job Applications
+          <div className="flex items-center gap-2">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-semibold border border-slate-200">
+              {t('রিক্রুটমেন্ট রেকর্ড', 'Recruitment Record')}
+            </span>
+          </div>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight mt-1">
+            {t('আমার চাকরির আবেদনসমূহ', 'My Job Applications')}
           </h1>
-          <p className="text-xs text-muted-foreground mt-1">
-            Real-time status tracking for every submitted application across our international recruitment pipeline.
+          <p className="text-xs text-slate-500 mt-0.5">
+            {t(
+              'আপনার প্রতিটি আবেদনের সর্বশেষ যাচাই ও অনুমোদন অগ্রগতি পর্যবেক্ষণ করুন।',
+              'Track real-time status and verification milestones for every submitted overseas position.'
+            )}
           </p>
         </div>
-        <Link href="/portal/jobs">
-          <Button size="sm">
-            <Briefcase className="w-4 h-4 mr-1.5" />
-            Apply for Jobs
-          </Button>
+        <Link
+          href="/portal/jobs"
+          className="h-9 px-4 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shrink-0"
+        >
+          <Briefcase className="w-3.5 h-3.5" />
+          <span>{t('নতুন চাকরি খুঁজুন', 'Browse Vacancies')}</span>
         </Link>
       </div>
 
       {/* Applications List */}
       {loading ? (
-        <div className="py-16 text-center text-muted-foreground">
-          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2 text-primary" />
-          Loading your applications...
-        </div>
+        <LoadingState text={t('আবেদনসমূহ লোড হচ্ছে...', 'Loading your job applications...')} />
       ) : applications.length === 0 ? (
-        <div className="text-center py-16 bg-card border border-border rounded-2xl p-6">
-          <FileCheck2 className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
-          <h3 className="font-semibold text-base text-foreground">No applications found</h3>
-          <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
-            You have not applied for any positions yet. Explore open vacancies to begin your journey.
-          </p>
-          <Link href="/portal/jobs" className="inline-block mt-4">
-            <Button size="sm">Explore Available Jobs</Button>
-          </Link>
-        </div>
+        <EmptyState
+          title={t('কোনো আবেদন পাওয়া যায়নি', 'No applications found')}
+          description={t(
+            'আপনি এখনও কোনো বিদেশি চাকরির পদে আবেদন করেননি। আমাদের অনুমোদিত শূন্যপদগুলোতে আবেদন করতে নিচের বাটনে ক্লিক করুন।',
+            'You have not applied for any overseas positions yet. Explore active vacancies to begin your journey.'
+          )}
+          action={{
+            label: t('চাকরির বিজ্ঞপ্তি দেখুন', 'Explore Available Jobs'),
+            href: '/portal/jobs',
+          }}
+        />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {applications.map((app) => (
             <div
               key={app.id}
-              className="bg-card rounded-2xl border border-border p-5 shadow-sm hover:border-primary/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              className="bg-white border border-slate-200/90 rounded-xl p-5 shadow-xs hover:border-slate-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
             >
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs font-semibold text-primary">
+                  <span className="font-mono text-xs font-bold text-slate-700">
                     {app.applicationCode}
                   </span>
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary">
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-800 border border-slate-200">
                     {app.status}
                   </span>
                 </div>
-                <h3 className="font-bold text-base text-foreground">{app.job?.title}</h3>
-                <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1 text-foreground">
-                    <MapPin className="w-3.5 h-3.5 text-primary" />
+                <h3 className="font-bold text-sm sm:text-base text-slate-900">
+                  {app.job?.title}
+                </h3>
+                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                  <span className="flex items-center gap-1 text-slate-700 font-medium">
+                    <MapPin className="w-3.5 h-3.5 text-slate-500" />
                     {app.job?.country?.name}
                   </span>
-                  {app.job?.employer && <span>Employer: {app.job.employer.companyName}</span>}
+                  {app.job?.employer && (
+                    <>
+                      <span>•</span>
+                      <span>{app.job.employer.companyName}</span>
+                    </>
+                  )}
+                  <span>•</span>
                   <span className="flex items-center gap-1">
                     <Calendar className="w-3.5 h-3.5" />
-                    Applied: {new Date(app.createdAt).toLocaleDateString()}
+                    {new Date(app.createdAt).toLocaleDateString()}
                   </span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <Link href={`/portal/applications/${app.id}`}>
-                  <Button variant="outline" size="sm" className="font-semibold text-xs">
-                    View Progress Timeline
-                    <ChevronRight className="w-4 h-4 ml-1 text-primary" />
-                  </Button>
+              <div className="flex items-center gap-3 shrink-0">
+                <Link
+                  href={`/portal/applications/${app.id}`}
+                  className="h-9 px-3.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-800 font-semibold text-xs flex items-center gap-1.5 transition-colors"
+                >
+                  <span>{t('টাইমলাইন দেখুন', 'View Timeline')}</span>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
                 </Link>
               </div>
             </div>

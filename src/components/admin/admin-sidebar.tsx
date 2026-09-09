@@ -104,7 +104,8 @@ const NAV_SECTIONS: NavSection[] = [
       { title: 'Inquiries & Leads', href: '/admin/inquiries', icon: MessageSquare },
       { title: 'Message Delivery', href: '/admin/communications', icon: Send },
       { title: 'Message Templates', href: '/admin/communications/templates', icon: FileText },
-      { title: 'Migrant Advisories', href: '/admin/migrant-information', icon: BookOpen },
+      { title: 'Articles & Overseas News', href: '/admin/blog', icon: BookOpen },
+      { title: 'Migrant Advisories', href: '/admin/migrant-information', icon: Info },
     ],
   },
   {
@@ -152,7 +153,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose, isC
       {/* Sidebar Container */}
       <aside
         className={cn(
-          'fixed top-0 bottom-0 left-0 z-40 bg-navy-950 text-slate-200 border-r border-navy-800/80 flex flex-col transition-all duration-300 ease-in-out',
+          'fixed top-0 bottom-0 left-0 z-40 bg-navy-950 text-slate-200 border-r border-navy-800/80 flex flex-col transition-all duration-300 ease-in-out print:hidden',
           // Desktop widths
           isCollapsed ? 'lg:w-20' : 'lg:w-64',
           // Mobile state

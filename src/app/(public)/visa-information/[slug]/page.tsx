@@ -13,7 +13,9 @@ import {
   Clock,
   HelpCircle,
 } from 'lucide-react';
+import Image from 'next/image';
 import prisma from '@/lib/prisma';
+import { getCountryFlagUrl } from '@/lib/image-constants';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
@@ -66,7 +68,14 @@ export default async function VisaInformationDetailPage({
         {/* Title Card */}
         <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           <div className="flex flex-wrap items-center gap-3">
-            <span className="text-3xl">{visa.country?.flag || '🌐'}</span>
+            <div className="relative w-7 h-5 rounded-xs overflow-hidden shadow-xs border border-slate-200 flex-shrink-0">
+              <Image
+                src={getCountryFlagUrl(visa.country?.code)}
+                alt={visa.country?.name || 'Country flag'}
+                fill
+                className="object-cover"
+              />
+            </div>
             <span className="text-sm font-semibold text-slate-700">{visa.country?.name}</span>
             <Badge variant="outline">{visa.visaType.replace(/_/g, ' ')}</Badge>
           </div>

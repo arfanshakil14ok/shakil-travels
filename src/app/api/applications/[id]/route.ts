@@ -22,6 +22,8 @@ export async function GET(
             assignedStaff: { select: { id: true, name: true, email: true } },
           },
         },
+        employer: true,
+        country: true,
         job: {
           include: {
             employer: true,
@@ -63,7 +65,24 @@ export async function GET(
       return NextResponse.json({ success: false, error: 'Application not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, data: application });
+    const employer = application.job?.employer || application.employer || null;
+    const country = application.job?.country || application.country || null;
+
+    const normalizedApplication = {
+      ...application,
+      employer,
+      country,
+      assignedTo: application.assignedStaff || null,
+      job: application.job
+        ? {
+            ...application.job,
+            employer,
+            country,
+          }
+        : null,
+    };
+
+    return NextResponse.json({ success: true, data: normalizedApplication });
   } catch (error: any) {
     if (error.name === 'AuthorizationError' || error.name === 'AuthenticationError') {
       return NextResponse.json({ success: false, error: error.message }, { status: 403 });

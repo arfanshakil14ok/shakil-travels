@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import Image from 'next/image';
 import {
   Globe2,
   Briefcase,
@@ -16,6 +17,7 @@ import {
   Banknote,
 } from 'lucide-react';
 import prisma from '@/lib/prisma';
+import { getCountryFlagUrl, getCountryImage, getJobCategoryImage } from '@/lib/image-constants';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
@@ -88,41 +90,67 @@ export default async function CountryPublicDetailPage({
           <span className="font-semibold text-slate-800">{country.name}</span>
         </nav>
 
-        {/* Hero Banner */}
-        <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm relative overflow-hidden">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <span className="text-5xl">{country.flag || '🌐'}</span>
-              <div>
-                <div className="flex items-center gap-3">
-                  <h1 className="text-3xl font-extrabold text-slate-900">{country.name}</h1>
-                  {getStatusDisplay(country.recruitmentStatus || 'ACTIVE')}
+        {/* Hero Banner with Landmark Photography */}
+        {(() => {
+          const countryImg = getCountryImage(country.code, country.slug || country.name);
+          return (
+            <div className="rounded-3xl border border-slate-200 shadow-xl relative overflow-hidden bg-navy-950 text-white">
+              {/* Photo Background */}
+              <div className="absolute inset-0">
+                <Image
+                  src={countryImg.src}
+                  alt={countryImg.alt || `${country.name} landmark`}
+                  fill
+                  priority
+                  className="object-cover opacity-35"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-navy-950 via-navy-950/85 to-navy-950/70" />
+              </div>
+
+              <div className="relative z-10 p-8 sm:p-10 space-y-6">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                  <div className="flex items-center gap-4">
+                    <div className="relative w-18 h-12 rounded-xl overflow-hidden shadow-lg border-2 border-white/40 flex-shrink-0">
+                      <Image
+                        src={getCountryFlagUrl(country.code)}
+                        alt={`${country.name} flag`}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">{country.name}</h1>
+                        {getStatusDisplay(country.recruitmentStatus || 'ACTIVE')}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-4 text-xs text-slate-300 mt-2 font-mono">
+                        <span>ISO: <strong className="text-emerald-400">{country.code}</strong></span>
+                        {country.continent && <span>Region: <strong className="text-white">{country.continent}</strong></span>}
+                        {country.currency && (
+                          <span>Currency: <strong className="text-white">{country.currency} ({country.currencyCode || ''})</strong></span>
+                        )}
+                        {country.timezone && <span>Timezone: <strong className="text-slate-300">{country.timezone}</strong></span>}
+                      </div>
+                    </div>
+                  </div>
+
+                  <Link href="#available-jobs" className="flex-shrink-0">
+                    <Button variant="gold" className="flex items-center gap-2 font-bold shadow-lg">
+                      <Briefcase className="w-4 h-4" />
+                      View Open Vacancies ({country.jobs.length})
+                    </Button>
+                  </Link>
                 </div>
-                <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 mt-2">
-                  <span>ISO: <strong className="text-slate-700">{country.code}</strong></span>
-                  {country.continent && <span>Region: <strong className="text-slate-700">{country.continent}</strong></span>}
-                  {country.currency && (
-                    <span>Currency: <strong className="text-slate-700">{country.currency} ({country.currencyCode || ''})</strong></span>
-                  )}
-                  {country.timezone && <span>Timezone: <strong className="text-slate-700">{country.timezone}</strong></span>}
-                </div>
+
+                {country.description && (
+                  <p className="text-sm text-slate-200 leading-relaxed max-w-3xl border-t border-navy-800/80 pt-4">
+                    {country.description}
+                  </p>
+                )}
               </div>
             </div>
-
-            <Link href="#available-jobs">
-              <Button className="flex items-center gap-2">
-                <Briefcase className="w-4 h-4" />
-                View Open Vacancies ({country.jobs.length})
-              </Button>
-            </Link>
-          </div>
-
-          {country.description && (
-            <p className="mt-6 text-sm text-slate-600 leading-relaxed max-w-3xl border-t border-slate-100 pt-4">
-              {country.description}
-            </p>
-          )}
-        </div>
+          );
+        })()}
 
         {/* Official Disclaimer Alert */}
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 text-xs text-amber-900">
@@ -209,35 +237,58 @@ export default async function CountryPublicDetailPage({
               Currently no published job circulars for {country.name}. Please check back shortly or register your profile with us.
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {country.jobs.map((job) => (
-                <div key={job.id} className="p-4 rounded-xl border border-slate-200 hover:border-primary-300 hover:shadow-sm transition-all flex flex-col justify-between space-y-3 bg-slate-50">
-                  <div>
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-bold text-slate-900 text-sm">{job.title}</h3>
-                      <Badge size="sm">{job.jobCategory?.name || 'General'}</Badge>
-                    </div>
-                    <div className="text-xs text-slate-500 mt-1">
-                      {job.employer?.companyName || 'Verified Foreign Company'}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {country.jobs.map((job) => {
+                const categoryImg = getJobCategoryImage(job.jobCategory?.name, job.title);
+                return (
+                  <div
+                    key={job.id}
+                    className="overflow-hidden rounded-2xl border border-slate-200 hover:border-emerald-500 hover:shadow-xl transition-all duration-300 flex flex-col justify-between bg-white group hover:-translate-y-1"
+                  >
+                    {/* Image Header */}
+                    <div className="relative h-36 w-full bg-slate-900 overflow-hidden">
+                      <Image
+                        src={categoryImg.src}
+                        alt={job.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                      <div className="absolute top-2.5 right-2.5 bg-navy-950/80 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
+                        {job.vacancyCount || 1} Vacancies
+                      </div>
+                      <div className="absolute bottom-2.5 left-3 right-3 text-white">
+                        <span className="text-[10px] uppercase font-bold text-emerald-300 block mb-0.5">
+                          {job.jobCategory?.name || 'General'}
+                        </span>
+                        <h3 className="font-bold text-white text-sm line-clamp-1 group-hover:text-emerald-300 transition-colors">
+                          {job.title}
+                        </h3>
+                      </div>
                     </div>
 
-                    <div className="mt-3 text-xs space-y-1 text-slate-600">
-                      <div>Vacancies: <strong>{job.vacancyCount || 1}</strong></div>
-                      {job.salaryMin && (
-                        <div className="text-primary-700 font-semibold">
-                          Salary: {job.currency || ''} {Number(job.salaryMin).toLocaleString()}/month
+                    <div className="p-4 space-y-3 flex-1 flex flex-col justify-between text-xs">
+                      <div className="space-y-2 text-slate-600">
+                        <div className="text-[11px] text-slate-500 truncate">
+                          {job.employer?.companyName || 'Verified Foreign Company'}
                         </div>
-                      )}
+
+                        {job.salaryMin && (
+                          <div className="p-2 bg-emerald-50 border border-emerald-100 rounded-lg font-bold text-emerald-800 text-xs">
+                            Salary: {job.currency || ''} {Number(job.salaryMin).toLocaleString()}/month
+                          </div>
+                        )}
+                      </div>
+
+                      <Link href={`/jobs/${job.slug}`} className="block pt-1">
+                        <Button size="sm" className="w-full text-xs flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                          View & Apply <ArrowRight className="w-3.5 h-3.5" />
+                        </Button>
+                      </Link>
                     </div>
                   </div>
-
-                  <Link href={`/jobs/${job.slug}`} className="block pt-2">
-                    <Button size="sm" className="w-full text-xs flex items-center justify-center gap-1.5">
-                      Apply Now <ArrowRight className="w-3.5 h-3.5" />
-                    </Button>
-                  </Link>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

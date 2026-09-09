@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { requirePermission } from '@/lib/rbac';
 import { getCurrentUser } from '@/lib/auth';
-import { jobSchema } from '@/lib/validations/job';
+import { jobBaseSchema } from '@/lib/validations/job';
 import { getMatchingApplicantsForJob } from '@/lib/matching';
 import { createAuditLog } from '@/lib/audit';
 
@@ -74,7 +74,7 @@ export async function PUT(
       return NextResponse.json({ success: false, error: 'Job not found' }, { status: 404 });
     }
 
-    const parsed = jobSchema.partial().safeParse(body);
+    const parsed = jobBaseSchema.partial().safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
         { success: false, error: 'Validation failed', details: parsed.error.flatten() },
@@ -83,6 +83,19 @@ export async function PUT(
     }
 
     const data = parsed.data;
+
+    const targetStatus = data.status !== undefined ? data.status : existing.status;
+    const targetEmployerId = data.employerId !== undefined ? data.employerId : existing.employerId;
+
+    if (targetStatus === 'PUBLISHED' && (!targetEmployerId || !targetEmployerId.trim())) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'An employer must be assigned before publishing a job vacancy. / চাকরি প্রকাশ করার পূর্বে নিয়োগকর্তা নির্বাচন বাধ্যতামূলক।',
+        },
+        { status: 400 }
+      );
+    }
 
     const updated = await prisma.job.update({
       where: { id: existing.id },

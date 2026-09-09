@@ -4,26 +4,29 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  Globe,
-  Home,
+  LayoutDashboard,
   Briefcase,
   FileCheck2,
   FileText,
+  Calendar,
   Stamp,
+  Receipt,
+  CreditCard,
   Bell,
   User,
   LogOut,
-  CreditCard,
-  Calendar,
   Menu,
   X,
   ShieldCheck,
+  ExternalLink,
+  ChevronRight,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/context/language-context';
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { language, toggleLanguage, t } = useLanguage();
 
   const [applicant, setApplicant] = useState<any | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -33,7 +36,8 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const isAuthPage =
     pathname.startsWith('/portal/login') ||
     pathname.startsWith('/portal/register') ||
-    pathname.startsWith('/portal/forgot-password');
+    pathname.startsWith('/portal/forgot-password') ||
+    pathname.startsWith('/portal/reset-password');
 
   useEffect(() => {
     if (isAuthPage) {
@@ -76,175 +80,323 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   };
 
   if (isAuthPage) {
-    return <div className="min-h-screen bg-slate-50 dark:bg-slate-950">{children}</div>;
+    return <div className="min-h-screen bg-slate-50 font-sans">{children}</div>;
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-4">
-        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-sm text-muted-foreground">Loading Candidate Portal...</p>
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 font-sans">
+        <div className="w-8 h-8 border-2 border-slate-900 border-t-transparent rounded-full animate-spin mb-3" />
+        <p className="text-xs text-slate-500 font-medium tracking-wide">
+          {t('পোর্টাল লোড হচ্ছে...', 'Loading Candidate Portal...')}
+        </p>
       </div>
     );
   }
 
-  const navLinks = [
-    { label: 'Dashboard', href: '/portal', icon: Home },
-    { label: 'Find Jobs', href: '/portal/jobs', icon: Briefcase },
-    { label: 'My Applications', href: '/portal/applications', icon: FileCheck2 },
-    { label: 'Documents', href: '/portal/documents', icon: FileText },
-    { label: 'Interviews', href: '/portal/interviews', icon: Calendar },
-    { label: 'Visa Tracking', href: '/portal/visa', icon: Stamp },
-    { label: 'Billing & Receipts', href: '/portal/invoices', icon: CreditCard },
+  const navItems = [
+    {
+      label: 'Dashboard',
+      labelBn: 'ড্যাশবোর্ড',
+      href: '/portal',
+      icon: LayoutDashboard,
+      exact: true,
+    },
+    {
+      label: 'Find Jobs',
+      labelBn: 'চাকরির বিজ্ঞপ্তি',
+      href: '/portal/jobs',
+      icon: Briefcase,
+    },
+    {
+      label: 'My Applications',
+      labelBn: 'আমার আবেদন',
+      href: '/portal/applications',
+      icon: FileCheck2,
+    },
+    {
+      label: 'Documents',
+      labelBn: 'নথিপত্র',
+      href: '/portal/documents',
+      icon: FileText,
+    },
+    {
+      label: 'Interviews',
+      labelBn: 'সাক্ষাৎকার',
+      href: '/portal/interviews',
+      icon: Calendar,
+    },
+    {
+      label: 'Visa Tracking',
+      labelBn: 'ভিসা ট্র্যাকিং',
+      href: '/portal/visa',
+      icon: Stamp,
+    },
+    {
+      label: 'Invoices',
+      labelBn: 'ইনভয়েস ও রসিদ',
+      href: '/portal/invoices',
+      icon: Receipt,
+    },
+    {
+      label: 'Payments',
+      labelBn: 'পেমেন্ট হিস্ট্রি',
+      href: '/portal/payments',
+      icon: CreditCard,
+    },
+    {
+      label: 'Notifications',
+      labelBn: 'নোটিফিকেশন',
+      href: '/portal/notifications',
+      icon: Bell,
+      badge: unreadCount > 0 ? unreadCount : undefined,
+    },
+    {
+      label: 'Profile',
+      labelBn: 'প্রোফাইল',
+      href: '/portal/profile',
+      icon: User,
+    },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-foreground flex flex-col pb-16 md:pb-0">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans antialiased">
       {/* Top Header */}
-      <header className="sticky top-0 z-40 bg-card/95 backdrop-blur border-b border-border shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-white border-b border-slate-200/90 h-16 flex-shrink-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between">
+          {/* Brand & Mobile Hamburger */}
           <div className="flex items-center gap-3">
             <button
-              className="md:hidden p-2 rounded-lg hover:bg-muted text-foreground"
+              className="md:hidden p-2 -ml-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle Navigation"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
 
-            <Link href="/portal" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm shadow">
-                SG
+            <Link href="/portal" className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center flex-shrink-0">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" aria-hidden="true" />
               </div>
-              <div className="leading-tight">
-                <span className="font-bold text-base text-foreground block">SHAKIL GLOBAL</span>
-                <span className="text-[10px] text-muted-foreground uppercase font-medium tracking-wider">
-                  Candidate Portal
+              <div>
+                <span className="text-xs sm:text-sm font-bold tracking-wider text-slate-900 uppercase block leading-none">
+                  Shakil Global
+                </span>
+                <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold block mt-0.5">
+                  RL-1892 • {t('প্রার্থী পোর্টাল', 'Candidate Portal')}
                 </span>
               </div>
             </Link>
           </div>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1">
-            {navLinks.slice(0, 5).map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                    isActive
-                      ? 'bg-primary/10 text-primary font-semibold'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
+          {/* Right Header Utilities */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Language Switcher */}
+            <button
+              type="button"
+              onClick={toggleLanguage}
+              className="text-[11px] font-medium text-slate-600 hover:text-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer select-none"
+              aria-label="Toggle language"
+            >
+              {language === 'bn' ? 'English' : 'বাংলা'}
+            </button>
 
-          {/* User actions */}
-          <div className="flex items-center gap-3">
+            {/* Notification Icon */}
             <Link
               href="/portal/notifications"
-              className="relative p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-              title="Notifications"
+              className="relative p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+              title={t('নোটিফিকেশন', 'Notifications')}
             >
-              <Bell className="w-5 h-5" />
+              <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-rose-600 text-white text-[10px] font-bold flex items-center justify-center">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-600 ring-2 ring-white" />
               )}
             </Link>
 
+            <div className="h-6 w-px bg-slate-200 mx-0.5 hidden sm:block" />
+
+            {/* Profile Avatar & Info */}
             <Link
               href="/portal/profile"
-              className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-muted transition-colors"
+              className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-50 transition-colors"
             >
-              <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold border border-primary/20">
-                {applicant?.fullName?.charAt(0)?.toUpperCase() || 'A'}
+              <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-800 flex items-center justify-center text-xs font-bold border border-slate-200">
+                {applicant?.fullName ? applicant.fullName.charAt(0).toUpperCase() : 'C'}
               </div>
-              <div className="hidden lg:block text-left">
-                <div className="text-xs font-semibold text-foreground truncate max-w-[120px]">
-                  {applicant?.fullName}
+              <div className="hidden lg:block text-left leading-tight">
+                <div className="text-xs font-semibold text-slate-900 truncate max-w-[130px]">
+                  {applicant?.fullName || 'Candidate'}
                 </div>
-                <div className="text-[10px] font-mono text-muted-foreground">
-                  {applicant?.applicantNumber}
+                <div className="text-[10px] font-mono text-slate-500">
+                  {applicant?.applicantNumber || 'Candidate ID'}
                 </div>
               </div>
             </Link>
 
-            <Button
-              variant="ghost"
-              size="sm"
+            {/* Sign Out Button */}
+            <button
               onClick={handleLogout}
-              className="text-muted-foreground hover:text-rose-600 p-2"
-              title="Sign Out"
+              className="p-2 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+              title={t('সাইন আউট', 'Sign Out')}
+              aria-label="Sign out"
             >
               <LogOut className="w-4 h-4" />
-            </Button>
+            </button>
           </div>
         </div>
 
-        {/* Mobile Slide-down Drawer */}
+        {/* Mobile Dropdown Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-border bg-card p-4 space-y-1">
-            {navLinks.map((item) => {
+          <div className="md:hidden border-b border-slate-200 bg-white p-3 space-y-1 shadow-lg animate-in fade-in slide-in-from-top-2 duration-150">
+            {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = pathname === item.href;
+              const isActive = item.exact
+                ? pathname === item.href
+                : pathname === item.href || pathname.startsWith(item.href + '/');
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium transition-colors ${
                     isActive
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-foreground hover:bg-muted'
+                      ? 'bg-slate-900 text-white font-semibold'
+                      : 'text-slate-700 hover:bg-slate-100'
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
-                  {item.label}
+                  <div className="flex items-center gap-2.5">
+                    <Icon className="w-4 h-4" />
+                    <span>{language === 'bn' ? item.labelBn : item.label}</span>
+                  </div>
+                  {item.badge !== undefined && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-rose-600 text-white font-bold">
+                      {item.badge}
+                    </span>
+                  )}
                 </Link>
               );
             })}
+            <div className="pt-2 border-t border-slate-100">
+              <Link
+                href="/jobs"
+                className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-500 hover:text-slate-900"
+              >
+                <ExternalLink className="w-4 h-4" />
+                <span>{t('বিদেশি চাকরির মূল পাতা', 'Public Job Portal')}</span>
+              </Link>
+            </div>
           </div>
         )}
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">{children}</main>
+      {/* Main Body with Left Sidebar */}
+      <div className="max-w-7xl mx-auto w-full flex-1 flex">
+        {/* Desktop Sidebar */}
+        <aside className="w-60 shrink-0 hidden md:flex flex-col justify-between border-r border-slate-200/90 bg-white py-5 px-3">
+          <div className="space-y-6">
+            <div>
+              <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                {t('প্রধান মেনু', 'Main Menu')}
+              </div>
+              <nav className="space-y-0.5">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = item.exact
+                    ? pathname === item.href
+                    : pathname === item.href || pathname.startsWith(item.href + '/');
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-colors ${
+                        isActive
+                          ? 'bg-slate-900 text-white font-semibold shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Icon className="w-4 h-4 shrink-0" />
+                        <span>{language === 'bn' ? item.labelBn : item.label}</span>
+                      </div>
+                      {item.badge !== undefined && (
+                        <span
+                          className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                            isActive
+                              ? 'bg-rose-500 text-white'
+                              : 'bg-rose-100 text-rose-700'
+                          }`}
+                        >
+                          {item.badge}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </nav>
+            </div>
 
-      {/* Mobile Bottom Navigation Bar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border flex items-center justify-around py-2 shadow-lg">
+            <div>
+              <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                {t('বহিরাগত লিংক', 'External')}
+              </div>
+              <Link
+                href="/jobs"
+                className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+              >
+                <ExternalLink className="w-4 h-4 shrink-0 text-slate-400" />
+                <span>{t('মূল ওয়েবসাইট', 'Public Website')}</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Agency License Info Card */}
+          <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-800">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Govt. Approved</span>
+            </div>
+            <p className="text-[10px] text-slate-500 leading-relaxed">
+              License No: RL-1892
+              <br />
+              Shakil Global Recruitment
+            </p>
+          </div>
+        </aside>
+
+        {/* Content Area */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0 pb-20 md:pb-8">
+          {children}
+        </main>
+      </div>
+
+      {/* Mobile Bottom Bar */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 flex items-center justify-around py-2 shadow-lg">
         {[
-          { label: 'Home', href: '/portal', icon: Home },
-          { label: 'Jobs', href: '/portal/jobs', icon: Briefcase },
-          { label: 'Applied', href: '/portal/applications', icon: FileCheck2 },
-          { label: 'Docs', href: '/portal/documents', icon: FileText },
-          { label: 'Profile', href: '/portal/profile', icon: User },
+          { label: 'হোম', labelEn: 'Home', href: '/portal', icon: LayoutDashboard },
+          { label: 'চাকরি', labelEn: 'Jobs', href: '/portal/jobs', icon: Briefcase },
+          { label: 'আবেদন', labelEn: 'Applied', href: '/portal/applications', icon: FileCheck2 },
+          { label: 'নথিপত্র', labelEn: 'Docs', href: '/portal/documents', icon: FileText },
+          { label: 'প্রোফাইল', labelEn: 'Profile', href: '/portal/profile', icon: User },
         ].map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href;
+          const isActive =
+            item.href === '/portal'
+              ? pathname === '/portal'
+              : pathname.startsWith(item.href);
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center gap-1 text-[11px] py-1 px-3 rounded-lg transition-colors ${
-                isActive ? 'text-primary font-bold' : 'text-muted-foreground hover:text-foreground'
+              className={`flex flex-col items-center gap-0.5 text-[10px] py-1 px-3 rounded-lg transition-colors ${
+                isActive ? 'text-slate-900 font-bold' : 'text-slate-500 hover:text-slate-800'
               }`}
             >
-              <Icon className="w-5 h-5" />
-              <span>{item.label}</span>
+              <Icon className="w-4 h-4" />
+              <span>{language === 'bn' ? item.label : item.labelEn}</span>
             </Link>
           );
         })}
-      </div>
+      </nav>
     </div>
   );
 }

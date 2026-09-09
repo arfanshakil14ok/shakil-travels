@@ -55,7 +55,7 @@ export default function AdminDashboardPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-              Phase 1 Enterprise Foundation
+              Enterprise Recruitment ERP
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
@@ -176,18 +176,18 @@ export default function AdminDashboardPage() {
         </Card>
       </div>
 
-      {/* Phase 2 Recruitment Pipeline Metrics */}
+      {/* Recruitment Pipeline Metrics */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-base font-semibold text-slate-900">
-              Recruitment Pipeline (Phase 2 Live)
+              Live Recruitment Pipeline
             </h2>
             <p className="text-xs text-slate-500">
               Active candidates, overseas vacancies, verified employers, and global destinations.
             </p>
           </div>
-          <Badge variant="success">Phase 2 Active</Badge>
+          <Badge variant="success">Operational</Badge>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

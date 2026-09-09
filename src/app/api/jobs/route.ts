@@ -122,6 +122,16 @@ export async function POST(request: NextRequest) {
 
     const data = parsed.data;
 
+    if (data.status === 'PUBLISHED' && (!data.employerId || !data.employerId.trim())) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'An employer must be assigned before publishing a job vacancy. / চাকরি প্রকাশ করার পূর্বে নিয়োগকর্তা নির্বাচন বাধ্যতামূলক।',
+        },
+        { status: 400 }
+      );
+    }
+
     // Generate unique jobCode: SGR-JOB-2026-XXXXXX
     const jobCode = await generateFormattedId(prisma, 'job');
 

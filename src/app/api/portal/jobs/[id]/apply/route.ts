@@ -69,6 +69,8 @@ export async function POST(
         applicationNumber: applicationCode,
         applicantId: applicant.id,
         jobId,
+        employerId: job.employerId || null,
+        countryId: job.countryId || null,
         currentStage: 'SUBMITTED',
         status: 'SUBMITTED',
         priority: 'MEDIUM',
@@ -85,9 +87,13 @@ export async function POST(
           select: {
             title: true,
             jobCode: true,
+            employerId: true,
+            countryId: true,
             country: { select: { name: true } },
           },
         },
+        employer: { select: { id: true, companyName: true } },
+        country: { select: { id: true, name: true } },
       },
     });
 

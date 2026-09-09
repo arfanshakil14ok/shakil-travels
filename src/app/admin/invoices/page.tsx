@@ -236,8 +236,8 @@ export default function InvoicesPage() {
                     {inv.application?.job?.title || 'General Services'}
                   </td>
                   <td className="py-3.5 px-4 text-slate-500">
-                    <div>Issued: {new Date(inv.issueDate).toLocaleDateString()}</div>
-                    <div className="text-[10px] text-slate-400">Due: {new Date(inv.dueDate).toLocaleDateString()}</div>
+                    <div>Issued: {new Date(inv.invoiceDate || inv.issueDate || inv.createdAt).toLocaleDateString()}</div>
+                    <div className="text-[10px] text-slate-400">Due: {inv.dueDate ? new Date(inv.dueDate).toLocaleDateString() : 'Upon receipt'}</div>
                   </td>
                   <td className="py-3.5 px-4 font-bold text-slate-900">
                     {inv.currency} {Number(inv.totalAmount).toLocaleString()}

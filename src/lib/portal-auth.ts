@@ -42,21 +42,48 @@ export async function verifyPortalToken(token: string): Promise<PortalApplicantS
   }
 }
 
+import type { NextResponse } from 'next/server';
+
 export async function setPortalCookie(token: string) {
-  const cookieStore = await cookies();
-  cookieStore.set(PORTAL_COOKIE_NAME, token, {
+  try {
+    const cookieStore = await cookies();
+    cookieStore.set(PORTAL_COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: PORTAL_SESSION_DURATION,
+    });
+  } catch (err) {
+    // In Route Handlers where cookies() is read-only, attachPortalCookie handles the response header
+  }
+}
+
+export function attachPortalCookie(response: NextResponse, token: string): NextResponse {
+  response.cookies.set(PORTAL_COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
     maxAge: PORTAL_SESSION_DURATION,
   });
+  return response;
 }
 
 export async function clearPortalCookie() {
-  const cookieStore = await cookies();
-  cookieStore.delete(PORTAL_COOKIE_NAME);
+  try {
+    const cookieStore = await cookies();
+    cookieStore.delete(PORTAL_COOKIE_NAME);
+  } catch (err) {
+    // In Route Handlers where cookies() is read-only, clearPortalCookieOnResponse handles it
+  }
 }
+
+export function clearPortalCookieOnResponse(response: NextResponse): NextResponse {
+  response.cookies.delete(PORTAL_COOKIE_NAME);
+  return response;
+}
+
 
 export async function getCurrentApplicant(): Promise<any | null> {
   try {

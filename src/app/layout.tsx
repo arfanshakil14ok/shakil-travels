@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter, Noto_Sans_Bengali } from 'next/font/google';
 import './globals.css';
 import { ToastProvider } from '@/components/ui/toast';
+import { LanguageProvider } from '@/context/language-context';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -53,8 +54,11 @@ export default function RootLayout({
   return (
     <html lang="bn" className={`${inter.variable} ${notoSansBengali.variable}`}>
       <body className="min-h-screen flex flex-col font-sans">
-        <ToastProvider>{children}</ToastProvider>
+        <LanguageProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </LanguageProvider>
       </body>
+
     </html>
   );
 }

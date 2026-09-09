@@ -12,8 +12,10 @@ export async function GET(
     await requirePermission('INVOICE_VIEW');
     const { id } = await params;
 
-    const invoice = await prisma.invoice.findUnique({
-      where: { id },
+    const invoice = await prisma.invoice.findFirst({
+      where: {
+        OR: [{ id }, { invoiceNumber: id }],
+      },
       include: {
         customer: true,
         applicant: {
@@ -87,7 +89,9 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
 
-    const existing = await prisma.invoice.findUnique({ where: { id } });
+    const existing = await prisma.invoice.findFirst({
+      where: { OR: [{ id }, { invoiceNumber: id }] },
+    });
     if (!existing) {
       return NextResponse.json({ success: false, error: 'Invoice not found' }, { status: 404 });
     }
@@ -97,7 +101,7 @@ export async function PUT(
     }
 
     const updated = await prisma.invoice.update({
-      where: { id },
+      where: { id: existing.id },
       data: {
         dueDate: body.dueDate ? new Date(body.dueDate) : existing.dueDate,
         notes: body.notes !== undefined ? body.notes : existing.notes,
@@ -135,8 +139,8 @@ export async function DELETE(
     const currentUser = await requirePermission('INVOICE_EDIT');
     const { id } = await params;
 
-    const existing = await prisma.invoice.findUnique({
-      where: { id },
+    const existing = await prisma.invoice.findFirst({
+      where: { OR: [{ id }, { invoiceNumber: id }] },
       include: { payments: true },
     });
 
@@ -153,9 +157,9 @@ export async function DELETE(
 
     await prisma.$transaction(async (tx) => {
       // Delete invoice items
-      await tx.invoiceItem.deleteMany({ where: { invoiceId: id } });
+      await tx.invoiceItem.deleteMany({ where: { invoiceId: existing.id } });
       // Delete invoice
-      await tx.invoice.delete({ where: { id } });
+      await tx.invoice.delete({ where: { id: existing.id } });
 
       // Post reversing transaction if was issued
       if (existing.status === 'ISSUED') {
