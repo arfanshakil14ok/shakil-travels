@@ -56,8 +56,8 @@ export default function PortalPaymentsPage() {
         </h1>
         <p className="text-xs text-slate-500 mt-0.5">
           {t(
-            'সাকিল গ্লোবাল কর্তৃক ইস্যুকৃত সকল অনুমোদিত পেমেন্ট রসিদ, ব্যাংকিং ট্রানজেকশন আইডি এবং জমার বিবরণ।',
-            'All officially verified receipts issued by Shakil Global, banking transaction references, and payment timestamps.'
+            'শাকিল গ্লোবাল ম্যানপাওয়ার কর্তৃক ইস্যুকৃত সকল অনুমোদিত পেমেন্ট রসিদ, ব্যাংকিং ট্রানজেকশন আইডি এবং জমার বিবরণ।',
+            'All officially verified receipts issued by SHAKIL GLOBAL MANPOWER, banking transaction references, and payment timestamps.'
           )}
         </p>
       </div>

@@ -23,11 +23,15 @@ import {
   Edit,
   ExternalLink,
   Save,
+  Copy,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Modal } from '@/components/ui/modal';
 import { generateQrDataUrl, getInvoiceVerificationUrl } from '@/lib/qrcode';
+import { BRAND } from '@/config/brand';
+import { BrandMark } from '@/components/brand/brand-logo';
 
 export default function InvoiceDetailPage({ params }: { params?: { id?: string } }) {
   const routeParams = useParams();
@@ -259,6 +263,53 @@ export default function InvoiceDetailPage({ params }: { params?: { id?: string }
     }
   };
 
+  const [isDuplicating, setIsDuplicating] = useState(false);
+  const [isDeletingInvoice, setIsDeletingInvoice] = useState(false);
+
+  const handleDuplicateInvoice = async () => {
+    if (!confirm('Duplicate this invoice? A new draft invoice will be created with identical line items.')) return;
+    setIsDuplicating(true);
+    try {
+      const res = await fetch(`/api/invoices/${id}/duplicate`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        router.push(`/admin/invoices/${data.data.id}`);
+      } else {
+        alert(data.error || 'Failed to duplicate invoice');
+      }
+    } catch {
+      alert('Error duplicating invoice');
+    } finally {
+      setIsDuplicating(false);
+    }
+  };
+
+  const handleDeleteInvoice = async () => {
+    if (invoice.status === 'PAID' || invoice.status === 'PARTIALLY_PAID') {
+      alert('পরিশোধিত ইনভয়েস মুছে ফেলা যাবে না / Paid invoices cannot be deleted. Please void the invoice instead.');
+      return;
+    }
+    if (invoice.status !== 'DRAFT') {
+      alert('শুধুমাত্র ড্রাফট ইনভয়েস মুছে ফেলা যাবে / Only draft invoices can be deleted. Please void issued invoices.');
+      return;
+    }
+    if (!confirm(`Are you sure you want to delete draft invoice ${invoice.invoiceNumber}?`)) return;
+    setIsDeletingInvoice(true);
+    try {
+      const res = await fetch(`/api/invoices/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        router.push('/admin/invoices');
+      } else {
+        alert(data.error || 'Failed to delete invoice');
+      }
+    } catch {
+      alert('Failed to delete invoice');
+    } finally {
+      setIsDeletingInvoice(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="py-24 text-center text-slate-400">
@@ -360,6 +411,30 @@ export default function InvoiceDetailPage({ params }: { params?: { id?: string }
               Void
             </Button>
           )}
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleDuplicateInvoice}
+            disabled={isDuplicating}
+            className="text-xs border-slate-300 text-slate-700 hover:bg-slate-50"
+          >
+            <Copy className="w-3.5 h-3.5 mr-1.5 text-slate-500" />
+            {isDuplicating ? 'Duplicating...' : 'Duplicate'}
+          </Button>
+
+          {invoice.status === 'DRAFT' && Number(invoice.paidAmount) === 0 && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleDeleteInvoice}
+              disabled={isDeletingInvoice}
+              className="text-xs border-rose-200 text-rose-600 hover:bg-rose-50"
+            >
+              <Trash2 className="w-3.5 h-3.5 mr-1.5 text-rose-500" />
+              Delete Draft
+            </Button>
+          )}
         </div>
       </div>
 
@@ -368,15 +443,23 @@ export default function InvoiceDetailPage({ params }: { params?: { id?: string }
         {/* Invoice Top Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start gap-6 border-b-2 border-slate-900/10 pb-6">
           <div>
-            <div className="text-2xl font-black tracking-tight text-slate-950 flex items-center gap-2">
-              <span>SHAKIL GLOBAL RECRUITMENT</span>
+            <div className="flex items-center gap-3">
+              <BrandMark size="md" />
+              <div>
+                <div className="text-2xl font-black tracking-tight text-slate-950">
+                  {BRAND.name}
+                </div>
+                <div className="text-xs font-bold text-emerald-700 uppercase tracking-wider">
+                  {BRAND.taglineEn}
+                </div>
+              </div>
             </div>
-            <div className="text-xs font-semibold text-primary-700 mt-1 uppercase tracking-wider">
-              Government Approved Recruiting Agency • License No: RL-1892
+            <div className="text-xs font-semibold text-slate-700 mt-2 uppercase tracking-wider">
+              Government Approved Recruiting Agency • License No: {BRAND.licenseNumber}
             </div>
-            <div className="text-xs text-slate-600 mt-1 leading-relaxed">
-              Concord Tower, Level 7, Gulshan-2, Dhaka-1212, Bangladesh<br />
-              Phone: +880 2-9876543 • Email: accounts@shakilglobal.com • Web: shakilglobalrecruitment.com
+            <div className="text-xs text-slate-600 mt-1 leading-relaxed font-bengali">
+              {BRAND.addressBn}<br />
+              <span className="font-sans">Phone: {BRAND.phone} • Email: {BRAND.accountsEmail} • Web: {BRAND.website}</span>
             </div>
           </div>
 
@@ -642,14 +725,14 @@ export default function InvoiceDetailPage({ params }: { params?: { id?: string }
           <div>
             <div className="w-44 border-b border-slate-400 mx-auto mb-1"></div>
             <span className="font-medium">Authorized Accounts Officer</span>
-            <div className="text-[10px] text-slate-400 mt-0.5">Shakil Global Recruitment • RL-1892</div>
+            <div className="text-[10px] text-slate-400 mt-0.5">{BRAND.name} • {BRAND.licenseNumber}</div>
           </div>
         </div>
 
         {/* Legal Disclaimer Footer */}
         <div className="mt-10 pt-4 border-t border-slate-100 text-center text-[10px] text-slate-400 leading-tight">
           This is a computer-generated invoice and is legally valid without physical signature if verified via official QR Code.<br />
-          Government Approved Recruiting Agency RL-1892 • Bureau of Manpower, Employment and Training (BMET) Approved.
+          Government Approved Recruiting Agency {BRAND.licenseNumber} • Bureau of Manpower, Employment and Training (BMET) Approved.
         </div>
       </div>
 

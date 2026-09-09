@@ -15,6 +15,7 @@ import {
   Eye,
   RefreshCw,
   Landmark,
+  Copy,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -70,6 +71,24 @@ export default function InvoicesPage() {
     fetchStats();
     fetchInvoices();
   }, [fetchInvoices]);
+
+  const handleDuplicate = async (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!confirm('Duplicate this invoice? A new draft will be created.')) return;
+    try {
+      const res = await fetch(`/api/invoices/${id}/duplicate`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        fetchInvoices();
+        fetchStats();
+      } else {
+        alert(data.error || 'Failed to duplicate invoice');
+      }
+    } catch {
+      alert('Error duplicating invoice');
+    }
+  };
 
   const getStatusBadge = (status: string, dueDate: string) => {
     const isOverdue = (status === 'ISSUED' || status === 'PARTIALLY_PAID') && new Date(dueDate) < new Date();
@@ -252,12 +271,24 @@ export default function InvoicesPage() {
                     {getStatusBadge(inv.status, inv.dueDate)}
                   </td>
                   <td className="py-3.5 px-4 text-right">
-                    <Link href={`/admin/invoices/${inv.id}`}>
-                      <Button size="sm" variant="outline" className="h-7 text-xs px-2.5">
-                        <Eye className="w-3.5 h-3.5 mr-1" />
-                        View
+                    <div className="flex items-center justify-end gap-1.5">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs px-2 text-slate-600 hover:text-slate-900"
+                        onClick={(e) => handleDuplicate(e, inv.id)}
+                        title="Duplicate Invoice"
+                      >
+                        <Copy className="w-3 h-3 mr-1 text-slate-400" />
+                        Copy
                       </Button>
-                    </Link>
+                      <Link href={`/admin/invoices/${inv.id}`}>
+                        <Button size="sm" variant="outline" className="h-7 text-xs px-2.5">
+                          <Eye className="w-3.5 h-3.5 mr-1" />
+                          View
+                        </Button>
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))

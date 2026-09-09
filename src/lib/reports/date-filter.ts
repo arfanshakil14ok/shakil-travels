@@ -1,5 +1,5 @@
 /**
- * Date Filtering Utilities for Shakil Global Recruitment ERP
+ * Date Filtering Utilities for SHAKIL GLOBAL MANPOWER ERP
  * Timezone: Asia/Dhaka (UTC+6)
  */
 

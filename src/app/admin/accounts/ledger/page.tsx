@@ -199,9 +199,9 @@ function CustomerLedgerContent() {
           {/* Statement Header */}
           <div className="flex justify-between items-start border-b border-slate-200 pb-6">
             <div>
-              <div className="text-xl font-black text-slate-950">SHAKIL GLOBAL RECRUITMENT</div>
-              <div className="text-xs text-slate-500 font-medium">
-                License No: RL-1892 • Concord Tower, Gulshan-2, Dhaka
+              <div className="text-xl font-black text-slate-950">SHAKIL GLOBAL MANPOWER</div>
+              <div className="text-xs text-slate-600 font-medium font-bengali">
+                লাইসেন্স নং: RL-1892 • ইসলামপুর মোড়, ডায়াবেটিক হাসপাতালের সামনে, পাসপোর্ট অফিস রোড, নেত্রকোনা-২৪০০ • ফোন: 01913681771
               </div>
               <div className="text-xs text-slate-500 mt-1">STATEMENT OF ACCOUNT (FINANCIAL LEDGER)</div>
             </div>

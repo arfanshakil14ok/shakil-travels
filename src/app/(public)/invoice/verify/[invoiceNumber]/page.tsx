@@ -78,7 +78,7 @@ export default function InvoiceVerifyPage({
         </div>
         <h1 className="text-xl font-black text-slate-900">Verification Unsuccessful</h1>
         <p className="text-sm text-slate-600 max-w-md text-center mt-2">
-          {error || 'The requested invoice could not be verified in the Shakil Global Recruitment database.'}
+          {error || 'The requested invoice could not be verified in the SHAKIL GLOBAL MANPOWER database.'}
         </p>
         <div className="mt-6 flex flex-wrap gap-3 justify-center">
           <Link href="/">
@@ -274,7 +274,7 @@ export default function InvoiceVerifyPage({
                   <span>Central Registry Verification Guarantee</span>
                 </div>
                 <p className="text-[11px] leading-relaxed text-emerald-900/90">
-                  This invoice is officially verified by the Shakil Global Recruitment Central Database under Government Recruiting License <strong>RL-1892</strong>. Any payment voucher or transaction matching these parameters is legally recorded.
+                  This invoice is officially verified by the SHAKIL GLOBAL MANPOWER Central Database under Government Recruiting License <strong>RL-1892</strong>. Any payment voucher or transaction matching these parameters is legally recorded.
                 </p>
                 <div className="text-[10px] text-emerald-800/80 font-mono pt-1">
                   Verification Timestamp: {new Date(data.verifiedAt).toLocaleString()}
@@ -285,7 +285,7 @@ export default function InvoiceVerifyPage({
             {/* Action Buttons */}
             <div className="pt-2 flex flex-wrap gap-3 justify-between items-center print:hidden">
               <Link href="/" className="text-xs text-slate-500 hover:text-slate-800 font-medium">
-                shakilglobalrecruitment.com
+                shakilglobal.com
               </Link>
               <Button
                 type="button"
@@ -302,7 +302,7 @@ export default function InvoiceVerifyPage({
 
         {/* Security and Anti-Fraud Notice */}
         <div className="text-center mt-6 text-[11px] text-slate-400 max-w-lg mx-auto print:hidden">
-          BMET License RL-1892 • Shakil Global Recruitment • For inquiries or reporting fraudulent payment requests, please email accounts@shakilglobal.com.
+          BMET License RL-1892 • SHAKIL GLOBAL MANPOWER • For inquiries or reporting fraudulent payment requests, please email accounts@shakilglobal.com.
         </div>
       </div>
     </div>

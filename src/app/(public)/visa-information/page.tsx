@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 export const metadata = {
-  title: 'Official Work Visa & Immigration Information | Shakil Global',
+  title: 'Official Work Visa & Immigration Information | SHAKIL GLOBAL MANPOWER',
   description: 'Country-specific foreign employment visa requirements, eligibility criteria, documentation, and official embassy guidelines.',
 };
 
@@ -52,7 +52,7 @@ export default async function VisaInformationPublicPage() {
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 flex items-start gap-3.5 text-xs text-amber-900 leading-relaxed">
           <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
-            <strong className="font-bold">Important Advisory:</strong> Visa and immigration requirements may change without prior notice. Always verify the latest information with the relevant government or immigration authority. Shakil Global Recruitment does not make unsupported guarantees of visa issuance or immigration outcomes; all decisions rest with sovereign destination embassies.
+            <strong className="font-bold">Important Advisory:</strong> Visa and immigration requirements may change without prior notice. Always verify the latest information with the relevant government or immigration authority. SHAKIL GLOBAL MANPOWER does not make unsupported guarantees of visa issuance or immigration outcomes; all decisions rest with sovereign destination embassies.
           </div>
         </div>
 

@@ -91,42 +91,121 @@ export async function PUT(
 
     const existing = await prisma.invoice.findFirst({
       where: { OR: [{ id }, { invoiceNumber: id }] },
+      include: { items: true },
     });
     if (!existing) {
       return NextResponse.json({ success: false, error: 'Invoice not found' }, { status: 404 });
     }
 
-    if (existing.status === 'VOID') {
-      return NextResponse.json({ success: false, error: 'Cannot modify a voided invoice' }, { status: 400 });
+    if (existing.status === 'VOID' || existing.status === 'PAID') {
+      return NextResponse.json(
+        { success: false, error: 'Cannot modify a paid or voided invoice' },
+        { status: 400 }
+      );
     }
 
-    const updated = await prisma.invoice.update({
-      where: { id: existing.id },
-      data: {
-        dueDate: body.dueDate ? new Date(body.dueDate) : existing.dueDate,
-        notes: body.notes !== undefined ? body.notes : existing.notes,
-        terms: body.terms !== undefined ? body.terms : existing.terms,
-      },
-    });
+    let updatedInvoice: any = null;
+
+    if (Array.isArray(body.items) && body.items.length > 0) {
+      // Recalculate financial breakdown using Decimal
+      let calcSubtotal = toDecimal('0.00');
+      let calcTax = toDecimal('0.00');
+      let calcDiscount = toDecimal('0.00');
+
+      const processedItems = body.items.map((item: any) => {
+        const qty = parseInt(item.quantity) || 1;
+        const uPrice = toDecimal(item.unitPrice || '0.00');
+        const itemDisc = toDecimal(item.discount || '0.00');
+        const itemTax = toDecimal(item.tax || '0.00');
+        const lTotal = uPrice.times(qty).minus(itemDisc).plus(itemTax);
+
+        calcSubtotal = calcSubtotal.plus(uPrice.times(qty));
+        calcTax = calcTax.plus(itemTax);
+        calcDiscount = calcDiscount.plus(itemDisc);
+
+        return {
+          invoiceId: existing.id,
+          serviceId: item.serviceId || null,
+          serviceCode: item.serviceCode || null,
+          description: item.description || 'Service',
+          quantity: qty,
+          unitPrice: uPrice,
+          discount: itemDisc,
+          tax: itemTax,
+          lineTotal: lTotal,
+        };
+      });
+
+      const adjustmentVal = body.adjustment !== undefined ? toDecimal(body.adjustment) : existing.adjustment;
+      const calcTotal = calcSubtotal.minus(calcDiscount).plus(calcTax).plus(adjustmentVal);
+      const calcDue = calcTotal.minus(existing.paidAmount);
+
+      updatedInvoice = await prisma.$transaction(async (tx) => {
+        // Delete old items and re-insert
+        await tx.invoiceItem.deleteMany({ where: { invoiceId: existing.id } });
+        await tx.invoiceItem.createMany({ data: processedItems });
+
+        return await tx.invoice.update({
+          where: { id: existing.id },
+          data: {
+            dueDate: body.dueDate ? new Date(body.dueDate) : existing.dueDate,
+            notes: body.notes !== undefined ? body.notes : existing.notes,
+            terms: body.terms !== undefined ? body.terms : existing.terms,
+            subtotal: calcSubtotal,
+            tax: calcTax,
+            discount: calcDiscount,
+            adjustment: adjustmentVal,
+            totalAmount: calcTotal,
+            dueAmount: calcDue,
+            updatedById: currentUser.id,
+          },
+          include: { items: true },
+        });
+      });
+    } else {
+      updatedInvoice = await prisma.invoice.update({
+        where: { id: existing.id },
+        data: {
+          dueDate: body.dueDate ? new Date(body.dueDate) : existing.dueDate,
+          notes: body.notes !== undefined ? body.notes : existing.notes,
+          terms: body.terms !== undefined ? body.terms : existing.terms,
+          updatedById: currentUser.id,
+        },
+        include: { items: true },
+      });
+    }
 
     await createAuditLog({
       userId: currentUser.id,
+      actorUserId: currentUser.id,
+      actorType: 'STAFF',
+      applicantId: existing.applicantId,
       action: 'INVOICE_EDIT',
       entity: 'INVOICE',
       entityId: id,
-      oldValue: existing,
-      newValue: updated,
+      description: `Invoice ${existing.invoiceNumber} updated by staff`,
+      oldValue: {
+        totalAmount: existing.totalAmount.toString(),
+        status: existing.status,
+        dueDate: existing.dueDate,
+      },
+      newValue: {
+        totalAmount: updatedInvoice.totalAmount.toString(),
+        status: updatedInvoice.status,
+        dueDate: updatedInvoice.dueDate,
+      },
     });
 
     return NextResponse.json({
       success: true,
-      data: updated,
+      data: updatedInvoice,
       message: 'Invoice updated successfully',
     });
   } catch (error: any) {
     if (error.name === 'AuthorizationError' || error.name === 'AuthenticationError') {
       return NextResponse.json({ success: false, error: error.message }, { status: 403 });
     }
+    console.error('Invoice update error:', error);
     return NextResponse.json({ success: false, error: 'Failed to update invoice' }, { status: 500 });
   }
 }
@@ -148,9 +227,35 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: 'Invoice not found' }, { status: 404 });
     }
 
-    if (existing.payments.length > 0) {
+    // Protection: PAID or PARTIALLY_PAID invoices MUST be blocked
+    if (existing.status === 'PAID' || existing.status === 'PARTIALLY_PAID') {
       return NextResponse.json(
-        { success: false, error: 'Cannot delete invoice with recorded payments. Use the Void action instead.' },
+        {
+          success: false,
+          error: 'পরিশোধিত ইনভয়েস মুছে ফেলা যাবে না / Paid invoices cannot be deleted. Please void the invoice instead.',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Protection: invoices with recorded payments cannot be deleted
+    if (existing.payments && existing.payments.length > 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Cannot delete invoice with recorded payments. Use the Void action instead.',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Protection: only DRAFT invoices may be directly deleted
+    if (existing.status !== 'DRAFT') {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'শুধুমাত্র ড্রাফট ইনভয়েস মুছে ফেলা যাবে / Only draft invoices can be deleted. Please void issued invoices.',
+        },
         { status: 400 }
       );
     }
@@ -160,45 +265,33 @@ export async function DELETE(
       await tx.invoiceItem.deleteMany({ where: { invoiceId: existing.id } });
       // Delete invoice
       await tx.invoice.delete({ where: { id: existing.id } });
-
-      // Post reversing transaction if was issued
-      if (existing.status === 'ISSUED') {
-        const lastTx = await tx.financialTransaction.findFirst({
-          where: existing.customerId ? { customerId: existing.customerId } : { applicantId: existing.applicantId! },
-          orderBy: { createdAt: 'desc' },
-        });
-
-        const prevBalance = lastTx ? lastTx.balance : toDecimal('0.00');
-        const newBalance = prevBalance.minus(existing.totalAmount);
-
-        await tx.financialTransaction.create({
-          data: {
-            transactionType: 'INVOICE',
-            referenceNumber: `DEL-${existing.invoiceNumber}`,
-            customerId: existing.customerId,
-            applicantId: existing.applicantId,
-            debit: toDecimal('0.00'),
-            credit: existing.totalAmount,
-            balance: newBalance,
-            notes: `Invoice deleted/reversal: ${existing.invoiceNumber}`,
-          },
-        });
-      }
     });
 
     await createAuditLog({
       userId: currentUser.id,
+      actorUserId: currentUser.id,
+      actorType: 'STAFF',
+      applicantId: existing.applicantId,
       action: 'INVOICE_DELETE',
       entity: 'INVOICE',
       entityId: id,
-      oldValue: existing,
+      description: `Draft invoice ${existing.invoiceNumber} deleted`,
+      oldValue: {
+        invoiceNumber: existing.invoiceNumber,
+        status: existing.status,
+        totalAmount: existing.totalAmount.toString(),
+      },
     });
 
-    return NextResponse.json({ success: true, message: `Invoice ${existing.invoiceNumber} deleted successfully` });
+    return NextResponse.json({
+      success: true,
+      message: `Invoice ${existing.invoiceNumber} deleted successfully`,
+    });
   } catch (error: any) {
     if (error.name === 'AuthorizationError' || error.name === 'AuthenticationError') {
       return NextResponse.json({ success: false, error: error.message }, { status: 403 });
     }
+    console.error('Invoice deletion error:', error);
     return NextResponse.json({ success: false, error: 'Failed to delete invoice' }, { status: 500 });
   }
 }

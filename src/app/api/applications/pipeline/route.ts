@@ -29,14 +29,14 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search')?.trim();
 
     const where: any = {
-      currentStatus: { notIn: ['REJECTED', 'CANCELLED'] },
+      status: { notIn: ['REJECTED', 'CANCELLED'] },
     };
 
     if (jobId && jobId !== 'ALL') {
       where.jobId = jobId;
     }
     if (assignedToId && assignedToId !== 'ALL') {
-      where.assignedToId = assignedToId;
+      where.assignedStaffId = assignedToId;
     }
     if (priority && priority !== 'ALL') {
       where.priority = priority;
@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
     if (search) {
       where.OR = [
         { applicationNumber: { contains: search, mode: 'insensitive' } },
+        { applicationCode: { contains: search, mode: 'insensitive' } },
         { applicant: { fullName: { contains: search, mode: 'insensitive' } } },
         { applicant: { applicantNumber: { contains: search, mode: 'insensitive' } } },
         { job: { title: { contains: search, mode: 'insensitive' } } },
@@ -91,7 +92,20 @@ export async function GET(request: NextRequest) {
     }
 
     for (const app of applications) {
-      const appWithAlias = { ...app, assignedTo: app.assignedStaff, vacancies: app.job.vacancyCount };
+      const employer = app.job?.employer || null;
+      const country = app.job?.country || null;
+      const appWithAlias = {
+        ...app,
+        assignedTo: app.assignedStaff,
+        vacancies: app.job?.vacancyCount || 0,
+        job: app.job
+          ? {
+              ...app.job,
+              employer,
+              country,
+            }
+          : null,
+      };
       const currentStage = app.status || app.currentStage;
       if (grouped[currentStage]) {
         grouped[currentStage].push(appWithAlias);

@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { ShieldCheck, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
+import { BrandLogo } from '@/components/brand/brand-logo';
 
 export interface AuthLayoutProps {
   title: string;
@@ -43,14 +44,7 @@ export function AuthLayout({
       <div className="w-full max-w-[420px] bg-white border border-slate-200/90 rounded-xl shadow-xs p-6 sm:p-8 space-y-6">
         {/* Brand & Language Header */}
         <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" aria-hidden="true" />
-            </div>
-            <span className="text-[11px] font-bold tracking-wider text-slate-800 uppercase font-sans">
-              Shakil Global
-            </span>
-          </Link>
+          <BrandLogo href="/" size="sm" variant="horizontal" showTagline={false} />
 
           <button
             type="button"

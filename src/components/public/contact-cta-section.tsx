@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   Clock,
 } from 'lucide-react';
+import { BRAND } from '@/config/brand';
 
 export const ContactCtaSection: React.FC = () => {
   const [name, setName] = useState('');
@@ -109,8 +110,17 @@ export const ContactCtaSection: React.FC = () => {
                   <Phone className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="font-bold block text-slate-900">হটলাইন সহায়তা:</span>
-                  <span className="font-mono text-slate-600">+880 2 9876543 / +880 1711-000000</span>
+                  <span className="font-bold block text-slate-900 font-bengali">হটলাইন সহায়তা:</span>
+                  <a
+                    href={BRAND.phoneTel}
+                    className="font-mono text-emerald-700 hover:underline font-bold text-sm"
+                    aria-label={`Call ${BRAND.phone}`}
+                  >
+                    {BRAND.phone}
+                  </a>
+                  <span className="text-[11px] text-slate-500 block font-bengali">
+                    মোবাইল থেকে সরাসরি কল করতে ট্যাপ করুন
+                  </span>
                 </div>
               </div>
 
@@ -119,8 +129,10 @@ export const ContactCtaSection: React.FC = () => {
                   <Mail className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="font-bold block text-slate-900">অফিসিয়াল ইমেইল:</span>
-                  <span className="font-mono text-slate-600">info@shakilglobal.com</span>
+                  <span className="font-bold block text-slate-900 font-bengali">অফিসিয়াল ইমেইল:</span>
+                  <a href={`mailto:${BRAND.email}`} className="font-mono text-slate-600 hover:text-navy-950">
+                    {BRAND.email}
+                  </a>
                 </div>
               </div>
 
@@ -130,7 +142,9 @@ export const ContactCtaSection: React.FC = () => {
                 </div>
                 <div>
                   <span className="font-bold block text-slate-900 font-bengali">অফিস ঠিকানা:</span>
-                  <span className="font-bengali text-slate-600">হাউস ১২, রোড ৪, সেক্টর ৭, উত্তরা, ঢাকা-১২৩০</span>
+                  <span className="font-bengali text-slate-600 leading-relaxed block">
+                    {BRAND.addressBn}
+                  </span>
                 </div>
               </div>
 
@@ -140,7 +154,7 @@ export const ContactCtaSection: React.FC = () => {
                 </div>
                 <div>
                   <span className="font-bold block text-slate-900 font-bengali">অফিস সময়সূচী:</span>
-                  <span className="font-bengali text-slate-600">শনিবার - বৃহস্পতিবার: সকাল ৯:০০ - সন্ধ্যা ৬:০০</span>
+                  <span className="font-bengali text-slate-600">{BRAND.hoursBn}</span>
                 </div>
               </div>
             </div>

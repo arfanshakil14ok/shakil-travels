@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   if (!country) return { title: 'Country Not Found' };
 
   return {
-    title: `${country.name} Recruitment & Work Visa Information | Shakil Global`,
+    title: `${country.name} Recruitment & Work Visa Information | SHAKIL GLOBAL MANPOWER`,
     description: `Official recruitment guidelines, open jobs, work permits, and living conditions for Bangladeshi workers in ${country.name}.`,
   };
 }
@@ -156,7 +156,7 @@ export default async function CountryPublicDetailPage({
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 text-xs text-amber-900">
           <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
-            <span className="font-bold">Official Immigration & Visa Policy Disclaimer:</span> Visa and immigration regulations, required documents, and minimum wage scales are determined exclusively by the respective sovereign governments and relevant immigration authorities. Shakil Global Recruitment facilitates authorized government-to-government (G2G) and licensed B2B recruitment. We do not claim 100% visa guarantees; all approvals are subject to official embassy vetting.
+            <span className="font-bold">Official Immigration & Visa Policy Disclaimer:</span> Visa and immigration regulations, required documents, and minimum wage scales are determined exclusively by the respective sovereign governments and relevant immigration authorities. SHAKIL GLOBAL MANPOWER facilitates authorized government-to-government (G2G) and licensed B2B recruitment. We do not claim 100% visa guarantees; all approvals are subject to official embassy vetting.
           </div>
         </div>
 

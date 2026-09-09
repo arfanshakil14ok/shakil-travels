@@ -192,8 +192,8 @@ export default function PortalVisaTrackingPage() {
                   </div>
                   <p className="text-[11px] leading-relaxed text-slate-500">
                     {t(
-                      `ভিসা মঞ্জুর করা সংশ্লিষ্ট রাষ্ট্র (${vc.country?.name || 'গন্তব্য দেশ'}) এবং তার দূতাবাসের সার্বভৌম অধিকার। সাকিল গ্লোবাল সকল আইনি নথি যথাযথভাবে উপস্থাপন ও ট্র্যাকিং নিশ্চিত করে।`,
-                      `Visa issuance is the sole prerogative of the embassy and sovereign authorities of ${vc.country?.name || 'the destination country'}. Shakil Global ensures 100% legal document submission and transparent tracking.`
+                      `ভিসা মঞ্জুর করা সংশ্লিষ্ট রাষ্ট্র (${vc.country?.name || 'গন্তব্য দেশ'}) এবং তার দূতাবাসের সার্বভৌম অধিকার। শাকিল গ্লোবাল ম্যানপাওয়ার সকল আইনি নথি যথাযথভাবে উপস্থাপন ও ট্র্যাকিং নিশ্চিত করে।`,
+                      `Visa issuance is the sole prerogative of the embassy and sovereign authorities of ${vc.country?.name || 'the destination country'}. SHAKIL GLOBAL MANPOWER ensures transparent tracking and authorized legal document submission.`
                     )}
                   </p>
                 </div>

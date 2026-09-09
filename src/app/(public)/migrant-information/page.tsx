@@ -20,7 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 export const metadata = {
-  title: 'Migrant Worker Information Portal | Shakil Global',
+  title: 'Migrant Worker Information Portal | SHAKIL GLOBAL MANPOWER',
   description: 'Pre-departure guidance, airport procedures, labor rights, salary protection, contract awareness, and emergency consular assistance.',
 };
 

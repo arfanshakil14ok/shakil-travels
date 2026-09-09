@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { requireApplicantAuth, calculateProfileCompletion } from '@/lib/portal-auth';
+import { createAuditLog } from '@/lib/audit';
 import { z } from 'zod';
 
 const updateProfileSchema = z.object({
-  fullName: z.string().min(2).optional(),
+  fullName: z.string().min(2, 'Name must be at least 2 characters').optional(),
   fatherName: z.string().optional().nullable(),
   motherName: z.string().optional().nullable(),
   dateOfBirth: z.string().optional().nullable(),
@@ -13,6 +14,8 @@ const updateProfileSchema = z.object({
   district: z.string().optional().nullable(),
   upazila: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
+  permanentAddress: z.string().optional().nullable(),
+  emergencyContact: z.string().optional().nullable(),
   education: z.string().optional().nullable(),
   profession: z.string().optional().nullable(),
   yearsOfExperience: z.number().int().min(0).optional(),
@@ -67,6 +70,14 @@ export async function PUT(request: NextRequest) {
     const applicant = await requireApplicantAuth();
     const body = await request.json();
 
+    // Security: strictly block any attempt to modify protected system fields
+    const protectedFields = ['id', 'applicantNumber', 'status', 'assignedStaffId', 'isActive', 'notes', 'createdAt', 'updatedAt'];
+    for (const field of protectedFields) {
+      if (field in body) {
+        delete body[field];
+      }
+    }
+
     const parsed = updateProfileSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
@@ -76,6 +87,12 @@ export async function PUT(request: NextRequest) {
     }
 
     const d = parsed.data;
+
+    // Fetch existing applicant data for audit diff
+    const current = await prisma.applicant.findUnique({
+      where: { id: applicant.id },
+      include: { profile: true },
+    });
 
     const updated = await prisma.applicant.update({
       where: { id: applicant.id },
@@ -101,8 +118,56 @@ export async function PUT(request: NextRequest) {
         preferredJobCategoryId: d.preferredJobCategoryId !== undefined ? d.preferredJobCategoryId : undefined,
       },
       include: {
+        profile: true,
         preferredCountry: { select: { id: true, name: true, code: true, flag: true } },
         preferredJobCategory: { select: { id: true, name: true, slug: true } },
+      },
+    });
+
+    // Upsert linked ApplicantProfile for address & emergency contact details
+    if (d.emergencyContact !== undefined || d.permanentAddress !== undefined || d.address !== undefined || d.skills !== undefined || d.education !== undefined || d.yearsOfExperience !== undefined) {
+      await prisma.applicantProfile.upsert({
+        where: { applicantId: applicant.id },
+        create: {
+          applicantId: applicant.id,
+          skills: d.skills || null,
+          experienceYears: d.yearsOfExperience || 0,
+          education: d.education || null,
+          currentAddress: d.address || null,
+          permanentAddress: d.permanentAddress || null,
+          emergencyContact: d.emergencyContact || null,
+        },
+        update: {
+          ...(d.skills !== undefined && { skills: d.skills }),
+          ...(d.yearsOfExperience !== undefined && { experienceYears: d.yearsOfExperience }),
+          ...(d.education !== undefined && { education: d.education }),
+          ...(d.address !== undefined && { currentAddress: d.address }),
+          ...(d.permanentAddress !== undefined && { permanentAddress: d.permanentAddress }),
+          ...(d.emergencyContact !== undefined && { emergencyContact: d.emergencyContact }),
+        },
+      });
+    }
+
+    // Record PROFILE_UPDATED audit log
+    await createAuditLog({
+      actorUserId: applicant.id,
+      actorType: 'APPLICANT',
+      applicantId: applicant.id,
+      action: 'PROFILE_UPDATED',
+      entity: 'APPLICANT',
+      entityId: applicant.id,
+      description: `Applicant updated profile details`,
+      oldValue: {
+        fullName: current?.fullName,
+        profession: current?.profession,
+        passportNumber: current?.passportNumber,
+        district: current?.district,
+      },
+      newValue: {
+        fullName: updated.fullName,
+        profession: updated.profession,
+        passportNumber: updated.passportNumber,
+        district: updated.district,
       },
     });
 

@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { requireApplicantAuth } from '@/lib/portal-auth';
-import { validateDocumentFile } from '@/lib/storage';
+import { validateDocumentFile, storage } from '@/lib/storage';
+import { createAuditLog } from '@/lib/audit';
+import crypto from 'crypto';
+import path from 'path';
 import { z } from 'zod';
 
-const createDocumentSchema = z.object({
+const createDocumentJsonSchema = z.object({
   applicationId: z.string().optional().nullable(),
   documentTypeId: z.string().min(1, 'Document type is required'),
   fileName: z.string().min(1, 'File name is required'),
@@ -55,36 +58,104 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const applicant = await requireApplicantAuth();
-    const body = await request.json();
+    const contentType = request.headers.get('content-type') || '';
 
-    const parsed = createDocumentSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { success: false, error: 'Validation failed', details: parsed.error.flatten() },
-        { status: 400 }
-      );
-    }
+    let documentTypeId = '';
+    let applicationId: string | null = null;
+    let fileName = '';
+    let filePath = '';
+    let fileSize = 0;
+    let mimeType = '';
+    let expiryDate: string | null = null;
+    let notes: string | null = null;
+    let passportNumber: string | null = null;
 
-    const data = parsed.data;
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await request.formData();
+      const file = formData.get('file') as File | null;
+      documentTypeId = (formData.get('documentTypeId') as string) || '';
+      applicationId = (formData.get('applicationId') as string) || null;
+      expiryDate = (formData.get('expiryDate') as string) || null;
+      notes = (formData.get('notes') as string) || null;
+      passportNumber = (formData.get('passportNumber') as string) || null;
 
-    // Validate size (max 10MB) and allowed MIME types (PDF, JPEG, PNG, WEBP)
-    const validation = validateDocumentFile(data.fileSize, data.mimeType);
-    if (!validation.valid) {
-      return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
+      if (!file) {
+        return NextResponse.json({ success: false, error: 'No file uploaded' }, { status: 400 });
+      }
+
+      if (!documentTypeId) {
+        return NextResponse.json({ success: false, error: 'Document type is required' }, { status: 400 });
+      }
+
+      // Validate size and MIME
+      const validation = validateDocumentFile(file.size, file.type);
+      if (!validation.valid) {
+        return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
+      }
+
+      fileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      fileSize = file.size;
+      mimeType = file.type;
+
+      // Generate secure private storage key: documents/{applicantId}/{timestamp}-{hex}{ext}
+      const rawExt = path.extname(file.name).toLowerCase();
+      const safeExt = ['.pdf', '.jpg', '.jpeg', '.png', '.webp'].includes(rawExt)
+        ? rawExt
+        : file.type === 'application/pdf'
+        ? '.pdf'
+        : '.jpg';
+      const storageKey = `documents/${applicant.id}/${Date.now()}-${crypto.randomBytes(8).toString('hex')}${safeExt}`;
+
+      const buffer = Buffer.from(await file.arrayBuffer());
+      await storage.saveFile(storageKey, buffer, {
+        originalName: file.name,
+        mimeType: file.type,
+        size: file.size,
+        uploadedAt: new Date(),
+        applicantId: applicant.id,
+      });
+
+      filePath = storageKey;
+    } else {
+      // JSON body fallback
+      const body = await request.json();
+      const parsed = createDocumentJsonSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { success: false, error: 'Validation failed', details: parsed.error.flatten() },
+          { status: 400 }
+        );
+      }
+
+      const d = parsed.data;
+      const validation = validateDocumentFile(d.fileSize, d.mimeType);
+      if (!validation.valid) {
+        return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
+      }
+
+      documentTypeId = d.documentTypeId;
+      applicationId = d.applicationId || null;
+      fileName = d.fileName;
+      filePath = d.filePath;
+      fileSize = d.fileSize;
+      mimeType = d.mimeType;
+      expiryDate = d.expiryDate || null;
+      notes = d.notes || null;
+      passportNumber = d.passportNumber || null;
     }
 
     // Verify documentType exists
     const docType = await prisma.documentType.findUnique({
-      where: { id: data.documentTypeId },
+      where: { id: documentTypeId },
     });
     if (!docType) {
       return NextResponse.json({ success: false, error: 'Invalid document type' }, { status: 400 });
     }
 
     // If applicationId is provided, verify applicant owns it
-    if (data.applicationId) {
+    if (applicationId) {
       const app = await prisma.application.findUnique({
-        where: { id: data.applicationId },
+        where: { id: applicationId },
       });
       if (!app || app.applicantId !== applicant.id) {
         return NextResponse.json({ success: false, error: 'Invalid application ID' }, { status: 403 });
@@ -95,7 +166,7 @@ export async function POST(request: NextRequest) {
     const previousVersions = await prisma.document.findMany({
       where: {
         applicantId: applicant.id,
-        documentTypeId: data.documentTypeId,
+        documentTypeId,
       },
       orderBy: { version: 'desc' },
       take: 1,
@@ -108,7 +179,7 @@ export async function POST(request: NextRequest) {
       await prisma.document.updateMany({
         where: {
           applicantId: applicant.id,
-          documentTypeId: data.documentTypeId,
+          documentTypeId,
           isLatest: true,
         },
         data: {
@@ -120,18 +191,18 @@ export async function POST(request: NextRequest) {
     const newDoc = await prisma.document.create({
       data: {
         applicantId: applicant.id,
-        applicationId: data.applicationId || null,
-        documentTypeId: data.documentTypeId,
-        fileName: data.fileName,
-        filePath: data.filePath,
+        applicationId: applicationId || null,
+        documentTypeId,
+        fileName,
+        filePath,
         fileUrl: '', // Updated immediately below
-        fileSize: data.fileSize,
-        mimeType: data.mimeType,
+        fileSize,
+        mimeType,
         version: nextVersion,
         isLatest: true,
-        status: 'UPLOADED',
-        expiryDate: data.expiryDate ? new Date(data.expiryDate) : null,
-        notes: data.notes || null,
+        status: 'PENDING',
+        expiryDate: expiryDate ? new Date(expiryDate) : null,
+        notes: notes || null,
       },
       include: {
         documentType: true,
@@ -147,16 +218,34 @@ export async function POST(request: NextRequest) {
     newDoc.fileUrl = fileDownloadUrl;
 
     // If document is PASSPORT, update applicant passport fields
-    if (docType.code.toUpperCase() === 'PASSPORT' || data.passportNumber) {
+    if (docType.code.toUpperCase() === 'PASSPORT' || passportNumber) {
       await prisma.applicant.update({
         where: { id: applicant.id },
         data: {
           passportAvailable: true,
-          ...(data.passportNumber && { passportNumber: data.passportNumber }),
-          ...(data.expiryDate && { passportExpiry: new Date(data.expiryDate) }),
+          ...(passportNumber && { passportNumber }),
+          ...(expiryDate && { passportExpiry: new Date(expiryDate) }),
         },
       });
     }
+
+    // Record DOCUMENT_UPLOADED in AuditLog
+    await createAuditLog({
+      actorUserId: applicant.id,
+      actorType: 'APPLICANT',
+      applicantId: applicant.id,
+      action: 'DOCUMENT_UPLOADED',
+      entity: 'DOCUMENT',
+      entityId: newDoc.id,
+      description: `Applicant uploaded document: ${fileName} (${docType.name})`,
+      metadata: {
+        fileName,
+        documentType: docType.name,
+        fileSize,
+        mimeType,
+        version: nextVersion,
+      },
+    });
 
     // In-app confirmation
     await prisma.notification.create({
@@ -164,7 +253,7 @@ export async function POST(request: NextRequest) {
         applicantId: applicant.id,
         type: 'DOCUMENT',
         title: 'Document Uploaded',
-        message: `Your document "${data.fileName}" (${docType.name}) has been uploaded and queued for verification.`,
+        message: `Your document "${fileName}" (${docType.name}) has been uploaded and queued for verification.`,
         link: '/portal/documents',
       },
     });

@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   if (!visa) return { title: 'Visa Information Not Found' };
 
   return {
-    title: `${visa.title} Requirements & Guidelines | Shakil Global`,
+    title: `${visa.title} Requirements & Guidelines | SHAKIL GLOBAL MANPOWER`,
     description: `Official requirements, eligibility, document checklist, and government guidelines for ${visa.title} (${visa.country?.name}).`,
   };
 }
@@ -100,7 +100,7 @@ export default async function VisaInformationDetailPage({
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 flex items-start gap-3.5 text-xs text-amber-900 leading-relaxed">
           <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
-            <strong className="font-bold">Mandatory Verification Advisory:</strong> Visa and immigration requirements may change. Always verify the latest information with the relevant government or immigration authority. Shakil Global Recruitment does not guarantee visa approvals or employment outcomes; foreign visa issuance is subject solely to destination government vetting.
+            <strong className="font-bold">Mandatory Verification Advisory:</strong> Visa and immigration requirements may change. Always verify the latest information with the relevant government or immigration authority. SHAKIL GLOBAL MANPOWER does not guarantee visa approvals or employment outcomes; foreign visa issuance is subject solely to destination government vetting.
           </div>
         </div>
 

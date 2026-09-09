@@ -6,6 +6,11 @@ import {
   MapPin,
   Save,
   CheckCircle2,
+  PhoneCall,
+  ShieldCheck,
+  Briefcase,
+  GraduationCap,
+  Plane,
 } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { LoadingState } from '@/components/ui/loading-state';
@@ -30,6 +35,8 @@ export default function PortalProfilePage() {
     district: '',
     upazila: '',
     address: '',
+    permanentAddress: '',
+    emergencyContact: '',
     education: '',
     profession: '',
     yearsOfExperience: 0,
@@ -60,6 +67,7 @@ export default function PortalProfilePage() {
         if (pData.success) {
           setProfile(pData.data);
           const p = pData.data;
+          const prof = p.profile || {};
           setFormData({
             fullName: p.fullName || '',
             fatherName: p.fatherName || '',
@@ -69,11 +77,13 @@ export default function PortalProfilePage() {
             nationality: p.nationality || 'Bangladeshi',
             district: p.district || '',
             upazila: p.upazila || '',
-            address: p.address || '',
-            education: p.education || '',
+            address: p.address || prof.currentAddress || '',
+            permanentAddress: prof.permanentAddress || '',
+            emergencyContact: prof.emergencyContact || '',
+            education: p.education || prof.education || '',
             profession: p.profession || '',
-            yearsOfExperience: p.yearsOfExperience || 0,
-            skills: p.skills || '',
+            yearsOfExperience: p.yearsOfExperience || prof.experienceYears || 0,
+            skills: p.skills || prof.skills || '',
             languages: p.languages || '',
             passportAvailable: !!p.passportAvailable,
             passportNumber: p.passportNumber || '',
@@ -146,6 +156,9 @@ export default function PortalProfilePage() {
           <p className="text-xs text-slate-500 mt-0.5">
             {t('প্রার্থী আইডি:', 'Candidate ID:')}{' '}
             <span className="font-mono font-bold text-slate-800">{profile?.applicantNumber}</span>
+            <span className="mx-2">•</span>
+            {t('স্ট্যাটাস:', 'Status:')}{' '}
+            <span className="font-semibold text-slate-700">{profile?.status}</span>
           </p>
         </div>
 
@@ -169,9 +182,12 @@ export default function PortalProfilePage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Section 1: Personal Info */}
         <div className="bg-white border border-slate-200/90 rounded-xl p-5 sm:p-6 shadow-xs space-y-4">
-          <h3 className="font-bold text-sm sm:text-base text-slate-900 border-b border-slate-100 pb-2">
-            1. {t('ব্যক্তিগত ও পরিচয় তথ্য', 'Personal & Identity Details')}
-          </h3>
+          <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+            <User className="w-4 h-4 text-slate-700" />
+            <h3 className="font-bold text-sm sm:text-base text-slate-900">
+              1. {t('ব্যক্তিগত ও পরিচয় তথ্য', 'Personal & Identity Details')}
+            </h3>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
             <div>
               <label className="font-semibold text-slate-700 block mb-1.5">
@@ -247,11 +263,14 @@ export default function PortalProfilePage() {
           </div>
         </div>
 
-        {/* Section 2: Passport */}
+        {/* Section 2: Passport & Travel Information */}
         <div className="bg-white border border-slate-200/90 rounded-xl p-5 sm:p-6 shadow-xs space-y-4">
-          <h3 className="font-bold text-sm sm:text-base text-slate-900 border-b border-slate-100 pb-2">
-            2. {t('পাসপোর্ট ও ভ্রমণ প্রস্তুতি', 'Passport & Travel Information')}
-          </h3>
+          <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+            <Plane className="w-4 h-4 text-slate-700" />
+            <h3 className="font-bold text-sm sm:text-base text-slate-900">
+              2. {t('পাসপোর্ট ও ভ্রমণ প্রস্তুতি', 'Passport & Travel Information')}
+            </h3>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
             <div>
               <label className="font-semibold text-slate-700 block mb-1.5">
@@ -302,9 +321,12 @@ export default function PortalProfilePage() {
 
         {/* Section 3: Trade & Experience */}
         <div className="bg-white border border-slate-200/90 rounded-xl p-5 sm:p-6 shadow-xs space-y-4">
-          <h3 className="font-bold text-sm sm:text-base text-slate-900 border-b border-slate-100 pb-2">
-            3. {t('পেশা, কাজের অভিজ্ঞতা ও পছন্দ', 'Profession, Experience & Preferences')}
-          </h3>
+          <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+            <Briefcase className="w-4 h-4 text-slate-700" />
+            <h3 className="font-bold text-sm sm:text-base text-slate-900">
+              3. {t('পেশা, কাজের অভিজ্ঞতা ও শিক্ষা', 'Profession, Experience & Education')}
+            </h3>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
             <div>
               <label className="font-semibold text-slate-700 block mb-1.5">
@@ -314,6 +336,18 @@ export default function PortalProfilePage() {
                 placeholder={t('যেমন: পাইপ ফিটার, ইলেকট্রিশিয়ান, ড্রাইভার', 'e.g. Electrician, Heavy Driver')}
                 value={formData.profession}
                 onChange={(e) => setFormData({ ...formData, profession: e.target.value })}
+                className="w-full h-10 px-3 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+              />
+            </div>
+
+            <div>
+              <label className="font-semibold text-slate-700 block mb-1.5">
+                {t('শিক্ষাগত যোগ্যতা', 'Educational Qualification')}
+              </label>
+              <input
+                placeholder={t('যেমন: এসএসসি / এইচএসসি / ডিপ্লোমা', 'e.g. SSC, HSC, Diploma')}
+                value={formData.education}
+                onChange={(e) => setFormData({ ...formData, education: e.target.value })}
                 className="w-full h-10 px-3 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/15"
               />
             </div>
@@ -373,6 +407,18 @@ export default function PortalProfilePage() {
               </select>
             </div>
 
+            <div>
+              <label className="font-semibold text-slate-700 block mb-1.5">
+                {t('ভাষাগত দক্ষতা', 'Languages Spoken')}
+              </label>
+              <input
+                placeholder={t('যেমন: বাংলা (মাতৃভাষা), ইংরেজি (প্রাথমিক), আরবি', 'e.g. Bengali, English, Arabic')}
+                value={formData.languages}
+                onChange={(e) => setFormData({ ...formData, languages: e.target.value })}
+                className="w-full h-10 px-3 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+              />
+            </div>
+
             <div className="col-span-full">
               <label className="font-semibold text-slate-700 block mb-1.5">
                 {t('কারিগরি দক্ষতা ও সনদ', 'Technical Skills & Certifications')}
@@ -385,26 +431,17 @@ export default function PortalProfilePage() {
                 className="w-full p-3 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/15"
               />
             </div>
-
-            <div className="col-span-full">
-              <label className="font-semibold text-slate-700 block mb-1.5">
-                {t('ভাষাগত দক্ষতা', 'Languages Spoken')}
-              </label>
-              <input
-                placeholder={t('যেমন: বাংলা (মাতৃভাষা), ইংরেজি (প্রাথমিক), আরবি (ক্যাথোপকথন)', 'e.g. Bengali, English, Arabic')}
-                value={formData.languages}
-                onChange={(e) => setFormData({ ...formData, languages: e.target.value })}
-                className="w-full h-10 px-3 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/15"
-              />
-            </div>
           </div>
         </div>
 
-        {/* Section 4: Address */}
+        {/* Section 4: Address & Emergency Contact */}
         <div className="bg-white border border-slate-200/90 rounded-xl p-5 sm:p-6 shadow-xs space-y-4">
-          <h3 className="font-bold text-sm sm:text-base text-slate-900 border-b border-slate-100 pb-2">
-            4. {t('স্থায়ী ঠিকানা ও যোগাযোগ', 'Address & Permanent Residence')}
-          </h3>
+          <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+            <MapPin className="w-4 h-4 text-slate-700" />
+            <h3 className="font-bold text-sm sm:text-base text-slate-900">
+              4. {t('ঠিকানা ও জরুরি যোগাযোগ', 'Address & Emergency Contact')}
+            </h3>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
             <div>
               <label className="font-semibold text-slate-700 block mb-1.5">
@@ -432,14 +469,39 @@ export default function PortalProfilePage() {
 
             <div className="col-span-full">
               <label className="font-semibold text-slate-700 block mb-1.5">
-                {t('গ্রাম / রাস্তার ঠিকানা', 'Village / Full Street Address')}
+                {t('বর্তমান ঠিকানা', 'Current Address')}
               </label>
               <textarea
                 rows={2}
-                placeholder={t('সম্পূর্ণ ডাক ঠিকানা লিখুন...', 'Complete postal address...')}
+                placeholder={t('বর্তমান ডাক ঠিকানা লিখুন...', 'Current living address...')}
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 className="w-full p-3 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+              />
+            </div>
+
+            <div className="col-span-full">
+              <label className="font-semibold text-slate-700 block mb-1.5">
+                {t('স্থায়ী ঠিকানা (পাসপোর্ট / এনআইডি অনুযায়ী)', 'Permanent Address (As in Passport/NID)')}
+              </label>
+              <textarea
+                rows={2}
+                placeholder={t('গ্রাম, ডাকঘর, থানা ও জেলা উল্লেখ করুন...', 'Village, Post Office, Police Station, District...')}
+                value={formData.permanentAddress}
+                onChange={(e) => setFormData({ ...formData, permanentAddress: e.target.value })}
+                className="w-full p-3 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+              />
+            </div>
+
+            <div className="col-span-full">
+              <label className="font-semibold text-slate-700 block mb-1.5">
+                {t('জরুরি যোগাযোগ নম্বর ও সম্পর্ক *', 'Emergency Contact Phone & Relation *')}
+              </label>
+              <input
+                placeholder={t('যেমন: পিতা - ০১৭XXXXXXXX / ভাই - ০১৮XXXXXXXX', 'e.g. Father - 017XXXXXXXX / Brother - 018XXXXXXXX')}
+                value={formData.emergencyContact}
+                onChange={(e) => setFormData({ ...formData, emergencyContact: e.target.value })}
+                className="w-full h-10 px-3 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/15"
               />
             </div>
           </div>

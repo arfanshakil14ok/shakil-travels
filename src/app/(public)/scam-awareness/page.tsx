@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 export const metadata = {
-  title: 'Recruitment Scam & Fake Visa Awareness | Shakil Global',
+  title: 'Recruitment Scam & Fake Visa Awareness | SHAKIL GLOBAL MANPOWER',
   description: 'Protect yourself from recruitment fraud, fake visa guarantees, unauthorized middlemen, and fraudulent overseas employment offers.',
 };
 
@@ -58,7 +58,7 @@ export default function ScamAwarenessPage() {
           <AlertTriangle className="w-6 h-6 text-amber-500 flex-shrink-0 mt-1" />
           <div className="text-sm text-slate-700 space-y-1 leading-relaxed">
             <strong className="text-slate-900 font-bold block">Important Notice Regarding Sub-Agents & Middlemen (Dalals):</strong>
-            Shakil Global Recruitment operates strictly through our authorized headquarters and verified digital portal. We do not authorize unverified third-party brokers or commission agents to collect cash from candidates.
+            SHAKIL GLOBAL MANPOWER operates strictly through our authorized headquarters and verified digital portal. We do not authorize unverified third-party brokers or commission agents to collect cash from candidates.
           </div>
         </div>
 
@@ -129,7 +129,7 @@ export default function ScamAwarenessPage() {
               <strong className="text-white font-mono text-sm">+880 9610 102030</strong>
             </div>
             <div>
-              <span className="text-slate-400 block">Shakil Global Anti-Fraud Desk:</span>
+              <span className="text-slate-400 block">SHAKIL GLOBAL MANPOWER Anti-Fraud Desk:</span>
               <strong className="text-white font-mono text-sm">compliance@shakilglobal.com</strong>
             </div>
           </div>

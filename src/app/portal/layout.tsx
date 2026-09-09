@@ -20,8 +20,12 @@ import {
   ShieldCheck,
   ExternalLink,
   ChevronRight,
+  Activity,
+  LifeBuoy,
 } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
+import { BRAND } from '@/config/brand';
+import { BrandLogo } from '@/components/brand/brand-logo';
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -145,11 +149,23 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       icon: CreditCard,
     },
     {
+      label: 'Activity',
+      labelBn: 'কার্যক্রম',
+      href: '/portal/activity',
+      icon: Activity,
+    },
+    {
       label: 'Notifications',
       labelBn: 'নোটিফিকেশন',
       href: '/portal/notifications',
       icon: Bell,
       badge: unreadCount > 0 ? unreadCount : undefined,
+    },
+    {
+      label: 'Help & Support',
+      labelBn: 'সহায়তা ও যোগাযোগ',
+      href: '/portal/help',
+      icon: LifeBuoy,
     },
     {
       label: 'Profile',
@@ -175,17 +191,10 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
             </button>
 
             <Link href="/portal" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center flex-shrink-0">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" aria-hidden="true" />
-              </div>
-              <div>
-                <span className="text-xs sm:text-sm font-bold tracking-wider text-slate-900 uppercase block leading-none">
-                  Shakil Global
-                </span>
-                <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold block mt-0.5">
-                  RL-1892 • {t('প্রার্থী পোর্টাল', 'Candidate Portal')}
-                </span>
-              </div>
+              <BrandLogo href="/portal" size="sm" variant="horizontal" showTagline={false} />
+              <span className="hidden lg:inline-block text-[10px] text-slate-500 uppercase tracking-wider font-semibold border-l border-slate-200 pl-2.5">
+                {BRAND.licenseNumber} • {t('প্রার্থী পোর্টাল', 'Candidate Portal')}
+              </span>
             </Link>
           </div>
 
@@ -355,10 +364,10 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
               <span>Govt. Approved</span>
             </div>
-            <p className="text-[10px] text-slate-500 leading-relaxed">
-              License No: RL-1892
+            <p className="text-[10px] text-slate-500 leading-relaxed font-sans">
+              License No: {BRAND.licenseNumber}
               <br />
-              Shakil Global Recruitment
+              <strong className="text-slate-700">{BRAND.name}</strong>
             </p>
           </div>
         </aside>

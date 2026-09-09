@@ -6,7 +6,7 @@ import { ContactCtaSection } from '@/components/public/contact-cta-section';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'আন্তর্জাতিক চাকরির খবর ও নিয়োগ বিজ্ঞপ্তি | Shakil Global Recruitment',
+  title: 'আন্তর্জাতিক চাকরির খবর ও নিয়োগ বিজ্ঞপ্তি | SHAKIL GLOBAL MANPOWER',
   description: 'সৌদি আরব, সংযুক্ত আরব আমিরাত, কাতার, কুয়েত, ওমান, জাপান ও ইউরোপের বিভিন্ন দেশে সরকার অনুমোদিত আন্তর্জাতিক চাকরির তালিকা।',
 };
 

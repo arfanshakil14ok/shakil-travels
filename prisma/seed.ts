@@ -257,12 +257,12 @@ const ROLE_PERMISSION_MAPPING: Record<string, string[]> = {
 };
 
 const SYSTEM_SETTINGS = [
-  { key: 'company.name', value: 'SHAKIL GLOBAL RECRUITMENT', group: 'company', description: 'Official registered company name' },
-  { key: 'company.address', value: 'House 12, Road 4, Sector 7, Uttara, Dhaka-1230, Bangladesh', group: 'company', description: 'Headquarters physical address' },
-  { key: 'company.phone', value: '+880 2 9876543 / +880 1711-000000', group: 'company', description: 'Official telephone and hotline' },
+  { key: 'company.name', value: 'SHAKIL GLOBAL MANPOWER', group: 'company', description: 'Official registered company name' },
+  { key: 'company.address', value: 'ইসলামপুর মোড়, ডায়াবেটিক হাসপাতালের সামনে, পাসপোর্ট অফিস রোড, নেত্রকোনা-২৪০০', group: 'company', description: 'Headquarters physical address' },
+  { key: 'company.phone', value: '01913681771', group: 'company', description: 'Official telephone and hotline' },
   { key: 'company.email', value: 'info@shakilglobal.com', group: 'company', description: 'Official email address' },
   { key: 'company.website', value: 'https://shakilglobal.com', group: 'company', description: 'Official portal URL' },
-  { key: 'company.logo', value: '/images/logo.png', group: 'company', description: 'Brand logo path' },
+  { key: 'company.logo', value: '/brand/logo.svg', group: 'company', description: 'Brand logo path' },
   { key: 'company.business_hours', value: 'Sat - Thu: 9:00 AM - 6:00 PM (Friday Closed)', group: 'company', description: 'Operational business hours' },
   { key: 'system.currency', value: 'BDT', group: 'system', description: 'Default system transaction currency' },
   { key: 'system.timezone', value: 'Asia/Dhaka', group: 'system', description: 'Platform default timezone' },

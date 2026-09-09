@@ -85,7 +85,7 @@ export async function GET(
       paymentsCount: invoice.payments.length,
       lastPaymentDate: invoice.payments[0]?.paymentDate || null,
       verifiedAt: new Date().toISOString(),
-      agencyName: 'SHAKIL GLOBAL RECRUITMENT',
+      agencyName: 'SHAKIL GLOBAL MANPOWER',
       agencyLicense: 'RL-1892',
       bmetApproved: true,
       isAuthentic: invoice.status !== 'VOID',

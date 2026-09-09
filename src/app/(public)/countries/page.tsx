@@ -6,7 +6,7 @@ import { ContactCtaSection } from '@/components/public/contact-cta-section';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'গন্তব্য দেশসমূহ ও ভিসা নীতিমালা | Shakil Global Recruitment',
+  title: 'গন্তব্য দেশসমূহ ও ভিসা নীতিমালা | SHAKIL GLOBAL MANPOWER',
   description: 'সৌদি আরব, আমিরাত, কাতার, কুয়েত, ওমান, সিঙ্গাপুর, মালয়েশিয়া, জাপান, পর্তুগাল, পোল্যান্ড ও অন্যান্য দেশে অভিবাসন শর্তাবলী।',
 };
 

@@ -318,7 +318,7 @@ export default function TemplatesPage() {
             <div>
               <label className="text-xs font-medium text-foreground block mb-1">Subject</label>
               <Input
-                placeholder="e.g. Shakil Global — Visa Approval for {{applicantName}}"
+                placeholder="e.g. SHAKIL GLOBAL MANPOWER — Visa Approval for {{applicantName}}"
                 value={formData.subject}
                 onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
               />

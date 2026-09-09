@@ -1,6 +1,6 @@
 /**
  * Image System Constants and Fallbacks
- * Shakil Global Recruitment Public Portal
+ * SHAKIL GLOBAL MANPOWER Public Portal
  *
  * Professional, high-resolution imagery for countries, job categories,
  * hero banners, and visa documentation.

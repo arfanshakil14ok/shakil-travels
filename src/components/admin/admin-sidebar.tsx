@@ -35,6 +35,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { IconButton } from '@/components/ui/icon-button';
+import { BRAND } from '@/config/brand';
+import { BrandMark } from '@/components/brand/brand-logo';
 
 interface NavItem {
   title: string;
@@ -162,17 +164,15 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose, isC
       >
         {/* Brand Header */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-navy-800/80 bg-navy-900/50 flex-shrink-0">
-          <Link href="/admin/dashboard" className="flex items-center gap-3 overflow-hidden">
-            <div className="w-9 h-9 rounded-lg bg-navy-800 border border-navy-700 flex items-center justify-center flex-shrink-0 text-gold-400 font-bold">
-              <ShieldCheck className="w-5 h-5 text-emerald-400" aria-hidden="true" />
-            </div>
+          <Link href="/admin/dashboard" className="flex items-center gap-2.5 overflow-hidden">
+            <BrandMark size="sm" />
             {(!isCollapsed || isOpen) && (
               <div className="flex flex-col min-w-0">
-                <span className="font-bold text-xs uppercase tracking-wider text-white truncate">
-                  Shakil Global
+                <span className="font-black text-xs uppercase tracking-tight text-white truncate font-sans">
+                  {BRAND.name}
                 </span>
-                <span className="text-[10px] text-gold-400 font-medium tracking-tight truncate">
-                  Recruitment ERP
+                <span className="text-[10px] text-emerald-400 font-semibold tracking-tight truncate">
+                  Admin Panel • অ্যাডমিন প্যানেল
                 </span>
               </div>
             )}

@@ -17,6 +17,9 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 
+import { BRAND } from '@/config/brand';
+import { BrandLogo } from '@/components/brand/brand-logo';
+
 export const PublicFooter: React.FC = () => {
   return (
     <footer className="bg-navy-950 text-slate-300 border-t border-navy-900 font-sans">
@@ -25,28 +28,16 @@ export const PublicFooter: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-8">
           {/* Column 1: Brand & Government Approval */}
           <div className="lg:col-span-2 space-y-4">
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-xl bg-navy-900 border border-navy-800 text-gold-400 flex items-center justify-center shadow-md">
-                <ShieldCheck className="w-6 h-6 text-emerald-400" />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-extrabold text-sm text-white uppercase tracking-tight font-sans">
-                  Shakil Global Recruitment
-                </span>
-                <span className="text-[11px] text-emerald-400 font-semibold font-bengali">
-                  শাকিল গ্লোবাল রিক্রুটমেন্ট
-                </span>
-              </div>
-            </Link>
+            <BrandLogo href="/" size="lg" theme="light" variant="full" />
 
             <p className="text-xs text-slate-400 leading-relaxed font-bengali max-w-sm">
-              বাংলাদেশ সরকার অনুমোদিত (RL-1234) আন্তর্জাতিক জনশক্তি রিক্রুটিং ও অভিবাসন কনসালটেন্সি। বৈধ প্রক্রিয়া, স্বচ্ছ খরচ ও প্রবাসীদের সর্বোচ্চ সুরক্ষায় আমরা প্রতিশ্রুতিবদ্ধ।
+              বাংলাদেশ সরকার অনুমোদিত ({BRAND.licenseNumber}) আন্তর্জাতিক জনশক্তি রিক্রুটিং ও অভিবাসন কনসালটেন্সি। বৈধ প্রক্রিয়া, স্বচ্ছ খরচ ও প্রবাসীদের সর্বোচ্চ সুরক্ষায় আমরা প্রতিশ্রুতিবদ্ধ।
             </p>
 
             <div className="p-3 bg-navy-900/90 rounded-xl border border-navy-800 text-xs text-gold-400 font-medium font-bengali space-y-1">
               <div className="flex items-center gap-2 font-bold text-white">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>সরকারি লাইসেন্স নম্বর: RL-1234</span>
+                <span>সরকারি লাইসেন্স নম্বর: {BRAND.licenseNumber}</span>
               </div>
               <p className="text-[11px] text-slate-400">
                 প্রবাসী কল্যাণ ও বৈদেশিক কর্মসংস্থান মন্ত্রণালয় এবং BMET কর্তৃক নিবন্ধিত।
@@ -151,19 +142,23 @@ export const PublicFooter: React.FC = () => {
             <ul className="space-y-2.5 text-xs text-slate-400">
               <li className="flex items-start gap-2.5">
                 <Building2 className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="font-bengali">হাউস ১২, রোড ৪, সেক্টর ৭, উত্তরা, ঢাকা-১২৩০, বাংলাদেশ</span>
+                <span className="font-bengali">{BRAND.addressBn}</span>
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                <span className="font-mono">+880 2 9876543 / +880 1711-000000</span>
+                <a href={BRAND.phoneTel} className="font-mono hover:text-white transition-colors">
+                  {BRAND.phone}
+                </a>
               </li>
               <li className="flex items-center gap-2.5">
                 <Mail className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                <span className="font-mono">info@shakilglobal.com</span>
+                <a href={`mailto:${BRAND.email}`} className="font-mono hover:text-white transition-colors">
+                  {BRAND.email}
+                </a>
               </li>
               <li className="flex items-start gap-2.5">
                 <CalendarDays className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="font-bengali">শনি - বৃহস্পতি: সকাল ৯:০০ - সন্ধ্যা ৬:০০ (শুক্রবার সাপ্তাহিক ছুটি)</span>
+                <span className="font-bengali">{BRAND.hoursBn}</span>
               </li>
             </ul>
           </div>
@@ -172,7 +167,7 @@ export const PublicFooter: React.FC = () => {
         {/* Legal & Compliance Bottom Bar */}
         <div className="mt-12 pt-6 border-t border-navy-900 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500 font-sans">
           <p className="text-center md:text-left font-bengali">
-            © {new Date().getFullYear()} Shakil Global Recruitment (RL-1234). সর্বস্বত্ব সংরক্ষিত।
+            © {new Date().getFullYear()} {BRAND.name} ({BRAND.licenseNumber}). সর্বস্বত্ব সংরক্ষিত।
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs">

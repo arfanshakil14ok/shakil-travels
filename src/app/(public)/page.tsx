@@ -16,7 +16,7 @@ export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
 export const metadata = {
-  title: 'শাকিল গ্লোবাল রিক্রুটমেন্ট | সরকারি অনুমোদিত আন্তর্জাতিক নিয়োগ ও অভিবাসন (RL-1234)',
+  title: 'SHAKIL GLOBAL MANPOWER | সরকারি অনুমোদিত আন্তর্জাতিক নিয়োগ ও অভিবাসন (RL-1892)',
   description: 'সৌদি আরব, আমিরাত, কাতার, কুয়েত, ওমান, সিঙ্গাপুর, মালয়েশিয়া, জাপান ও ইউরোপে বৈধ কর্মসংস্থান, ভিসা তথ্য ও নিরাপদ অভিবাসন সেবা।',
 };
 

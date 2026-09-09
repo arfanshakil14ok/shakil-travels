@@ -4,6 +4,7 @@ import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ShieldCheck, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { BrandLogo } from '@/components/brand/brand-logo';
 
 function LoginForm() {
   const router = useRouter();
@@ -92,14 +93,7 @@ function LoginForm() {
       <div className="w-full max-w-[420px] bg-white border border-slate-200/90 rounded-xl shadow-xs p-6 sm:p-8 space-y-6">
         {/* Brand & Language Header */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center flex-shrink-0">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" aria-hidden="true" />
-            </div>
-            <span className="text-[11px] font-bold tracking-wider text-slate-800 uppercase font-sans">
-              Shakil Global
-            </span>
-          </div>
+          <BrandLogo href="/" size="sm" variant="horizontal" showTagline={false} />
 
           <button
             type="button"

@@ -7,30 +7,73 @@ export async function GET(req: NextRequest) {
     await requirePermission('AUDIT_VIEW');
 
     const searchParams = req.nextUrl.searchParams;
-    const page = parseInt(searchParams.get('page') || '1', 10);
-    const pageSize = parseInt(searchParams.get('pageSize') || '20', 10);
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get('pageSize') || '25', 10)));
     const action = searchParams.get('action')?.trim();
     const entity = searchParams.get('entity')?.trim();
+    const actorType = searchParams.get('actorType')?.trim();
+    const applicantId = searchParams.get('applicantId')?.trim();
+    const actorUserId = searchParams.get('actorUserId')?.trim();
+    const startDate = searchParams.get('startDate')?.trim();
+    const endDate = searchParams.get('endDate')?.trim();
     const search = searchParams.get('search')?.trim();
 
     const where: any = {};
 
-    if (action) {
+    if (action && action !== 'ALL') {
       where.action = action;
     }
 
-    if (entity) {
+    if (entity && entity !== 'ALL') {
       where.entity = entity;
     }
 
-    if (search) {
+    if (actorType && actorType !== 'ALL') {
+      where.actorType = actorType;
+    }
+
+    if (applicantId) {
       where.OR = [
+        { applicantId },
+        { actorUserId: applicantId },
+      ];
+    } else if (actorUserId) {
+      where.actorUserId = actorUserId;
+    }
+
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) {
+        where.createdAt.gte = new Date(startDate);
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        where.createdAt.lte = end;
+      }
+    }
+
+    if (search) {
+      const searchCondition = [
         { action: { contains: search, mode: 'insensitive' } },
         { entity: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
         { ipAddress: { contains: search, mode: 'insensitive' } },
         { user: { name: { contains: search, mode: 'insensitive' } } },
         { user: { email: { contains: search, mode: 'insensitive' } } },
+        { applicant: { fullName: { contains: search, mode: 'insensitive' } } },
+        { applicant: { applicantNumber: { contains: search, mode: 'insensitive' } } },
       ];
+
+      if (where.OR) {
+        where.AND = [
+          { OR: where.OR },
+          { OR: searchCondition },
+        ];
+        delete where.OR;
+      } else {
+        where.OR = searchCondition;
+      }
     }
 
     const [total, logs] = await Promise.all([
@@ -46,6 +89,14 @@ export async function GET(req: NextRequest) {
               role: {
                 select: { name: true },
               },
+            },
+          },
+          applicant: {
+            select: {
+              id: true,
+              applicantNumber: true,
+              fullName: true,
+              phone: true,
             },
           },
         },

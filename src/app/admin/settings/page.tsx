@@ -139,7 +139,7 @@ export default function AdminSettingsPage() {
                 required
                 value={settings['company.name'] || ''}
                 onChange={(e) => handleChange('company.name', e.target.value)}
-                placeholder="SHAKIL GLOBAL RECRUITMENT"
+                placeholder="SHAKIL GLOBAL MANPOWER"
               />
 
               <Input
@@ -147,7 +147,7 @@ export default function AdminSettingsPage() {
                 required
                 value={settings['company.address'] || ''}
                 onChange={(e) => handleChange('company.address', e.target.value)}
-                placeholder="House 12, Road 4, Sector 7, Uttara, Dhaka-1230, Bangladesh"
+                placeholder="ইসলামপুর মোড়, ডায়াবেটিক হাসপাতালের সামনে, পাসপোর্ট অফিস রোড, নেত্রকোনা-২৪০০"
               />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -156,7 +156,7 @@ export default function AdminSettingsPage() {
                   required
                   value={settings['company.phone'] || ''}
                   onChange={(e) => handleChange('company.phone', e.target.value)}
-                  placeholder="+880 2 9876543 / +880 1711-000000"
+                  placeholder="01913681771"
                 />
                 <Input
                   label="Official Email Address"

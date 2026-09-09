@@ -413,8 +413,8 @@ export default function PortalDashboardPage() {
             </div>
             <p className="leading-relaxed text-[11px] text-slate-500">
               {t(
-                'অনুমোদিত রসিদ ছাড়া কোনো ধরনের আর্থিক লেনদেন করবেন না। ভিসা প্রাপ্তির সিদ্ধান্ত শুধুমাত্র সংশ্লিষ্ট দেশের দূতাবাস দ্বারা নির্ধারিত হয়। সাকিল গ্লোবাল শতভাগ আইনি প্রক্রিয়া মেনে সেবা প্রদানে প্রতিশ্রুতিবদ্ধ।',
-                'Never pay recruitment fees without an official system-generated receipt. Visa issuance is exclusively determined by foreign embassies. Shakil Global ensures 100% transparent and legal placement.'
+                'অনুমোদিত রসিদ ছাড়া কোনো ধরনের আর্থিক লেনদেন করবেন না। ভিসা প্রাপ্তির সিদ্ধান্ত শুধুমাত্র সংশ্লিষ্ট দেশের দূতাবাস দ্বারা নির্ধারিত হয়। শাকিল গ্লোবাল ম্যানপাওয়ার শতভাগ আইনি প্রক্রিয়া মেনে সেবা প্রদানে প্রতিশ্রুতিবদ্ধ।',
+                'Never pay recruitment fees without an official system-generated receipt. Visa issuance is exclusively determined by foreign embassies. SHAKIL GLOBAL MANPOWER ensures transparent and legal placement.'
               )}
             </p>
           </div>

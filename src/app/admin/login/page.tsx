@@ -3,6 +3,8 @@
 import React, { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ShieldCheck, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { BrandLogo } from '@/components/brand/brand-logo';
+import { BRAND } from '@/config/brand';
 
 function AdminLoginForm() {
   const router = useRouter();
@@ -54,16 +56,11 @@ function AdminLoginForm() {
       {/* Centered Login Card */}
       <div className="w-full max-w-[420px] bg-white border border-slate-200/90 rounded-xl shadow-xs p-6 sm:p-8 space-y-6">
         {/* Brand Header */}
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center flex-shrink-0">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" aria-hidden="true" />
-          </div>
-          <div>
-            <span className="text-[11px] font-bold tracking-wider text-slate-800 uppercase block font-sans">
-              Shakil Global Recruitment
-            </span>
-            <span className="text-[10px] text-slate-500 font-medium">Administrative ERP</span>
-          </div>
+        <div className="flex flex-col gap-1">
+          <BrandLogo href="/" size="sm" variant="horizontal" showTagline={false} />
+          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider pl-10">
+            Admin Panel • অ্যাডমিন প্যানেল
+          </span>
         </div>
 
         {/* Title & Description */}

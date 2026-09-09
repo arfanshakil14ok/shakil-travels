@@ -114,19 +114,30 @@ model SystemSetting {
 }
 
 model AuditLog {
-  id        String   @id @default(uuid())
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  action    String
-  entity    String
-  entityId  String?
-  ipAddress String?
-  userAgent String?
-  oldValue  String?  @db.Text
-  newValue  String?  @db.Text
-  createdAt DateTime @default(now())
+  id           String     @id @default(uuid())
+  userId       String?
+  user         User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  actorUserId  String?
+  actorType    String?    @default("STAFF") // STAFF, APPLICANT, SYSTEM
+  targetUserId String?
+  applicantId  String?
+  applicant    Applicant? @relation(fields: [applicantId], references: [id], onDelete: SetNull)
+  action       String
+  entity       String
+  entityType   String?
+  entityId     String?
+  description  String?    @db.Text
+  metadata     String?    @db.Text
+  ipAddress    String?
+  userAgent    String?
+  oldValue     String?    @db.Text
+  newValue     String?    @db.Text
+  createdAt    DateTime   @default(now())
 
   @@index([userId])
+  @@index([actorUserId])
+  @@index([applicantId])
+  @@index([targetUserId])
   @@index([action])
   @@index([entity])
   @@index([createdAt])
@@ -235,6 +246,7 @@ model Applicant {
   communicationLogs       CommunicationLog[]
   inquiries               Inquiry[]
   portalNotifications     Notification[]
+  auditLogs               AuditLog[]
 
   @@index([applicantNumber])
   @@index([phone])

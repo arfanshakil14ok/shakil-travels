@@ -48,13 +48,13 @@ export async function generateMetadata({ params }: JobDetailPageProps) {
 
   if (!job) {
     return {
-      title: 'Job Circular Not Found | Shakil Global Recruitment',
+      title: 'Job Circular Not Found | SHAKIL GLOBAL MANPOWER',
     };
   }
 
   return {
-    title: `${job.title} in ${job.country.name} | Shakil Global Recruitment`,
-    description: `Official job vacancy for ${job.title} in ${job.country.name}. Vacancies: ${job.vacancyCount}. Verified overseas employment through licensed recruitment agency RL-1234.`,
+    title: `${job.title} in ${job.country.name} | SHAKIL GLOBAL MANPOWER`,
+    description: `Official job vacancy for ${job.title} in ${job.country.name}. Vacancies: ${job.vacancyCount}. Verified overseas employment through licensed recruitment agency RL-1892.`,
   };
 }
 
@@ -302,7 +302,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
               <div className="space-y-1">
                 <span className="font-extrabold block text-amber-900">সরকারি নীতিমালা ও প্রতারণা সতর্কতা:</span>
                 <p>
-                  শাকিল গ্লোবাল রিক্রুটমেন্ট (RL-1234) বাংলাদেশ সরকারের প্রবাসী কল্যাণ ও বৈদেশিক কর্মসংস্থান মন্ত্রণালয় এবং BMET এর পূর্ণাঙ্গ নীতি অনুসরণ করে। কোনো মধ্যস্বত্বভোগী বা দালালের সাথে আর্থিক লেনদেন করবেন না। সমস্ত ফি অফিসের অফিসিয়াল রসিদের মাধ্যমে প্রদেয়।
+                  SHAKIL GLOBAL MANPOWER (RL-1892) বাংলাদেশ সরকারের প্রবাসী কল্যাণ ও বৈদেশিক কর্মসংস্থান মন্ত্রণালয় এবং BMET এর পূর্ণাঙ্গ নীতি অনুসরণ করে। কোনো মধ্যস্বত্বভোগী বা দালালের সাথে আর্থিক লেনদেন করবেন না। সমস্ত ফি অফিসের অফিসিয়াল রসিদের মাধ্যমে প্রদেয়।
                 </p>
               </div>
             </div>
@@ -371,7 +371,10 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                   সকাল ৯টা থেকে সন্ধ্যা ৬টা পর্যন্ত আমাদের ক্যারিয়ার কাউন্সিলিং টিম সহায়তায় প্রস্তুত।
                 </p>
                 <div className="font-mono font-bold text-slate-800 text-xs">
-                  হটলাইন: +880 1711-000000
+                  হটলাইন:{' '}
+                  <a href="tel:01913681771" className="text-emerald-700 hover:underline">
+                    01913681771
+                  </a>
                 </div>
               </div>
             </div>

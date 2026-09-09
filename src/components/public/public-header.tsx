@@ -29,6 +29,8 @@ import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { cn } from '@/lib/utils';
 import { POPULAR_COUNTRIES_NAV } from '@/lib/image-constants';
+import { BRAND } from '@/config/brand';
+import { BrandLogo } from '@/components/brand/brand-logo';
 
 export const PublicHeader: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -77,6 +79,7 @@ export const PublicHeader: React.FC = () => {
   const navLinks = [
     { href: '/', labelBn: 'হোম', labelEn: 'Home' },
     { href: '/jobs', labelBn: 'চাকরি', labelEn: 'Jobs' },
+    { href: '/countries', labelBn: 'দেশসমূহ', labelEn: 'Countries' },
     { href: '/visa-information', labelBn: 'ভিসা তথ্য', labelEn: 'Visa Info' },
     { href: '/migrant-information', labelBn: 'প্রবাসী তথ্য', labelEn: 'Migrant Info' },
     { href: '/about', labelBn: 'আমাদের সম্পর্কে', labelEn: 'About Us' },
@@ -95,11 +98,11 @@ export const PublicHeader: React.FC = () => {
             </span>
             <span className="font-bengali text-slate-200 font-medium hidden sm:inline">
               {language === 'bn'
-                ? 'গণপ্রজাতন্ত্রী বাংলাদেশ সরকার অনুমোদিত রিক্রুটিং লাইসেন্স (RL-1234)'
-                : 'Govt. Approved International Recruiting Agency (RL-1234)'}
+                ? `গণপ্রজাতন্ত্রী বাংলাদেশ সরকার অনুমোদিত রিক্রুটিং লাইসেন্স (${BRAND.licenseNumber})`
+                : `Govt. Approved International Recruiting Agency (${BRAND.licenseNumber})`}
             </span>
             <span className="font-bengali text-slate-200 font-medium sm:hidden">
-              RL-1234 অনুমোদিত
+              {BRAND.licenseNumber} অনুমোদিত
             </span>
             <span className="text-slate-600 hidden md:inline">•</span>
             <Link
@@ -113,11 +116,11 @@ export const PublicHeader: React.FC = () => {
 
           <div className="flex items-center gap-4 text-slate-300 font-mono text-[11px]">
             <a
-              href="tel:+8801711000000"
+              href="tel:01913681771"
               className="flex items-center gap-1 hover:text-white transition-colors"
             >
               <Phone className="w-3 h-3 text-gold-400" />
-              <span className="hidden sm:inline">+880 1711-000000</span>
+              <span className="hidden sm:inline">01913681771</span>
               <span className="sm:hidden">হটলাইন</span>
             </a>
             <span className="text-slate-700 hidden sm:inline">•</span>
@@ -135,19 +138,7 @@ export const PublicHeader: React.FC = () => {
       {/* Main Navigation Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-3 group flex-shrink-0">
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-navy-900 to-navy-950 border border-navy-800 text-gold-400 flex items-center justify-center shadow-md group-hover:border-emerald-500/50 transition-all">
-            <ShieldCheck className="w-6 h-6 text-emerald-400" aria-hidden="true" />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-black text-sm sm:text-base text-navy-950 tracking-tight leading-tight uppercase font-sans">
-              Shakil Global
-            </span>
-            <span className="text-[10px] sm:text-[11px] text-emerald-700 font-bold font-bengali leading-none">
-              শাকিল গ্লোবাল রিক্রুটমেন্ট
-            </span>
-          </div>
-        </Link>
+        <BrandLogo href="/" size="md" variant="horizontal" />
 
         {/* Desktop Nav Links */}
         <nav className="hidden lg:flex items-center space-x-1 xl:space-x-1.5" aria-label="Main Navigation">
@@ -437,19 +428,7 @@ export const PublicHeader: React.FC = () => {
             <div className="p-6 space-y-6">
               {/* Header */}
               <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-navy-900 text-gold-400 flex items-center justify-center shadow-xs">
-                    <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                  </div>
-                  <div>
-                    <span className="font-extrabold text-xs uppercase tracking-tight text-slate-900 block">
-                      Shakil Global
-                    </span>
-                    <span className="text-[10px] text-emerald-700 font-bold font-bengali">
-                      শাকিল গ্লোবাল রিক্রুটমেন্ট
-                    </span>
-                  </div>
-                </div>
+                <BrandLogo href="/" size="sm" variant="horizontal" />
                 <IconButton
                   variant="ghost"
                   size="sm"

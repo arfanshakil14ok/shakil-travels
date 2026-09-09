@@ -64,7 +64,7 @@ export const HeroSection: React.FC = () => {
             {/* Minimal Trust Badge */}
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-navy-800/90 border border-navy-700 text-xs text-gold-400 font-semibold shadow-xs font-bengali">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-              <span>RL-1234 • সরকারি অনুমোদিত রিক্রুটিং এজেন্সি</span>
+              <span>RL-1892 • সরকারি অনুমোদিত রিক্রুটিং এজেন্সি</span>
             </div>
 
             {/* Minimal Punchy Headline */}

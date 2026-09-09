@@ -25,6 +25,8 @@ import {
   Edit,
   Trash2,
   CheckCircle2,
+  Activity,
+  Eye,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,6 +36,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useToast } from '@/components/ui/toast';
 import { formatDate } from '@/lib/utils';
+import { AuditLogDetailDialog } from '@/components/admin/audit-log-detail-dialog';
 
 export default function ApplicantDetailPage() {
   const params = useParams();
@@ -72,9 +75,31 @@ export default function ApplicantDetailPage() {
     }
   }, [id, error]);
 
+  // Activity Timeline state
+  const [activityLogs, setActivityLogs] = useState<any[]>([]);
+  const [isLoadingActivity, setIsLoadingActivity] = useState(false);
+  const [viewingActivityLog, setViewingActivityLog] = useState<any | null>(null);
+
+  const fetchActivityLogs = useCallback(async () => {
+    if (!id) return;
+    try {
+      setIsLoadingActivity(true);
+      const res = await fetch(`/api/audit-logs?applicantId=${id}&pageSize=50`);
+      const data = await res.json();
+      if (data.success) {
+        setActivityLogs(data.data.logs || []);
+      }
+    } catch {
+      // Non-blocking
+    } finally {
+      setIsLoadingActivity(false);
+    }
+  }, [id]);
+
   useEffect(() => {
     fetchApplicant();
-  }, [fetchApplicant]);
+    fetchActivityLogs();
+  }, [fetchApplicant, fetchActivityLogs]);
 
   const handleStatusChange = async (newStatus: string) => {
     if (!applicant || newStatus === applicant.status) return;
@@ -681,6 +706,85 @@ export default function ApplicantDetailPage() {
           </Card>
         </div>
       </div>
+
+      {/* Candidate Activity Timeline */}
+      <Card>
+        <CardHeader className="pb-3 border-b border-slate-100">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-navy-900">
+              <Activity className="w-4 h-4 text-purple-600" />
+              <CardTitle>Applicant Activity & Audit Trail</CardTitle>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchActivityLogs}
+              disabled={isLoadingActivity}
+              leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isLoadingActivity ? 'animate-spin' : ''}`} />}
+            >
+              Refresh
+            </Button>
+          </div>
+          <CardDescription>
+            Chronological log of portal logins, document submissions, profile modifications, and workflow stage changes.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-4 text-xs">
+          {isLoadingActivity && activityLogs.length === 0 ? (
+            <p className="text-slate-400 text-center py-6">Loading activity logs...</p>
+          ) : activityLogs.length === 0 ? (
+            <p className="text-slate-400 text-center py-6">No activity records logged for this candidate yet.</p>
+          ) : (
+            <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+              {activityLogs.map((log) => (
+                <div
+                  key={log.id}
+                  className="p-3 bg-slate-50/70 border border-slate-200 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:border-slate-300 transition-colors"
+                >
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold font-mono text-slate-900 text-xs">
+                        {log.action}
+                      </span>
+                      <Badge
+                        variant={log.actorType === 'APPLICANT' ? 'success' : log.actorType === 'STAFF' ? 'primary' : 'neutral'}
+                        size="sm"
+                      >
+                        {log.actorType || 'STAFF'}
+                      </Badge>
+                      <Badge variant="neutral" size="sm">
+                        {log.entity}
+                      </Badge>
+                    </div>
+                    <p className="text-slate-600 text-xs truncate max-w-xl">
+                      {log.description || log.action.replace(/_/g, ' ')}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-3 flex-shrink-0 text-slate-400 text-[11px] font-mono">
+                    <span>{formatDate(log.createdAt, true)}</span>
+                    <button
+                      type="button"
+                      onClick={() => setViewingActivityLog(log)}
+                      className="p-1 rounded text-slate-500 hover:text-slate-900 hover:bg-slate-200 cursor-pointer transition-colors"
+                      title="View Details"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Audit Log Detail Dialog */}
+      <AuditLogDetailDialog
+        isOpen={!!viewingActivityLog}
+        onClose={() => setViewingActivityLog(null)}
+        log={viewingActivityLog}
+      />
 
       {/* Confirmation Dialog for Removal */}
       <ConfirmDialog

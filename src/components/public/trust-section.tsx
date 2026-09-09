@@ -69,10 +69,10 @@ export const TrustSection: React.FC = () => {
             <span>কেন আমাদের বেছে নেবেন</span>
           </div>
           <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-            নিরাপদ আন্তর্জাতিক ক্যারিয়ারে শাকিল গ্লোবাল রিক্রুটমেন্ট
+            নিরাপদ আন্তর্জাতিক ক্যারিয়ারে SHAKIL GLOBAL MANPOWER
           </h2>
           <p className="text-xs sm:text-base text-slate-600 leading-relaxed">
-            সরকারি অনুমোদন (RL-1234), আন্তর্জাতিক মানদণ্ড ও ডিজিটাল জবাবদিহিতায় আমরা প্রতিটি প্রার্থীর আস্থার ঠিকানা।
+            সরকারি অনুমোদন (RL-1892), আন্তর্জাতিক মানদণ্ড ও ডিজিটাল জবাবদিহিতায় আমরা প্রতিটি প্রার্থীর আস্থার ঠিকানা।
           </p>
         </div>
 
