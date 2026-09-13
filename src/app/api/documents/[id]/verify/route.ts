@@ -52,14 +52,32 @@ export async function POST(
 
     await createAuditLog({
       userId: currentUser.id,
+      applicantId: existing.applicantId,
+      actorType: 'STAFF',
       action: status === 'VERIFIED' ? 'DOCUMENT_VERIFY' : 'DOCUMENT_REJECT',
       entity: 'DOCUMENT',
       entityId: id,
+      description: status === 'VERIFIED'
+        ? `Document verified by ${currentUser.name}: ${existing.documentType.name} (${existing.fileName})`
+        : `Document rejected by ${currentUser.name}: ${existing.documentType.name}. Reason: ${rejectionReason}`,
       newValue: {
         status,
         rejectionReason,
         verifiedBy: currentUser.name,
         documentType: existing.documentType.name,
+      },
+    });
+
+    // Notify candidate in portal
+    await prisma.notification.create({
+      data: {
+        applicantId: existing.applicantId,
+        type: status === 'VERIFIED' ? 'DOCUMENT_VERIFIED' : 'DOCUMENT_REJECTED',
+        title: status === 'VERIFIED' ? 'ডকুমেন্ট যাচাই সম্পন্ন' : 'ডকুমেন্ট গৃহীত হয়নি',
+        message: status === 'VERIFIED'
+          ? `আপনার আপলোডকৃত "${existing.documentType.name}" সফলভাবে যাচাই করা হয়েছে।`
+          : `আপনার আপলোডকৃত "${existing.documentType.name}" গৃহীত হয়নি। কারণ: ${rejectionReason}। অনুগ্রহ করে সঠিক ডকুমেন্ট পুনরায় আপলোড করুন।`,
+        link: '/portal/documents',
       },
     });
 

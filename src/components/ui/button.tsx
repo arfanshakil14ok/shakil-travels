@@ -8,6 +8,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  asChild?: boolean;
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -21,6 +22,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       rightIcon,
       disabled,
       children,
+      asChild = false,
       ...props
     },
     ref
@@ -42,6 +44,24 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       md: 'text-sm px-4 py-2 gap-2',
       lg: 'text-base px-5 py-2.5 gap-2.5',
     };
+
+    if (asChild && React.isValidElement(children)) {
+      const child = children as React.ReactElement<any>;
+      return React.cloneElement(child, {
+        className: cn(baseStyles, variants[variant], sizes[size], className, child.props.className),
+        children: (
+          <>
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin text-current" aria-hidden="true" />
+            ) : (
+              leftIcon
+            )}
+            {child.props.children}
+            {!isLoading && rightIcon}
+          </>
+        ),
+      });
+    }
 
     return (
       <button

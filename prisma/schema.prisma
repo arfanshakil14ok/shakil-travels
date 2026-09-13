@@ -47,6 +47,31 @@ model User {
   createdMigrantInfo   MigrantInformation[]       @relation("CreatedMigrantInfo")
   updatedMigrantInfo   MigrantInformation[]       @relation("UpdatedMigrantInfo")
   assignedInquiries    Inquiry[]                  @relation("AssignedInquiryStaff")
+  verifiedCertificates TrainingCertificate[]      @relation("VerifiedCertificates")
+  reviewedMedicalRecords MedicalRecord[]          @relation("ReviewedMedicalRecords")
+  reviewedClearances   ClearanceRecord[]          @relation("ReviewedClearances")
+  managedDepartures    DepartureRecord[]          @relation("ManagedDepartures")
+  assignedSupportTickets SupportTicket[]          @relation("AssignedStaffTickets")
+  ticketMessages       TicketMessage[]            @relation("StaffTicketMessages")
+  screenedApplications ApplicationScreening[]     @relation("ScreenedApplications")
+  conductedInterviews  Interview[]                @relation("ConductedInterviews")
+  assignedProcessingCases RecruitmentProcessingCase[] @relation("AssignedProcessingOfficer")
+  processingStatusChanges ProcessingStatusHistory[]   @relation("ProcessingStatusChanger")
+  verifiedProcessingDocs  ProcessingDocumentRequirement[] @relation("VerifiedProcessingDocs")
+  reviewedMedicalCases    MedicalCase[]               @relation("ReviewedMedicalCases")
+  issuedTravelTickets     TravelTicket[]              @relation("IssuedTravelTickets")
+  confirmedDepartures     DepartureCase[]             @relation("ConfirmedDepartures")
+  confirmedJoinings       JoiningCase[]               @relation("ConfirmedJoinings")
+  approvedPayments        Payment[]                   @relation("ApprovedPayments")
+  issuedReceipts          Receipt[]                   @relation("IssuedReceipts")
+  requestedRefunds        Refund[]                    @relation("RequestedRefunds")
+  approvedRefunds         Refund[]                    @relation("ApprovedRefunds")
+  approvedAdjustments     FinancialAdjustment[]       @relation("ApprovedAdjustments")
+  createdLedgerEntries    CandidateLedgerEntry[]      @relation("CreatedLedgerEntries")
+  createdPaymentPlans     PaymentPlan[]               @relation("CreatedPaymentPlans")
+  approvedPaymentPlans    PaymentPlan[]               @relation("ApprovedPaymentPlans")
+  createdCosts            RecruitmentCost[]           @relation("CreatedCosts")
+  approvedCosts           RecruitmentCost[]           @relation("ApprovedCosts")
 
   @@index([roleId])
   @@index([email])
@@ -232,6 +257,7 @@ model Applicant {
   resetToken              String?
   resetTokenExpiry        DateTime?
   notificationPreferences String?   @db.Text
+  candidateType           String    @default("SKILLED") // SKILLED, UNSKILLED
   createdAt               DateTime  @default(now())
   updatedAt               DateTime  @updatedAt
 
@@ -247,13 +273,42 @@ model Applicant {
   inquiries               Inquiry[]
   portalNotifications     Notification[]
   auditLogs               AuditLog[]
+  candidateSkills         CandidateSkill[]
+  candidateLanguages      CandidateLanguage[]
+  candidateEducation      CandidateEducation[]
+  candidateExperience     CandidateExperience[]
+  trainingApplications    TrainingApplication[]
+  trainingEnrollments     TrainingEnrollment[]
+  trainingCertificates    TrainingCertificate[]
+  medicalRecords          MedicalRecord[]
+  clearanceRecords        ClearanceRecord[]
+  departureRecords        DepartureRecord[]
+  supportTickets          SupportTicket[]
+  processingCases         RecruitmentProcessingCase[]
+  medicalCases            MedicalCase[]
+  visaCases               VisaCase[]
+  clearanceCases          ClearanceCase[]
+  travelTickets           TravelTicket[]
+  departureCases          DepartureCase[]
+  joiningCases            JoiningCase[]
+  payments                Payment[]
+  receipts                Receipt[]
+  refunds                 Refund[]
+  adjustments             FinancialAdjustment[]
+  ledgerEntries           CandidateLedgerEntry[]
+  paymentPlans            PaymentPlan[]
+  costs                   RecruitmentCost[]
 
   @@index([applicantNumber])
   @@index([phone])
   @@index([status])
+  @@index([candidateType])
   @@index([preferredCountryId])
   @@index([preferredJobCategoryId])
   @@index([assignedStaffId])
+  @@index([status, preferredCountryId])
+  @@index([status, preferredJobCategoryId])
+  @@index([status, candidateType])
   @@map("applicants")
 }
 
@@ -349,16 +404,23 @@ model JobCategory {
 
 model Employer {
   id                 String    @id @default(uuid())
+  employerCode       String?   @unique // SGR-EMP-2026-000001
   companyName        String
+  companyNameLocal   String?
   countryId          String?
   country            Country?  @relation(fields: [countryId], references: [id], onDelete: SetNull)
+  city               String?
   industry           String?
   contactPerson      String?
   email              String?
   phone              String?
   address            String?   @db.Text
   website            String?
-  verificationStatus String    @default("PENDING") // PENDING, VERIFIED, INACTIVE
+  verificationStatus String    @default("PENDING") // PENDING, UNVERIFIED, VERIFIED, REJECTED, INACTIVE
+  status             String    @default("ACTIVE") // ACTIVE, INACTIVE, SUSPENDED, ARCHIVED
+  verifiedById       String?
+  verifiedAt         DateTime?
+  verificationNotes  String?   @db.Text
   notes              String?   @db.Text
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
@@ -366,28 +428,72 @@ model Employer {
   customer     Customer?
   jobs         Job[]
   applications Application[]
+  contacts     EmployerContact[]
+  documents    EmployerDocument[]
+  processingCases RecruitmentProcessingCase[]
+  joiningCases    JoiningCase[]
+  invoices        Invoice[]
+  costs           RecruitmentCost[]
 
   @@index([companyName])
+  @@index([employerCode])
   @@index([verificationStatus])
+  @@index([status])
   @@index([countryId])
   @@map("employers")
+}
+
+model EmployerContact {
+  id          String   @id @default(uuid())
+  employerId  String
+  name        String
+  designation String?
+  email       String?
+  phone       String?
+  isPrimary   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  employer    Employer @relation(fields: [employerId], references: [id], onDelete: Cascade)
+
+  @@index([employerId])
+  @@map("employer_contacts")
+}
+
+model EmployerDocument {
+  id                 String   @id @default(uuid())
+  employerId         String
+  documentType       String   // COMPANY_REGISTRATION, DEMAND_LETTER, RECRUITMENT_AGREEMENT, JOB_ORDER, AUTHORIZATION_LETTER, OTHER
+  title              String
+  fileUrl            String
+  verificationStatus String   @default("STAFF_ONLY") // STAFF_ONLY, VERIFIED, REJECTED
+  createdAt          DateTime @default(now())
+
+  employer           Employer @relation(fields: [employerId], references: [id], onDelete: Cascade)
+
+  @@index([employerId])
+  @@map("employer_documents")
 }
 
 model Job {
   id                   String      @id @default(uuid())
   jobCode              String      @unique // SGR-JOB-2026-000001
   title                String
+  titleLocal           String?
   slug                 String      @unique
   countryId            String
   country              Country     @relation(fields: [countryId], references: [id], onDelete: Restrict)
+  city                 String?
   jobCategoryId        String
   jobCategory          JobCategory @relation(fields: [jobCategoryId], references: [id], onDelete: Restrict)
   employerId           String?
   employer             Employer?   @relation(fields: [employerId], references: [id], onDelete: SetNull)
   description          String      @db.Text
+  descriptionLocal     String?     @db.Text
   salaryMin            Decimal?    @db.Decimal(12, 2)
   salaryMax            Decimal?    @db.Decimal(12, 2)
   currency             String      @default("BDT")
+  salaryPeriod         String?     @default("MONTHLY") // HOURLY, DAILY, WEEKLY, MONTHLY, YEARLY, CONTRACT
   experienceRequired   Int         @default(0)
   educationRequired    String?
   ageMin               Int?
@@ -395,6 +501,7 @@ model Job {
   languageRequirements String?
   skillsRequired       String?     @db.Text
   vacancyCount         Int         @default(1)
+  filledCount          Int         @default(0)
   accommodation        Boolean     @default(false)
   food                 Boolean     @default(false)
   transportation       Boolean     @default(false)
@@ -403,15 +510,24 @@ model Job {
   workingHours         String?     // e.g. "8 hours / 6 days"
   contractDuration     String?     // e.g. "2 years renewable"
   applicationDeadline  DateTime?
-  status               String      @default("DRAFT") // DRAFT, PUBLISHED, PAUSED, CLOSED, EXPIRED
+  status               String      @default("DRAFT") // DRAFT, PENDING_APPROVAL, APPROVED, PUBLISHED, PAUSED, CLOSED, EXPIRED, CANCELLED
   featured             Boolean     @default(false)
   createdBy            String?
   createdByUser        User?       @relation("CreatedJobs", fields: [createdBy], references: [id], onDelete: SetNull)
+  publishedAt          DateTime?
+  publishedById        String?
+  approvedAt           DateTime?
+  approvedById         String?
+  reviewNotes          String?     @db.Text
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt
 
   applications Application[]
   interviews   Interview[]
+  processingCases RecruitmentProcessingCase[]
+  joiningCases    JoiningCase[]
+  invoices        Invoice[]
+  costs           RecruitmentCost[]
 
   @@index([jobCode])
   @@index([slug])
@@ -447,17 +563,43 @@ model Application {
   assignedStaff     User?       @relation("AssignedStaffApplication", fields: [assignedStaffId], references: [id], onDelete: SetNull)
   priority          String      @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
   notes             String?     @db.Text
+  internalNotes     String?     @db.Text
   rejectionReason   String?     @db.Text
+  withdrawalReason  String?     @db.Text
+  screenedAt        DateTime?
+  shortlistedAt     DateTime?
+  interviewedAt     DateTime?
   selectedAt        DateTime?
+  rejectedAt        DateTime?
+  withdrawnAt       DateTime?
   completedAt       DateTime?
+  selectionNotes    String?     @db.Text
+  selectedPosition  String?
+  eligibilitySnapshot Json?
+  matchingSnapshot  Json?
+  salarySnapshot    Json?
+  employerSnapshot  Json?
+  jobSnapshot       Json?
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
 
-  statusHistory   ApplicationStatusHistory[]
-  documents       Document[]
-  interviews      Interview[]
+  statusHistory    ApplicationStatusHistory[]
+  screenings       ApplicationScreening[]
+  documents        Document[]
+  interviews       Interview[]
   visaApplications VisaApplication[]
-  invoices        Invoice[]
+  invoices         Invoice[]
+  payments         Payment[]
+  receipts         Receipt[]
+  refunds          Refund[]
+  adjustments      FinancialAdjustment[]
+  ledgerEntries    CandidateLedgerEntry[]
+  paymentPlans     PaymentPlan[]
+  costs            RecruitmentCost[]
+  medicalRecord    MedicalRecord?
+  clearanceRecord  ClearanceRecord?
+  departureRecord  DepartureRecord?
+  processingCase   RecruitmentProcessingCase?
 
   @@index([applicantId])
   @@index([jobId])
@@ -466,7 +608,29 @@ model Application {
   @@index([assignedStaffId])
   @@index([status])
   @@index([currentStage])
+  @@index([createdAt])
+  @@index([applicantId, status])
+  @@index([jobId, status])
   @@map("applications")
+}
+
+model ApplicationScreening {
+  id              String      @id @default(uuid())
+  applicationId   String
+  application     Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  screenedById    String?
+  screenedBy      User?       @relation("ScreenedApplications", fields: [screenedById], references: [id], onDelete: SetNull)
+  screenedAt      DateTime    @default(now())
+  overallResult   String      @default("PENDING") // PASS, FAIL, PENDING
+  checklist       Json?       // Structured 13-point criteria checklist
+  notes           String?     @db.Text
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([applicationId])
+  @@index([screenedById])
+  @@index([overallResult])
+  @@map("application_screenings")
 }
 
 model ApplicationStatusHistory {
@@ -475,8 +639,11 @@ model ApplicationStatusHistory {
   application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   fromStage     String?
   toStage       String
+  fromStatus    String?
+  toStatus      String?
   changedById   String?
   changedBy     User?       @relation("StatusChanger", fields: [changedById], references: [id], onDelete: SetNull)
+  changedByRole String?
   reason        String?
   notes         String?     @db.Text
   createdAt     DateTime    @default(now())
@@ -533,6 +700,13 @@ model Document {
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
+  processingRequirements ProcessingDocumentRequirement[]
+  medicalReports         MedicalCase[]
+  visaDocuments          VisaCase[]
+  clearanceDocuments     ClearanceCase[]
+  travelTickets          TravelTicket[]
+  joiningDocuments       JoiningCase[]
+
   @@index([applicantId])
   @@index([applicationId])
   @@index([documentTypeId])
@@ -559,6 +733,10 @@ model Interview {
   score            Int?
   feedback         String?     @db.Text
   notes            String?     @db.Text
+  candidateNotes   String?     @db.Text
+  scorecard        Json?       // 1-10 scores across 7 dimensions + average
+  interviewerId    String?
+  interviewerUser  User?       @relation("ConductedInterviews", fields: [interviewerId], references: [id], onDelete: SetNull)
   createdById      String?
   createdBy        User?       @relation("CreatedInterviews", fields: [createdById], references: [id], onDelete: SetNull)
   createdAt        DateTime    @default(now())
@@ -567,6 +745,7 @@ model Interview {
   @@index([applicationId])
   @@index([applicantId])
   @@index([jobId])
+  @@index([interviewerId])
   @@index([status])
   @@map("interviews")
 }
@@ -595,65 +774,83 @@ model Service {
 }
 
 model Invoice {
-  id            String       @id @default(uuid())
-  invoiceNumber String       @unique // SGR-INV-2026-000001
-  customerId    String?
-  customer      Customer?    @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  applicantId   String?
-  applicant     Applicant?   @relation(fields: [applicantId], references: [id], onDelete: SetNull)
-  applicationId String?
-  application   Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
-  invoiceDate   DateTime     @default(now())
-  dueDate       DateTime?
-  currency      String       @default("BDT")
-  subtotal      Decimal      @default(0) @db.Decimal(12, 2)
-  discount      Decimal      @default(0) @db.Decimal(12, 2)
-  tax           Decimal      @default(0) @db.Decimal(12, 2)
-  adjustment    Decimal      @default(0) @db.Decimal(12, 2)
-  totalAmount   Decimal      @default(0) @db.Decimal(12, 2)
-  paidAmount    Decimal      @default(0) @db.Decimal(12, 2)
-  dueAmount     Decimal      @default(0) @db.Decimal(12, 2)
-  status        String       @default("DRAFT") // DRAFT, ISSUED, PARTIALLY_PAID, PAID, OVERDUE, VOID, CANCELLED, REFUNDED
-  notes         String?      @db.Text
-  terms         String?      @db.Text
-  createdById   String?
-  createdBy     User?        @relation("CreatedInvoices", fields: [createdById], references: [id], onDelete: SetNull)
-  updatedById   String?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  id               String                     @id @default(uuid())
+  invoiceNumber    String                     @unique // SGR-INV-2026-000001
+  customerId       String?
+  customer         Customer?                  @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  applicantId      String?
+  applicant        Applicant?                 @relation(fields: [applicantId], references: [id], onDelete: SetNull)
+  applicationId    String?
+  application      Application?               @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  processingCaseId String?
+  processingCase   RecruitmentProcessingCase? @relation(fields: [processingCaseId], references: [id], onDelete: SetNull)
+  employerId       String?
+  employer         Employer?                  @relation(fields: [employerId], references: [id], onDelete: SetNull)
+  jobId            String?
+  job              Job?                       @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  invoiceDate      DateTime                   @default(now())
+  dueDate          DateTime?
+  currency         String                     @default("BDT")
+  subtotal         Decimal                    @default(0) @db.Decimal(12, 2)
+  discount         Decimal                    @default(0) @db.Decimal(12, 2)
+  tax              Decimal                    @default(0) @db.Decimal(12, 2)
+  adjustment       Decimal                    @default(0) @db.Decimal(12, 2)
+  totalAmount      Decimal                    @default(0) @db.Decimal(12, 2)
+  paidAmount       Decimal                    @default(0) @db.Decimal(12, 2)
+  dueAmount        Decimal                    @default(0) @db.Decimal(12, 2)
+  status           String                     @default("DRAFT") // DRAFT, ISSUED, PARTIALLY_PAID, PAID, OVERDUE, VOID, CANCELLED, REFUNDED
+  notes            String?                    @db.Text
+  terms            String?                    @db.Text
+  createdById      String?
+  createdBy        User?                      @relation("CreatedInvoices", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById      String?
+  createdAt        DateTime                   @default(now())
+  updatedAt        DateTime                   @updatedAt
 
   items                 InvoiceItem[]
   payments              Payment[]
+  paymentAllocations    PaymentAllocation[]
+  receipts              Receipt[]
   refunds               Refund[]
   adjustments           FinancialAdjustment[]
+  paymentPlans          PaymentPlan[]
+  ledgerEntries         CandidateLedgerEntry[]
   financialTransactions FinancialTransaction[]
 
   @@index([customerId])
   @@index([applicantId])
   @@index([applicationId])
+  @@index([processingCaseId])
+  @@index([employerId])
+  @@index([jobId])
   @@index([invoiceNumber])
   @@index([status])
   @@index([dueDate])
+  @@index([applicantId, status, dueDate])
   @@map("invoices")
 }
 
 model InvoiceItem {
-  id          String   @id @default(uuid())
-  invoiceId   String
-  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  serviceId   String?
-  service     Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
-  serviceCode String?
-  description String
-  quantity    Int      @default(1)
-  unitPrice   Decimal  @db.Decimal(12, 2)
-  discount    Decimal  @default(0) @db.Decimal(12, 2)
-  tax         Decimal  @default(0) @db.Decimal(12, 2)
-  lineTotal   Decimal  @db.Decimal(12, 2)
-  createdAt   DateTime @default(now())
+  id               String   @id @default(uuid())
+  invoiceId        String
+  invoice          Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  serviceId        String?
+  service          Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  serviceCode      String?
+  description      String
+  descriptionLocal String?
+  category         String   @default("PROCESSING_FEE") // PROCESSING_FEE, SERVICE_FEE, VISA_FEE, MEDICAL_FEE, TRAINING_FEE, DOCUMENTATION_FEE, BMET_FEE, TICKET_FEE, CONSULTANCY_FEE, OTHER
+  quantity         Int      @default(1)
+  unitPrice        Decimal  @db.Decimal(12, 2)
+  discount         Decimal  @default(0) @db.Decimal(12, 2)
+  tax              Decimal  @default(0) @db.Decimal(12, 2)
+  lineTotal        Decimal  @db.Decimal(12, 2)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @default(now()) @updatedAt
 
   @@index([invoiceId])
   @@index([serviceId])
+  @@index([category])
   @@map("invoice_items")
 }
 
@@ -667,73 +864,289 @@ model PaymentMethod {
 }
 
 model Payment {
-  id              String    @id @default(uuid())
-  paymentNumber   String    @unique // SGR-PAY-2026-000001
-  receiptNumber   String?   @unique // SGR-RCP-2026-000001
-  invoiceId       String
-  invoice         Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
-  customerId      String?
-  customer        Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  amount          Decimal   @db.Decimal(12, 2)
-  currency        String    @default("BDT")
-  paymentDate     DateTime  @default(now())
-  paymentMethod   String    @default("CASH") // CASH, BANK_TRANSFER, MOBILE_BANKING, CARD, CHEQUE, OTHER
-  referenceNumber String?
-  transactionId   String?
-  receivedById    String?
-  receivedBy      User?     @relation("ReceivedPayments", fields: [receivedById], references: [id], onDelete: SetNull)
-  status          String    @default("COMPLETED") // COMPLETED, REVERSED, VOID
-  notes           String?   @db.Text
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id               String                     @id @default(uuid())
+  paymentNumber    String                     @unique // SGR-PAY-2026-000001
+  receiptNumber    String?                    @unique // SGR-RCP-2026-000001
+  invoiceId        String
+  invoice          Invoice                    @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  customerId       String?
+  customer         Customer?                  @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  applicantId      String?
+  applicant        Applicant?                 @relation(fields: [applicantId], references: [id], onDelete: SetNull)
+  applicationId    String?
+  application      Application?               @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  processingCaseId String?
+  processingCase   RecruitmentProcessingCase? @relation(fields: [processingCaseId], references: [id], onDelete: SetNull)
+  amount           Decimal                    @db.Decimal(12, 2)
+  currency         String                     @default("BDT")
+  paymentDate      DateTime                   @default(now())
+  paymentMethod    String                     @default("CASH") // CASH, BANK_TRANSFER, MOBILE_BANKING, CARD, CHEQUE, OTHER
+  referenceNumber  String?
+  transactionId    String?
+  receivedById     String?
+  receivedBy       User?                      @relation("ReceivedPayments", fields: [receivedById], references: [id], onDelete: SetNull)
+  approvedById     String?
+  approvedBy       User?                      @relation("ApprovedPayments", fields: [approvedById], references: [id], onDelete: SetNull)
+  status           String                     @default("COMPLETED") // PENDING, CONFIRMED, COMPLETED, REVERSED, REJECTED, REFUNDED, PARTIALLY_REFUNDED, VOID
+  notes            String?                    @db.Text
+  createdAt        DateTime                   @default(now())
+  updatedAt        DateTime                   @updatedAt
 
+  receipts              Receipt[]
   refunds               Refund[]
+  allocations           PaymentAllocation[]
+  ledgerEntries         CandidateLedgerEntry[]
   financialTransactions FinancialTransaction[]
 
   @@index([invoiceId])
   @@index([customerId])
+  @@index([applicantId])
+  @@index([applicationId])
+  @@index([processingCaseId])
   @@index([paymentNumber])
   @@index([paymentDate])
+  @@index([status])
   @@map("payments")
 }
 
-model Refund {
-  id           String    @id @default(uuid())
-  refundNumber String    @unique // SGR-REF-2026-000001
-  invoiceId    String
-  invoice      Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
-  paymentId    String?
-  payment      Payment?  @relation(fields: [paymentId], references: [id], onDelete: SetNull)
-  amount       Decimal   @db.Decimal(12, 2)
-  reason       String    @db.Text
-  refundMethod String    @default("CASH")
-  refundedById String?
-  refundedBy   User?     @relation("RefundedPayments", fields: [refundedById], references: [id], onDelete: SetNull)
-  refundDate   DateTime  @default(now())
-  status       String    @default("COMPLETED") // PENDING, APPROVED, COMPLETED, REJECTED
-  notes        String?   @db.Text
-  createdAt    DateTime  @default(now())
+model Receipt {
+  id              String       @id @default(uuid())
+  receiptNumber   String       @unique // SGR-RCP-2026-000001
+  paymentId       String
+  payment         Payment      @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  invoiceId       String
+  invoice         Invoice      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  applicantId     String?
+  applicant       Applicant?   @relation(fields: [applicantId], references: [id], onDelete: SetNull)
+  applicationId   String?
+  application     Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  amount          Decimal      @db.Decimal(12, 2)
+  currency        String       @default("BDT")
+  amountInWords   String?
+  amountInWordsBn String?
+  receivedFrom    String?
+  status          String       @default("ISSUED") // ISSUED, VOID, CANCELLED
+  receiptDate     DateTime     @default(now())
+  issuedById      String?
+  issuedBy        User?        @relation("IssuedReceipts", fields: [issuedById], references: [id], onDelete: SetNull)
+  notes           String?      @db.Text
+  createdAt       DateTime     @default(now())
 
+  @@index([paymentId])
+  @@index([invoiceId])
+  @@index([applicantId])
+  @@index([receiptNumber])
+  @@map("receipts")
+}
+
+model Refund {
+  id            String       @id @default(uuid())
+  refundNumber  String       @unique // SGR-REF-2026-000001
+  invoiceId     String
+  invoice       Invoice      @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  paymentId     String?
+  payment       Payment?     @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  applicantId   String?
+  applicant     Applicant?   @relation(fields: [applicantId], references: [id], onDelete: SetNull)
+  applicationId String?
+  application   Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  amount        Decimal      @db.Decimal(12, 2)
+  reason        String       @db.Text
+  refundMethod  String       @default("CASH")
+  refundedById  String?
+  refundedBy    User?        @relation("RefundedPayments", fields: [refundedById], references: [id], onDelete: SetNull)
+  requestedById String?
+  requestedBy   User?        @relation("RequestedRefunds", fields: [requestedById], references: [id], onDelete: SetNull)
+  approvedById  String?
+  approvedBy    User?        @relation("ApprovedRefunds", fields: [approvedById], references: [id], onDelete: SetNull)
+  refundDate    DateTime     @default(now())
+  status        String       @default("COMPLETED") // REQUESTED, APPROVED, PROCESSED, COMPLETED, REJECTED, CANCELLED
+  notes         String?      @db.Text
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @default(now()) @updatedAt
+
+  ledgerEntries         CandidateLedgerEntry[]
   financialTransactions FinancialTransaction[]
 
   @@index([invoiceId])
   @@index([paymentId])
+  @@index([applicantId])
   @@index([refundNumber])
+  @@index([status])
   @@map("refunds")
 }
 
 model FinancialAdjustment {
-  id          String   @id @default(uuid())
-  invoiceId   String
-  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  type        String   // DISCOUNT_CORRECTION, ROUNDING, CREDIT, DEBIT
-  amount      Decimal  @db.Decimal(12, 2)
-  reason      String   @db.Text
-  createdById String?
-  createdAt   DateTime @default(now())
+  id               String       @id @default(uuid())
+  adjustmentNumber String?      @unique // SGR-ADJ-2026-000001
+  invoiceId        String
+  invoice          Invoice      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  applicantId      String?
+  applicant        Applicant?   @relation(fields: [applicantId], references: [id], onDelete: SetNull)
+  applicationId    String?
+  application      Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  type             String       // DISCOUNT, WAIVER, CREDIT, DEBIT, DISCOUNT_CORRECTION, ROUNDING, CORRECTION
+  adjustmentType   String?      // DISCOUNT, WAIVER, CREDIT, DEBIT, PENALTY, SURCHARGE
+  amount           Decimal      @db.Decimal(12, 2)
+  reason           String       @db.Text
+  status           String       @default("APPROVED") // REQUESTED, APPROVED, REJECTED, CANCELLED
+  createdById      String?
+  approvedById     String?
+  approvedBy       User?        @relation("ApprovedAdjustments", fields: [approvedById], references: [id], onDelete: SetNull)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @default(now()) @updatedAt
+
+  ledgerEntries CandidateLedgerEntry[]
 
   @@index([invoiceId])
+  @@index([applicantId])
+  @@index([adjustmentNumber])
+  @@index([status])
   @@map("financial_adjustments")
+}
+
+model CandidateLedgerEntry {
+  id               String                     @id @default(uuid())
+  applicantId      String
+  applicant        Applicant                  @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  applicationId    String?
+  application      Application?               @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  processingCaseId String?
+  processingCase   RecruitmentProcessingCase? @relation(fields: [processingCaseId], references: [id], onDelete: SetNull)
+  invoiceId        String?
+  invoice          Invoice?                   @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  paymentId        String?
+  payment          Payment?                   @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  refundId         String?
+  refund           Refund?                    @relation(fields: [refundId], references: [id], onDelete: SetNull)
+  adjustmentId     String?
+  adjustment       FinancialAdjustment?       @relation(fields: [adjustmentId], references: [id], onDelete: SetNull)
+  transactionType  String                     // INVOICE, PAYMENT, REFUND, DISCOUNT, WAIVER, ADJUSTMENT, REVERSAL
+  referenceType    String                     // INVOICE, PAYMENT, RECEIPT, REFUND, ADJUSTMENT, REVERSAL
+  referenceId      String
+  debit            Decimal                    @default(0) @db.Decimal(12, 2)
+  credit           Decimal                    @default(0) @db.Decimal(12, 2)
+  balance          Decimal                    @default(0) @db.Decimal(12, 2)
+  currency         String                     @default("BDT")
+  transactionDate  DateTime                   @default(now())
+  description      String
+  createdById      String?
+  createdBy        User?                      @relation("CreatedLedgerEntries", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt        DateTime                   @default(now())
+
+  @@index([applicantId])
+  @@index([applicationId])
+  @@index([processingCaseId])
+  @@index([transactionDate])
+  @@index([transactionType])
+  @@index([applicantId, transactionDate, createdAt])
+  @@map("candidate_ledger_entries")
+}
+
+model PaymentAllocation {
+  id        String   @id @default(uuid())
+  paymentId String
+  payment   Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  invoiceId String
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  amount    Decimal  @db.Decimal(12, 2)
+  createdAt DateTime @default(now())
+
+  @@index([paymentId])
+  @@index([invoiceId])
+  @@map("payment_allocations")
+}
+
+model PaymentPlan {
+  id                   String                     @id @default(uuid())
+  planNumber           String                     @unique // SGR-PLAN-2026-000001
+  applicantId          String
+  applicant            Applicant                  @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  invoiceId            String
+  invoice              Invoice                    @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  applicationId        String?
+  application          Application?               @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  processingCaseId     String?
+  processingCase       RecruitmentProcessingCase? @relation(fields: [processingCaseId], references: [id], onDelete: SetNull)
+  totalAmount          Decimal                    @db.Decimal(12, 2)
+  numberOfInstallments Int
+  frequency            String                     @default("MONTHLY") // WEEKLY, BIWEEKLY, MONTHLY, CUSTOM
+  startDate            DateTime
+  status               String                     @default("DRAFT")   // DRAFT, ACTIVE, COMPLETED, CANCELLED, DEFAULTED
+  notes                String?                    @db.Text
+  createdById          String?
+  createdBy            User?                      @relation("CreatedPaymentPlans", fields: [createdById], references: [id], onDelete: SetNull)
+  approvedById         String?
+  approvedBy           User?                      @relation("ApprovedPaymentPlans", fields: [approvedById], references: [id], onDelete: SetNull)
+  createdAt            DateTime                   @default(now())
+  updatedAt            DateTime                   @updatedAt
+
+  installments         Installment[]
+
+  @@index([applicantId])
+  @@index([invoiceId])
+  @@index([status])
+  @@map("payment_plans")
+}
+
+model Installment {
+  id                String      @id @default(uuid())
+  paymentPlanId     String
+  paymentPlan       PaymentPlan @relation(fields: [paymentPlanId], references: [id], onDelete: Cascade)
+  installmentNumber Int
+  dueDate           DateTime
+  amount            Decimal     @db.Decimal(12, 2)
+  paidAmount        Decimal     @default(0) @db.Decimal(12, 2)
+  remainingAmount   Decimal     @db.Decimal(12, 2)
+  status            String      @default("PENDING") // PENDING, PARTIALLY_PAID, PAID, OVERDUE, WAIVED, CANCELLED
+  notes             String?     @db.Text
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@index([paymentPlanId])
+  @@index([dueDate])
+  @@index([status])
+  @@map("installments")
+}
+
+model RecruitmentCost {
+  id               String                     @id @default(uuid())
+  costNumber       String                     @unique // SGR-COST-2026-000001
+  applicantId      String?
+  applicant        Applicant?                 @relation(fields: [applicantId], references: [id], onDelete: SetNull)
+  applicationId    String?
+  application      Application?               @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  processingCaseId String?
+  processingCase   RecruitmentProcessingCase? @relation(fields: [processingCaseId], references: [id], onDelete: SetNull)
+  jobId            String?
+  job              Job?                       @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  employerId       String?
+  employer         Employer?                  @relation(fields: [employerId], references: [id], onDelete: SetNull)
+  category         String                     // MEDICAL, VISA, BMET, DOCUMENTATION, TRAINING, TICKET, ACCOMMODATION, TRANSPORT, AGENCY_COST, EMPLOYER_COST, OTHER
+  description      String
+  amount           Decimal                    @db.Decimal(12, 2)
+  currency         String                     @default("BDT")
+  costDate         DateTime                   @default(now())
+  vendor           String?
+  referenceNumber  String?
+  status           String                     @default("DRAFT") // DRAFT, SUBMITTED, APPROVED, REJECTED, VOID
+  notes            String?                    @db.Text
+  createdById      String?
+  createdBy        User?                      @relation("CreatedCosts", fields: [createdById], references: [id], onDelete: SetNull)
+  approvedById     String?
+  approvedBy       User?                      @relation("ApprovedCosts", fields: [approvedById], references: [id], onDelete: SetNull)
+  createdAt        DateTime                   @default(now())
+  updatedAt        DateTime                   @updatedAt
+
+  @@index([applicantId])
+  @@index([applicationId])
+  @@index([processingCaseId])
+  @@index([jobId])
+  @@index([employerId])
+  @@index([category])
+  @@index([status])
+  @@index([costDate])
+  @@map("recruitment_costs")
 }
 
 model FinancialTransaction {
@@ -993,3 +1406,802 @@ model Inquiry {
   @@index([createdAt])
   @@map("inquiries")
 }
+
+// ==============================================================================
+// 12. QUALIFICATIONS & CANDIDATE SKILLS (V2)
+// ==============================================================================
+
+model CandidateSkill {
+  id               String               @id @default(uuid())
+  applicantId      String
+  applicant        Applicant            @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  skillName        String
+  category         String?
+  proficiencyLevel String               @default("INTERMEDIATE") // BEGINNER, INTERMEDIATE, EXPERT
+  isVerified       Boolean              @default(false)
+  verifiedAt       DateTime?
+  certificateId    String?
+  certificate      TrainingCertificate? @relation(fields: [certificateId], references: [id], onDelete: SetNull)
+  acquiredVia      String               @default("EXPERIENCE") // TRAINING, EXPERIENCE, CERTIFICATION, EDUCATION
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  @@index([applicantId])
+  @@index([skillName])
+  @@index([isVerified])
+  @@map("candidate_skills")
+}
+
+model CandidateLanguage {
+  id          String    @id @default(uuid())
+  applicantId String
+  applicant   Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  language    String
+  speaking    String    @default("BASIC") // BASIC, GOOD, FLUENT, NATIVE
+  reading     String    @default("BASIC")
+  writing     String    @default("BASIC")
+  createdAt   DateTime  @default(now())
+
+  @@index([applicantId])
+  @@map("candidate_languages")
+}
+
+model CandidateEducation {
+  id          String    @id @default(uuid())
+  applicantId String
+  applicant   Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  degree      String
+  institution String
+  passingYear Int?
+  grade       String?
+  board       String?
+  createdAt   DateTime  @default(now())
+
+  @@index([applicantId])
+  @@map("candidate_education")
+}
+
+model CandidateExperience {
+  id             String    @id @default(uuid())
+  applicantId    String
+  applicant      Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  company        String
+  role           String
+  country        String?
+  durationMonths Int       @default(0)
+  startDate      DateTime?
+  endDate        DateTime?
+  isCurrent      Boolean   @default(false)
+  description    String?   @db.Text
+  createdAt      DateTime  @default(now())
+
+  @@index([applicantId])
+  @@map("candidate_experience")
+}
+
+// ==============================================================================
+// 13. SKILL TRAINING ECOSYSTEM (V2)
+// ==============================================================================
+
+model TrainingCategory {
+  id           String           @id @default(uuid())
+  name         String           @unique
+  banglaName   String
+  slug         String           @unique
+  icon         String?
+  description  String?          @db.Text
+  displayOrder Int              @default(0)
+  isActive     Boolean          @default(true)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  courses      TrainingCourse[]
+
+  @@index([slug])
+  @@index([isActive])
+  @@map("training_categories")
+}
+
+model TrainingCenter {
+  id              String                @id @default(uuid())
+  name            String
+  banglaName      String
+  code            String                @unique // TC-DHK-001
+  district        String
+  division        String
+  address         String                @db.Text
+  contactPerson   String?
+  contactPhone    String
+  email           String?
+  mapUrl          String?
+  capacity        Int                   @default(50)
+  facilities      String?               @db.Text
+  operatingStatus String                @default("ACTIVE") // ACTIVE, SUSPENDED, INACTIVE
+  isActive        Boolean               @default(true)
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  batches         TrainingBatch[]
+  instructors     TrainingInstructor[]
+  certificates    TrainingCertificate[]
+
+  @@index([district])
+  @@index([division])
+  @@index([operatingStatus])
+  @@index([isActive])
+  @@map("training_centers")
+}
+
+model TrainingCourse {
+  id                 String                @id @default(uuid())
+  courseCode         String                @unique // TC-ELE-01
+  title              String
+  banglaTitle        String
+  slug               String                @unique
+  categoryId         String
+  category           TrainingCategory      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  description        String                @db.Text
+  durationWeeks      Int                   @default(4)
+  hoursTotal         Int                   @default(120)
+  fee                Decimal               @default(0) @db.Decimal(10, 2)
+  currency           String                @default("BDT")
+  eligibility        String?               @db.Text
+  requiredDocuments  String?               @db.Text
+  certificationType  String                @default("BMET_AFFILIATED") // BMET_AFFILIATED, AGENCY_CERTIFIED, TECHNICAL_BOARD, VOCATIONAL
+  status             String                @default("ACTIVE") // ACTIVE, PAUSED, DRAFT, ARCHIVED
+  featured           Boolean               @default(false)
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+
+  batches            TrainingBatch[]
+  applications       TrainingApplication[]
+  certificates       TrainingCertificate[]
+
+  @@index([courseCode])
+  @@index([slug])
+  @@index([categoryId])
+  @@index([status])
+  @@map("training_courses")
+}
+
+model TrainingInstructor {
+  id             String               @id @default(uuid())
+  centerId       String?
+  center         TrainingCenter?      @relation(fields: [centerId], references: [id], onDelete: SetNull)
+  name           String
+  phone          String
+  email          String?
+  specialization String
+  certification  String?
+  bio            String?              @db.Text
+  isActive       Boolean              @default(true)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  batches        TrainingBatch[]
+  assessments    TrainingAssessment[]
+
+  @@index([centerId])
+  @@index([isActive])
+  @@map("training_instructors")
+}
+
+model TrainingBatch {
+  id             String                @id @default(uuid())
+  batchCode      String                @unique // BATCH-2026-ELE-01
+  courseId       String
+  course         TrainingCourse        @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  centerId       String
+  center         TrainingCenter        @relation(fields: [centerId], references: [id], onDelete: Restrict)
+  instructorId   String?
+  instructor     TrainingInstructor?   @relation(fields: [instructorId], references: [id], onDelete: SetNull)
+  startDate      DateTime
+  endDate        DateTime
+  classSchedule  String?               // e.g. "Sun-Thu 9:00 AM - 1:00 PM"
+  capacity       Int                   @default(30)
+  enrolledCount  Int                   @default(0)
+  status         String                @default("UPCOMING") // UPCOMING, ENROLLING, ONGOING, COMPLETED, CANCELLED
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  schedules      TrainingSchedule[]
+  applications   TrainingApplication[]
+  enrollments    TrainingEnrollment[]
+  attendances    TrainingAttendance[]
+
+  @@index([courseId])
+  @@index([centerId])
+  @@index([batchCode])
+  @@index([status])
+  @@map("training_batches")
+}
+
+model TrainingSchedule {
+  id         String        @id @default(uuid())
+  batchId    String
+  batch      TrainingBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  dayOfWeek  String        // SUNDAY, MONDAY, etc.
+  startTime  String        // "09:00"
+  endTime    String        // "13:00"
+  roomNumber String?
+  topic      String?
+
+  @@index([batchId])
+  @@map("training_schedules")
+}
+
+model TrainingApplication {
+  id              String              @id @default(uuid())
+  applicationCode String              @unique // SGR-TRN-APP-2026-000001
+  applicantId     String
+  applicant       Applicant           @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  courseId        String
+  course          TrainingCourse      @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  batchId         String?
+  batch           TrainingBatch?      @relation(fields: [batchId], references: [id], onDelete: SetNull)
+  status          String              @default("APPLIED") // APPLIED, UNDER_REVIEW, APPROVED, REJECTED, WAITLISTED, ENROLLED, COMPLETED, DROPPED
+  appliedAt       DateTime            @default(now())
+  reviewNotes     String?             @db.Text
+  rejectionReason String?             @db.Text
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  enrollment      TrainingEnrollment?
+
+  @@index([applicantId])
+  @@index([courseId])
+  @@index([batchId])
+  @@index([status])
+  @@map("training_applications")
+}
+
+model TrainingEnrollment {
+  id               String                @id @default(uuid())
+  enrollmentNumber String                @unique // SGR-ENR-2026-000001
+  applicantId      String
+  applicant        Applicant             @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  batchId          String
+  batch            TrainingBatch         @relation(fields: [batchId], references: [id], onDelete: Restrict)
+  applicationId    String?               @unique
+  application      TrainingApplication?  @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  rollNumber       String?
+  status           String                @default("ENROLLED") // ENROLLED, ATTENDING, ASSESSMENT_PENDING, COMPLETED, DROPPED
+  enrolledAt       DateTime              @default(now())
+  completedAt      DateTime?
+  finalGrade       String?               // A+, A, B, PASSED, FAILED
+
+  attendance       TrainingAttendance[]
+  progress         TrainingProgress[]
+  assessments      TrainingAssessment[]
+  certificate      TrainingCertificate?
+
+  @@index([applicantId])
+  @@index([batchId])
+  @@index([enrollmentNumber])
+  @@index([status])
+  @@map("training_enrollments")
+}
+
+model TrainingAttendance {
+  id           String             @id @default(uuid())
+  enrollmentId String
+  enrollment   TrainingEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  batchId      String
+  batch        TrainingBatch      @relation(fields: [batchId], references: [id], onDelete: Restrict)
+  date         DateTime           @db.Date
+  status       String             @default("PRESENT") // PRESENT, ABSENT, LATE, EXCUSED
+  remarks      String?
+  createdAt    DateTime           @default(now())
+
+  @@index([enrollmentId])
+  @@index([batchId])
+  @@index([date])
+  @@map("training_attendance")
+}
+
+model TrainingProgress {
+  id                   String             @id @default(uuid())
+  enrollmentId         String
+  enrollment           TrainingEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  moduleName           String
+  completionPercentage Int                @default(0)
+  assessmentScore      Int?
+  trainerRemarks       String?            @db.Text
+  updatedAt            DateTime           @updatedAt
+
+  @@index([enrollmentId])
+  @@map("training_progress")
+}
+
+model TrainingAssessment {
+  id              String              @id @default(uuid())
+  enrollmentId    String
+  enrollment      TrainingEnrollment  @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  instructorId    String?
+  instructor      TrainingInstructor? @relation(fields: [instructorId], references: [id], onDelete: SetNull)
+  title           String
+  assessmentType  String              @default("PRACTICAL") // PRACTICAL, THEORETICAL, VIVA
+  totalMarks      Int                 @default(100)
+  obtainedMarks   Int
+  passed          Boolean             @default(true)
+  evaluationNotes String?             @db.Text
+  assessmentDate  DateTime            @default(now())
+
+  @@index([enrollmentId])
+  @@index([instructorId])
+  @@map("training_assessments")
+}
+
+model TrainingCertificate {
+  id               String              @id @default(uuid())
+  certificateNumber String             @unique // SGR-CERT-2026-000001
+  enrollmentId     String?             @unique
+  enrollment       TrainingEnrollment? @relation(fields: [enrollmentId], references: [id], onDelete: SetNull)
+  applicantId      String
+  applicant        Applicant           @relation(fields: [applicantId], references: [id], onDelete: Restrict)
+  courseId         String
+  course           TrainingCourse      @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  centerId         String
+  center           TrainingCenter      @relation(fields: [centerId], references: [id], onDelete: Restrict)
+  issueDate        DateTime            @default(now())
+  expiryDate       DateTime?
+  skillAcquired    String              // e.g. "Electrician Level 1 - Industrial Wiring"
+  grade            String              @default("PASSED")
+  scorePercentage  Int?
+  verificationCode String              @unique
+  qrCodeUrl        String?
+  verifiedStatus   String              @default("VERIFIED") // PENDING, VERIFIED, REVOKED
+  verifiedById     String?
+  verifiedBy       User?               @relation("VerifiedCertificates", fields: [verifiedById], references: [id], onDelete: SetNull)
+  verifiedAt       DateTime?           @default(now())
+  remarks          String?             @db.Text
+  createdAt        DateTime            @default(now())
+
+  candidateSkills  CandidateSkill[]
+
+  @@index([certificateNumber])
+  @@index([verificationCode])
+  @@index([applicantId])
+  @@index([courseId])
+  @@index([centerId])
+  @@index([verifiedStatus])
+  @@map("training_certificates")
+}
+
+// ==============================================================================
+// 14. POST-SELECTION RECRUITMENT OPERATIONS (V2)
+// ==============================================================================
+
+model MedicalRecord {
+  id                String      @id @default(uuid())
+  applicationId     String      @unique
+  application       Application @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  applicantId       String
+  applicant         Applicant   @relation(fields: [applicantId], references: [id], onDelete: Restrict)
+  medicalCenterName String
+  appointmentDate   DateTime?
+  examinationDate   DateTime?
+  result            String      @default("PENDING") // PENDING, SCHEDULED, PASSED, FAILED, RETEST_REQUIRED
+  reportFilePath    String?
+  reportFileName    String?
+  fitnessExpiryDate DateTime?
+  gamcaNumber       String?     // GCC GAMCA Slip/Report Number
+  reviewedById      String?
+  reviewedBy        User?       @relation("ReviewedMedicalRecords", fields: [reviewedById], references: [id], onDelete: SetNull)
+  remarks           String?     @db.Text
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@index([applicationId])
+  @@index([applicantId])
+  @@index([result])
+  @@map("medical_records")
+}
+
+model ClearanceRecord {
+  id                String      @id @default(uuid())
+  applicationId     String      @unique
+  application       Application @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  applicantId       String
+  applicant         Applicant   @relation(fields: [applicantId], references: [id], onDelete: Restrict)
+  clearanceType     String      @default("BMET_EMIGRATION") // BMET_EMIGRATION, POLICE_CLEARANCE, EMBASSY_CLEARANCE
+  submissionDate    DateTime?
+  approvalDate      DateTime?
+  smartCardNumber   String?     // BMET Smart Emigration Card number
+  certificateNumber String?
+  status            String      @default("NOT_STARTED") // NOT_STARTED, SUBMITTED, IN_REVIEW, APPROVED, REJECTED
+  reviewedById      String?
+  reviewedBy        User?       @relation("ReviewedClearances", fields: [reviewedById], references: [id], onDelete: SetNull)
+  remarks           String?     @db.Text
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@index([applicationId])
+  @@index([applicantId])
+  @@index([status])
+  @@map("clearance_records")
+}
+
+model DepartureRecord {
+  id                    String      @id @default(uuid())
+  applicationId         String      @unique
+  application           Application @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  applicantId           String
+  applicant             Applicant   @relation(fields: [applicantId], references: [id], onDelete: Restrict)
+  airline               String
+  flightNumber          String
+  ticketNumber          String?
+  departureDate         DateTime
+  departureAirport      String      @default("DAC - Hazrat Shahjalal International Airport, Dhaka")
+  destinationAirport    String
+  transitAirports       String?
+  reportingTime         DateTime?
+  reportingInstructions String?     @db.Text
+  pnrNumber             String?
+  status                String      @default("SCHEDULED") // SCHEDULED, BOARDED, DEPARTED, ARRIVED, CANCELLED, RESCHEDULED
+  managedById           String?
+  managedBy             User?       @relation("ManagedDepartures", fields: [managedById], references: [id], onDelete: SetNull)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  @@index([applicationId])
+  @@index([applicantId])
+  @@index([departureDate])
+  @@index([status])
+  @@map("departure_records")
+}
+
+// ==============================================================================
+// 15. CANDIDATE SUPPORT TICKETING SYSTEM (V2)
+// ==============================================================================
+
+model SupportTicket {
+  id              String          @id @default(uuid())
+  ticketNumber    String          @unique // SGR-TCK-2026-000001
+  applicantId     String
+  applicant       Applicant       @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  assignedStaffId String?
+  assignedStaff   User?           @relation("AssignedStaffTickets", fields: [assignedStaffId], references: [id], onDelete: SetNull)
+  category        String          @default("GENERAL") // GENERAL, APPLICATION, TRAINING, DOCUMENT, VISA, PAYMENT, TECHNICAL
+  priority        String          @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  subject         String
+  status          String          @default("OPEN") // OPEN, IN_PROGRESS, WAITING_FOR_CANDIDATE, RESOLVED, CLOSED
+  resolvedAt      DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  messages        TicketMessage[]
+
+  @@index([ticketNumber])
+  @@index([applicantId])
+  @@index([assignedStaffId])
+  @@index([status])
+  @@map("support_tickets")
+}
+
+model TicketMessage {
+  id          String        @id @default(uuid())
+  ticketId    String
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  senderType  String        // APPLICANT, STAFF, SYSTEM
+  senderId    String?
+  staffSender User?         @relation("StaffTicketMessages", fields: [senderId], references: [id], onDelete: SetNull)
+  message     String        @db.Text
+  attachments String?       // JSON string array of file metadata
+  createdAt   DateTime      @default(now())
+
+  @@index([ticketId])
+  @@index([senderType])
+  @@map("ticket_messages")
+}
+
+// ==============================================================================
+// 16. POST-SELECTION RECRUITMENT PROCESSING PIPELINE (PHASE 6)
+// ==============================================================================
+
+model RecruitmentProcessingCase {
+  id                    String      @id @default(uuid())
+  processingCode        String      @unique // SGR-PROC-2026-000001
+  applicationId         String      @unique // One selected application = maximum one active processing case
+  application           Application @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  applicantId           String
+  applicant             Applicant   @relation(fields: [applicantId], references: [id], onDelete: Restrict)
+  jobId                 String
+  job                   Job         @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  employerId            String?
+  employer              Employer?   @relation(fields: [employerId], references: [id], onDelete: SetNull)
+  currentStage          String      @default("SELECTED") // SELECTED, DOCUMENT_PROCESSING, DOCUMENT_VERIFICATION, MEDICAL_PENDING, MEDICAL_SCHEDULED, MEDICAL_COMPLETED, MEDICAL_PASSED, MEDICAL_FAILED, VISA_PREPARATION, VISA_SUBMITTED, VISA_PROCESSING, VISA_APPROVED, VISA_REJECTED, CLEARANCE_PENDING, CLEARANCE_PROCESSING, CLEARANCE_COMPLETED, TICKET_PENDING, TICKET_ISSUED, DEPARTURE_READY, DEPARTED, JOINED, COMPLETED, ON_HOLD, CANCELLED
+  overallStatus         String      @default("ACTIVE")   // ACTIVE, ON_HOLD, CANCELLED, COMPLETED
+  previousStage         String?     // Stored when moving to ON_HOLD
+  assignedOfficerId     String?
+  assignedOfficer       User?       @relation("AssignedProcessingOfficer", fields: [assignedOfficerId], references: [id], onDelete: SetNull)
+  priority              String      @default("NORMAL")   // LOW, NORMAL, HIGH, URGENT
+  startedAt             DateTime    @default(now())
+  expectedDepartureDate DateTime?
+  completedAt           DateTime?
+  holdReason            String?     @db.Text
+  cancellationReason    String?     @db.Text
+  internalNotes         String?     @db.Text
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  statusHistory         ProcessingStatusHistory[]
+  documentRequirements  ProcessingDocumentRequirement[]
+  medicalCase           MedicalCase?
+  visaCase              VisaCase?
+  clearanceCase         ClearanceCase?
+  travelTicket          TravelTicket?
+  departureCase         DepartureCase?
+  joiningCase           JoiningCase?
+  invoices              Invoice[]
+  payments              Payment[]
+  ledgerEntries         CandidateLedgerEntry[]
+  paymentPlans          PaymentPlan[]
+  costs                 RecruitmentCost[]
+
+  @@index([processingCode])
+  @@index([applicationId])
+  @@index([applicantId])
+  @@index([jobId])
+  @@index([employerId])
+  @@index([currentStage])
+  @@index([overallStatus])
+  @@index([assignedOfficerId])
+  @@index([priority])
+  @@index([expectedDepartureDate])
+  @@index([applicantId, overallStatus, currentStage])
+  @@map("recruitment_processing_cases")
+}
+
+model ProcessingStatusHistory {
+  id               String                    @id @default(uuid())
+  processingCaseId String
+  processingCase   RecruitmentProcessingCase @relation(fields: [processingCaseId], references: [id], onDelete: Cascade)
+  fromStage        String?
+  toStage          String
+  changedById      String?
+  changedBy        User?                     @relation("ProcessingStatusChanger", fields: [changedById], references: [id], onDelete: SetNull)
+  changedByRole    String?                   // APPLICANT, RECRUITER, DOCUMENT_OFFICER, VISA_OFFICER, ADMIN, SUPER_ADMIN, SYSTEM
+  reason           String?                   @db.Text
+  notes            String?                   @db.Text
+  createdAt        DateTime                  @default(now())
+
+  @@index([processingCaseId])
+  @@index([toStage])
+  @@index([createdAt])
+  @@map("processing_status_history")
+}
+
+model ProcessingDocumentRequirement {
+  id               String                    @id @default(uuid())
+  processingCaseId String
+  processingCase   RecruitmentProcessingCase @relation(fields: [processingCaseId], references: [id], onDelete: Cascade)
+  documentType     String                    // PASSPORT, NID, BIRTH_CERTIFICATE, CV, EMPLOYMENT_CONTRACT, TRADE_CERTIFICATE, TRAINING_CERTIFICATE, EDUCATION_CERTIFICATE, POLICE_CLEARANCE, DEMAND_LETTER, VISA_COPY, TICKET, OTHER
+  title            String
+  titleLocal       String?
+  required         Boolean                   @default(true)
+  status           String                    @default("REQUIRED") // REQUIRED, UPLOADED, UNDER_REVIEW, VERIFIED, REJECTED, EXPIRED, NOT_REQUIRED
+  dueDate          DateTime?
+  documentId       String?
+  document         Document?                 @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  notes            String?                   @db.Text
+  verifiedById     String?
+  verifiedBy       User?                     @relation("VerifiedProcessingDocs", fields: [verifiedById], references: [id], onDelete: SetNull)
+  verifiedByRole   String?
+  verifiedAt       DateTime?
+  verificationNote String?                   @db.Text
+  rejectionReason  String?                   @db.Text
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+
+  @@index([processingCaseId])
+  @@index([documentType])
+  @@index([status])
+  @@map("processing_document_requirements")
+}
+
+model MedicalCenter {
+  id          String        @id @default(uuid())
+  name        String
+  nameLocal   String?
+  country     String        @default("Bangladesh")
+  city        String        @default("Dhaka")
+  address     String?       @db.Text
+  phone       String?
+  email       String?
+  isGamca     Boolean       @default(true)
+  status      String        @default("ACTIVE") // ACTIVE, INACTIVE
+  notes       String?       @db.Text
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  medicalCases MedicalCase[]
+
+  @@index([city])
+  @@index([status])
+  @@map("medical_centers")
+}
+
+model MedicalCase {
+  id                String                    @id @default(uuid())
+  processingCaseId  String                    @unique
+  processingCase    RecruitmentProcessingCase @relation(fields: [processingCaseId], references: [id], onDelete: Cascade)
+  candidateId       String
+  candidate         Applicant                 @relation(fields: [candidateId], references: [id], onDelete: Restrict)
+  appointmentDate   DateTime?
+  appointmentTime   String?                   // e.g. "10:30 AM"
+  medicalCenterId   String?
+  medicalCenter     MedicalCenter?            @relation(fields: [medicalCenterId], references: [id], onDelete: SetNull)
+  medicalCenterName String?
+  medicalType       String                    @default("GAMCA") // GAMCA, GENERAL, EMBASSY_SPECIFIC
+  status            String                    @default("PENDING") // PENDING, SCHEDULED, COMPLETED, CANCELLED, RESCHEDULED
+  result            String                    @default("PENDING") // PENDING, FIT, UNFIT, RETEST_REQUIRED, CONDITIONALLY_FIT
+  reportDocumentId  String?
+  reportDocument    Document?                 @relation(fields: [reportDocumentId], references: [id], onDelete: SetNull)
+  gamcaNumber       String?                   // GCC GAMCA slip number
+  fitnessExpiryDate DateTime?
+  appointmentNotes  String?                   @db.Text
+  resultNotes       String?                   @db.Text
+  conductedAt       DateTime?
+  reviewedById      String?
+  reviewedBy        User?                     @relation("ReviewedMedicalCases", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt        DateTime?
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+
+  @@index([processingCaseId])
+  @@index([candidateId])
+  @@index([status])
+  @@index([result])
+  @@map("medical_cases")
+}
+
+model VisaCase {
+  id                String                    @id @default(uuid())
+  processingCaseId  String                    @unique
+  processingCase    RecruitmentProcessingCase @relation(fields: [processingCaseId], references: [id], onDelete: Cascade)
+  candidateId       String
+  candidate         Applicant                 @relation(fields: [candidateId], references: [id], onDelete: Restrict)
+  country           String?
+  visaType          String                    @default("EMPLOYMENT_VISA") // EMPLOYMENT_VISA, VISIT_TO_WORK, RESIDENCE_VISA
+  applicationNumber String?
+  sponsorName       String?
+  sponsorReference  String?                   // Wakala / MOFA / Enjaz reference
+  submissionDate    DateTime?
+  status            String                    @default("PREPARATION") // PREPARATION, READY_TO_SUBMIT, SUBMITTED, PROCESSING, ADDITIONAL_DOCUMENTS_REQUIRED, APPROVED, REJECTED, CANCELLED, EXPIRED
+  approvedDate      DateTime?
+  expiryDate        DateTime?
+  rejectionReason   String?                   @db.Text
+  notes             String?                   @db.Text
+  visaDocumentId    String?
+  visaDocument      Document?                 @relation(fields: [visaDocumentId], references: [id], onDelete: SetNull)
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+
+  @@index([processingCaseId])
+  @@index([candidateId])
+  @@index([status])
+  @@map("visa_cases")
+}
+
+model ClearanceCase {
+  id                String                    @id @default(uuid())
+  processingCaseId  String                    @unique
+  processingCase    RecruitmentProcessingCase @relation(fields: [processingCaseId], references: [id], onDelete: Cascade)
+  candidateId       String
+  candidate         Applicant                 @relation(fields: [candidateId], references: [id], onDelete: Restrict)
+  clearanceType     String                    @default("BMET_EMIGRATION") // BMET_EMIGRATION, POLICE_CLEARANCE, EMBASSY_CLEARANCE
+  applicationDate   DateTime?
+  referenceNumber   String?
+  status            String                    @default("NOT_STARTED") // NOT_STARTED, PENDING, SUBMITTED, PROCESSING, COMPLETED, REJECTED, EXPIRED
+  smartCardNumber   String?                   // BMET Smart Card Number
+  certificateNumber String?
+  issueDate         DateTime?
+  expiryDate        DateTime?
+  documentId        String?
+  document          Document?                 @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  rejectionReason   String?                   @db.Text
+  notes             String?                   @db.Text
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+
+  @@index([processingCaseId])
+  @@index([candidateId])
+  @@index([status])
+  @@map("clearance_cases")
+}
+
+model TravelTicket {
+  id               String                    @id @default(uuid())
+  processingCaseId String                    @unique
+  processingCase   RecruitmentProcessingCase @relation(fields: [processingCaseId], references: [id], onDelete: Cascade)
+  candidateId      String
+  candidate        Applicant                 @relation(fields: [candidateId], references: [id], onDelete: Restrict)
+  airline          String
+  bookingReference String?                   // PNR
+  ticketNumber     String?
+  flightNumber     String
+  departureAirport String                    @default("DAC - Hazrat Shahjalal International Airport, Dhaka")
+  arrivalAirport   String
+  departureDate    DateTime
+  departureTime    String?                   // e.g. "04:30 AM"
+  arrivalDate      DateTime?
+  arrivalTime      String?
+  baggageAllowance String?                   @default("30 KG + 7 KG Cabin")
+  ticketDocumentId String?
+  ticketDocument   Document?                 @relation(fields: [ticketDocumentId], references: [id], onDelete: SetNull)
+  status           String                    @default("PENDING") // PENDING, RESERVED, ISSUED, CANCELLED, CHANGED
+  issuedById       String?
+  issuedByUser     User?                     @relation("IssuedTravelTickets", fields: [issuedById], references: [id], onDelete: SetNull)
+  issuedAt         DateTime?
+  notes            String?                   @db.Text
+  changeHistory    Json?                     // Historical array of previous ticket iterations
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+
+  @@index([processingCaseId])
+  @@index([candidateId])
+  @@index([departureDate])
+  @@index([status])
+  @@map("travel_tickets")
+}
+
+model DepartureCase {
+  id                  String                    @id @default(uuid())
+  processingCaseId    String                    @unique
+  processingCase      RecruitmentProcessingCase @relation(fields: [processingCaseId], references: [id], onDelete: Cascade)
+  candidateId         String
+  candidate           Applicant                 @relation(fields: [candidateId], references: [id], onDelete: Restrict)
+  departureDate       DateTime
+  departureTime       String?
+  airport             String                    @default("DAC - Hazrat Shahjalal International Airport, Dhaka")
+  flightNumber        String
+  destination         String
+  reportingTime       DateTime?
+  meetingPoint        String?                   @default("Terminal 1, Departure Briefing Gate")
+  travelCoordinatorId String?
+  emergencyContact    String?
+  departureStatus     String                    @default("NOT_READY") // NOT_READY, READY, CONFIRMED, DEPARTED, NO_SHOW, CANCELLED
+  confirmedById       String?
+  confirmedBy         User?                     @relation("ConfirmedDepartures", fields: [confirmedById], references: [id], onDelete: SetNull)
+  confirmedAt         DateTime?
+  notes               String?                   @db.Text
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+
+  @@index([processingCaseId])
+  @@index([candidateId])
+  @@index([departureDate])
+  @@index([departureStatus])
+  @@map("departure_cases")
+}
+
+model JoiningCase {
+  id                     String                    @id @default(uuid())
+  processingCaseId       String                    @unique
+  processingCase         RecruitmentProcessingCase @relation(fields: [processingCaseId], references: [id], onDelete: Cascade)
+  candidateId            String
+  candidate              Applicant                 @relation(fields: [candidateId], references: [id], onDelete: Restrict)
+  employerId             String?
+  employer               Employer?                 @relation(fields: [employerId], references: [id], onDelete: SetNull)
+  jobId                  String?
+  job                    Job?                      @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  joiningDate            DateTime
+  joiningLocation        String?
+  employerContact        String?
+  confirmationDocumentId String?
+  confirmationDocument   Document?                 @relation(fields: [confirmationDocumentId], references: [id], onDelete: SetNull)
+  status                 String                    @default("PENDING") // PENDING, JOINED, DID_NOT_JOIN, CANCELLED
+  confirmedById          String?
+  confirmedBy            User?                     @relation("ConfirmedJoinings", fields: [confirmedById], references: [id], onDelete: SetNull)
+  confirmedAt            DateTime?
+  notes                  String?                   @db.Text
+  createdAt              DateTime                  @default(now())
+  updatedAt              DateTime                  @updatedAt
+
+  @@index([processingCaseId])
+  @@index([candidateId])
+  @@index([status])
+  @@map("joining_cases")
+}
+

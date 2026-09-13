@@ -25,7 +25,7 @@ export const invoiceCreateSchema = z.object({
   customerId: z.string().optional().nullable(),
   applicantId: z.string().optional().nullable(),
   applicationId: z.string().optional().nullable(),
-  issueDate: z.string().min(1, 'Issue date is required'),
+  issueDate: z.string().optional().default(() => new Date().toISOString()),
   dueDate: z.string().min(1, 'Due date is required'),
   invoiceDate: z.string().optional(),
   currency: z.string().default('BDT'),

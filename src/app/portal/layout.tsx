@@ -22,10 +22,14 @@ import {
   ChevronRight,
   Activity,
   LifeBuoy,
+  GraduationCap,
+  Headset,
+  Plane,
 } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { BRAND } from '@/config/brand';
 import { BrandLogo } from '@/components/brand/brand-logo';
+import { ProfileAvatar } from '@/components/ui/profile-avatar';
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -41,7 +45,8 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     pathname.startsWith('/portal/login') ||
     pathname.startsWith('/portal/register') ||
     pathname.startsWith('/portal/forgot-password') ||
-    pathname.startsWith('/portal/reset-password');
+    pathname.startsWith('/portal/reset-password') ||
+    pathname.startsWith('/portal/complete-profile');
 
   useEffect(() => {
     if (isAuthPage) {
@@ -58,6 +63,12 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           if (data.success) {
             setApplicant(data.data.applicant);
             setUnreadCount(data.data.counts?.unreadNotifications || 0);
+
+            // Mandatory profile photo enforcement: redirect to complete-profile if missing
+            if (!data.data.applicant?.hasPhoto && pathname !== '/portal/complete-profile') {
+              router.push('/portal/complete-profile');
+              return;
+            }
           } else {
             router.push(`/portal/login?redirect=${encodeURIComponent(pathname)}`);
           }
@@ -107,6 +118,12 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       exact: true,
     },
     {
+      label: 'Skill Training',
+      labelBn: 'স্কিল ট্রেনিং',
+      href: '/portal/training',
+      icon: GraduationCap,
+    },
+    {
       label: 'Find Jobs',
       labelBn: 'চাকরির বিজ্ঞপ্তি',
       href: '/portal/jobs',
@@ -117,6 +134,12 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       labelBn: 'আমার আবেদন',
       href: '/portal/applications',
       icon: FileCheck2,
+    },
+    {
+      label: 'Deployment & Processing',
+      labelBn: 'নিয়োগ ও বিদেশযাত্রা প্রসেসিং',
+      href: '/portal/processing',
+      icon: Plane,
     },
     {
       label: 'Documents',
@@ -162,10 +185,16 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       badge: unreadCount > 0 ? unreadCount : undefined,
     },
     {
-      label: 'Help & Support',
-      labelBn: 'সহায়তা ও যোগাযোগ',
+      label: 'Help & FAQ',
+      labelBn: 'সহায়তা ও এফএকিউ',
       href: '/portal/help',
       icon: LifeBuoy,
+    },
+    {
+      label: 'Support Tickets',
+      labelBn: 'সাপোর্ট টিকিট',
+      href: '/portal/support',
+      icon: Headset,
     },
     {
       label: 'Profile',
@@ -229,9 +258,11 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
               href="/portal/profile"
               className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-50 transition-colors"
             >
-              <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-800 flex items-center justify-center text-xs font-bold border border-slate-200">
-                {applicant?.fullName ? applicant.fullName.charAt(0).toUpperCase() : 'C'}
-              </div>
+              <ProfileAvatar
+                src={applicant?.profilePhoto}
+                name={applicant?.fullName}
+                size="sm"
+              />
               <div className="hidden lg:block text-left leading-tight">
                 <div className="text-xs font-semibold text-slate-900 truncate max-w-[130px]">
                   {applicant?.fullName || 'Candidate'}
@@ -285,12 +316,19 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                 </Link>
               );
             })}
-            <div className="pt-2 border-t border-slate-100">
+            <div className="pt-2 border-t border-slate-100 space-y-1">
+              <Link
+                href="/"
+                className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-600 hover:text-slate-900"
+              >
+                <ExternalLink className="w-4 h-4 text-emerald-600" />
+                <span>{t('মূল ওয়েবসাইট (হোমপেজ)', 'Main Website (Home)')}</span>
+              </Link>
               <Link
                 href="/jobs"
                 className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-500 hover:text-slate-900"
               >
-                <ExternalLink className="w-4 h-4" />
+                <Briefcase className="w-4 h-4 text-slate-400" />
                 <span>{t('বিদেশি চাকরির মূল পাতা', 'Public Job Portal')}</span>
               </Link>
             </div>
@@ -346,15 +384,24 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
             <div>
               <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                {t('বহিরাগত লিংক', 'External')}
+                {t('মূল ওয়েবসাইট', 'Main Website')}
               </div>
-              <Link
-                href="/jobs"
-                className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors"
-              >
-                <ExternalLink className="w-4 h-4 shrink-0 text-slate-400" />
-                <span>{t('মূল ওয়েবসাইট', 'Public Website')}</span>
-              </Link>
+              <div className="space-y-0.5">
+                <Link
+                  href="/"
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+                >
+                  <ExternalLink className="w-4 h-4 shrink-0 text-emerald-600" />
+                  <span>{t('মূল ওয়েবসাইট (হোম)', 'Main Website (Home)')}</span>
+                </Link>
+                <Link
+                  href="/jobs"
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+                >
+                  <Briefcase className="w-4 h-4 shrink-0 text-slate-400" />
+                  <span>{t('বৈদেশিক চাকরির পাতা', 'Public Job Portal')}</span>
+                </Link>
+              </div>
             </div>
           </div>
 

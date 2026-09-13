@@ -32,6 +32,8 @@ import {
   UserCheck,
   ListTodo,
   X,
+  ExternalLink,
+  Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { IconButton } from '@/components/ui/icon-button';
@@ -128,6 +130,14 @@ const NAV_SECTIONS: NavSection[] = [
       { title: 'Users', href: '/admin/users', icon: Users },
       { title: 'Settings', href: '/admin/settings', icon: Settings },
       { title: 'Audit Logs', href: '/admin/audit-logs', icon: History },
+      { title: 'Trash / রিসাইকেল বিন', href: '/admin/trash', icon: Trash2 },
+    ],
+  },
+  {
+    title: 'MAIN WEBSITE',
+    items: [
+      { title: 'Public Homepage', href: '/', icon: ExternalLink },
+      { title: 'Public Job Board', href: '/jobs', icon: BriefcaseBusiness },
     ],
   },
 ];

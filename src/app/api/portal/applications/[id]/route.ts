@@ -4,16 +4,17 @@ import { requireApplicantAuth } from '@/lib/portal-auth';
 
 // Safe applicant-facing timeline definition
 const STAGES = [
-  { key: 'SUBMITTED', label: 'Application Submitted', description: 'Application received and registered' },
-  { key: 'UNDER_REVIEW', label: 'Under Review', description: 'Profile and qualifications being evaluated' },
-  { key: 'SHORTLISTED', label: 'Shortlisted', description: 'Profile selected for employer consideration' },
-  { key: 'INTERVIEW_SCHEDULED', label: 'Interview Scheduled', description: 'Interview date and details arranged' },
-  { key: 'SELECTED', label: 'Candidate Selected', description: 'Selected by overseas employer' },
-  { key: 'OFFER_ACCEPTED', label: 'Offer / Contract', description: 'Employment contract signed' },
-  { key: 'MEDICAL_PASSED', label: 'Medical Clearance', description: 'Health check completed and certified' },
-  { key: 'VISA_PROCESSING', label: 'Visa Processing', description: 'Visa application submitted to embassy' },
-  { key: 'VISA_APPROVED', label: 'Visa Approved', description: 'Visa issued and stamped' },
-  { key: 'COMPLETED', label: 'Departure Complete', description: 'Flight booked and deployed to destination' },
+  { key: 'APPLIED', label: 'Application Submitted', labelBn: 'আবেদন দাখিল', description: 'Application received and registered' },
+  { key: 'SCREENING', label: 'Profile Screening', labelBn: 'বাছাই যাচাই', description: 'Recruitment screening in progress' },
+  { key: 'SHORTLISTED', label: 'Shortlisted', labelBn: 'শর্টলিস্টেড', description: 'Profile selected for employer consideration' },
+  { key: 'INTERVIEW_SCHEDULED', label: 'Interview Scheduled', labelBn: 'সাক্ষাৎকার নির্ধারিত', description: 'Interview date and details arranged' },
+  { key: 'INTERVIEWED', label: 'Interview Evaluated', labelBn: 'সাক্ষাৎকার সম্পন্ন', description: 'Interview completed and evaluated' },
+  { key: 'SELECTED', label: 'Candidate Selected', labelBn: 'নির্বাচিত', description: 'Selected for overseas vacancy' },
+  { key: 'OFFER_ACCEPTED', label: 'Offer / Contract', labelBn: 'চুক্তি স্বাক্ষর', description: 'Employment contract signed' },
+  { key: 'MEDICAL_PASSED', label: 'Medical Clearance', labelBn: 'মেডিকেল ফিটনেস', description: 'Health check certified' },
+  { key: 'VISA_PROCESSING', label: 'Visa Processing', labelBn: 'ভিসা প্রসেসিং', description: 'Visa application submitted' },
+  { key: 'VISA_APPROVED', label: 'Visa Approved', labelBn: 'ভিসা অনুমোদিত', description: 'Visa issued and stamped' },
+  { key: 'COMPLETED', label: 'Departure Complete', labelBn: 'ফ্লাইট ও ডিপার্চার', description: 'Flight booked and deployed' },
 ];
 
 export async function GET(

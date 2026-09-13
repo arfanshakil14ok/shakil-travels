@@ -5,6 +5,7 @@ import { headers } from 'next/headers';
 export interface AuditLogInput {
   userId?: string | null;
   actorUserId?: string | null;
+  actorId?: string | null;
   actorType?: 'STAFF' | 'APPLICANT' | 'SYSTEM' | string;
   targetUserId?: string | null;
   applicantId?: string | null;
@@ -56,13 +57,13 @@ export async function createAuditLog(params: AuditLogInput) {
         : String(params.metadata)
       : null;
 
-    const actorId = params.actorUserId || params.userId || null;
-    const actorType = params.actorType || (params.applicantId && !params.userId ? 'APPLICANT' : 'STAFF');
+    const effectiveActorId = params.actorUserId || params.actorId || params.userId || null;
+    const actorType = params.actorType || (params.applicantId && !params.userId && !params.actorId ? 'APPLICANT' : 'STAFF');
 
     return await prisma.auditLog.create({
       data: {
-        userId: params.userId || null,
-        actorUserId: actorId,
+        userId: params.userId || params.actorId || null,
+        actorUserId: effectiveActorId,
         actorType,
         targetUserId: params.targetUserId || null,
         applicantId: params.applicantId || null,

@@ -13,8 +13,8 @@ import {
   GraduationCap,
   FileCheck2,
   ShieldCheck,
+  CheckCircle2,
   AlertTriangle,
-  ArrowRight,
   ChevronRight,
   Utensils,
   Home,
@@ -26,19 +26,30 @@ import {
   UserPlus,
 } from 'lucide-react';
 import prisma from '@/lib/prisma';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getJobCategoryImage, getCountryFlagUrl, getCountryImage } from '@/lib/image-constants';
+import { getCurrentApplicant } from '@/lib/portal-auth';
+import { getCurrentUser } from '@/lib/auth';
+import { calculateMatch } from '@/lib/matching';
+
+export const dynamic = 'force-dynamic';
 
 interface JobDetailPageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 export async function generateMetadata({ params }: JobDetailPageProps) {
+  const { slug } = await params;
   const job = await prisma.job.findFirst({
     where: {
-      OR: [{ slug: params.slug }, { id: params.slug }, { jobCode: params.slug }],
+      OR: [{ slug }, { id: slug }, { jobCode: slug }],
       status: 'PUBLISHED',
+      employer: {
+        is: {
+          verificationStatus: 'VERIFIED',
+          status: 'ACTIVE',
+        },
+      },
     },
     include: {
       country: true,
@@ -48,21 +59,35 @@ export async function generateMetadata({ params }: JobDetailPageProps) {
 
   if (!job) {
     return {
-      title: 'Job Circular Not Found | SHAKIL GLOBAL MANPOWER',
+      title: 'Job Circular Not Found | SHAKIL GLOBAL RECRUITMENT',
     };
   }
 
   return {
-    title: `${job.title} in ${job.country.name} | SHAKIL GLOBAL MANPOWER`,
+    title: `${job.title} in ${job.country.name} | SHAKIL GLOBAL RECRUITMENT (RL-1892)`,
     description: `Official job vacancy for ${job.title} in ${job.country.name}. Vacancies: ${job.vacancyCount}. Verified overseas employment through licensed recruitment agency RL-1892.`,
   };
 }
 
 export default async function JobDetailPage({ params }: JobDetailPageProps) {
+  const { slug } = await params;
+  
+  // Check candidate portal session or staff user session
+  const [applicant, staffUser] = await Promise.all([
+    getCurrentApplicant(),
+    getCurrentUser(),
+  ]);
+
   const job = await prisma.job.findFirst({
     where: {
-      OR: [{ slug: params.slug }, { id: params.slug }, { jobCode: params.slug }],
+      OR: [{ slug }, { id: slug }, { jobCode: slug }],
       status: 'PUBLISHED',
+      employer: {
+        is: {
+          verificationStatus: 'VERIFIED',
+          status: 'ACTIVE',
+        },
+      },
     },
     include: {
       country: true,
@@ -75,20 +100,41 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     notFound();
   }
 
+  // Calculate remaining vacancies
+  const remainingVacancies = Math.max(0, (job.vacancyCount || 0) - (job.filledCount || 0));
+
+  // Candidate Match calculation if candidate is logged in
+  let candidateMatch: any = null;
+  let hasApplied = false;
+
+  if (applicant) {
+    try {
+      candidateMatch = calculateMatch(applicant, job);
+      const appCount = await prisma.application.count({
+        where: { jobId: job.id, applicantId: applicant.id },
+      });
+      hasApplied = appCount > 0;
+    } catch {
+      // Fallback if matching engine encounter edge case
+      candidateMatch = null;
+    }
+  }
+
   const categoryImg = getJobCategoryImage(job.jobCategory?.name, job.title);
   const flagUrl = getCountryFlagUrl(job.country?.code);
-  const countryImg = getCountryImage(job.country?.code);
+  const countryImg = getCountryImage(job.country?.code, job.country?.slug || job.country?.name);
 
   const formatSalary = () => {
     const cur = job.currency || 'BDT';
+    const period = job.salaryPeriod ? ` / ${job.salaryPeriod.toLowerCase()}` : ' / মাস';
     if (!job.salaryMin && !job.salaryMax) return 'আলোচনা সাপেক্ষে (Negotiable)';
     if (job.salaryMin && job.salaryMax) {
-      return `${cur} ${Number(job.salaryMin).toLocaleString()} - ${Number(job.salaryMax).toLocaleString()} / মাস`;
+      return `${cur} ${Number(job.salaryMin).toLocaleString()} - ${Number(job.salaryMax).toLocaleString()}${period}`;
     }
     if (job.salaryMin) {
-      return `${cur} ${Number(job.salaryMin).toLocaleString()}+ / মাস`;
+      return `${cur} ${Number(job.salaryMin).toLocaleString()}+${period}`;
     }
-    return `${cur} ${Number(job.salaryMax).toLocaleString()} / মাস`;
+    return `${cur} ${Number(job.salaryMax).toLocaleString()}${period}`;
   };
 
   const formatDeadline = (date?: Date | null) => {
@@ -113,7 +159,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
           <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
           <Link href="/jobs" className="hover:text-slate-900 transition-colors">চাকরি</Link>
           <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-          <Link href={`/countries/${job.country.slug}`} className="hover:text-slate-900 transition-colors">
+          <Link href={`/countries/${job.country.slug || job.country.id}`} className="hover:text-slate-900 transition-colors">
             {job.country.name}
           </Link>
           <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
@@ -136,9 +182,6 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
             {/* Country & Category Tags */}
             <div className="absolute top-4 left-4 sm:left-6 flex flex-wrap items-center gap-2">
               <div className="bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-200 shadow-md flex items-center gap-2">
-                <div className="relative w-6 h-4 rounded-xs overflow-hidden shadow-2xs border border-slate-200">
-                  <Image src={countryImg.src} alt={job.country.name} fill className="object-cover" />
-                </div>
                 <div className="relative w-4 h-3 rounded-xs overflow-hidden">
                   <Image src={flagUrl} alt={job.country.name} fill className="object-cover" />
                 </div>
@@ -146,7 +189,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
               </div>
 
               <div className="bg-navy-900/80 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-xs font-semibold">
-                {job.jobCategory?.name || 'General'}
+                {job.jobCategory?.name || 'সাধারণ ক্যাটাগরি'}
               </div>
 
               {job.featured && (
@@ -159,7 +202,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
             {/* Headline in banner bottom */}
             <div className="absolute bottom-4 sm:bottom-6 left-4 sm:left-6 right-4 sm:right-6 text-white">
               <div className="text-xs text-slate-300 font-mono mb-1">
-                সার্কুলার কোড: {job.jobCode}
+                সার্কুলার কোড: {job.jobCode || 'SK-JOB'}
               </div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white font-bengali">
                 {job.title}
@@ -173,17 +216,20 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
               <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1 font-bengali">
                 <Banknote className="w-3.5 h-3.5" /> মাসিক বেতন
               </span>
-              <div className="text-sm sm:text-base font-extrabold text-emerald-900">
+              <div className="text-sm sm:text-base font-extrabold text-emerald-900 font-sans">
                 {formatSalary()}
               </div>
             </div>
 
             <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1 font-bengali">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                <Users className="w-3.5 h-3.5 text-slate-400" /> মোট পদসংখ্যা
+                <Users className="w-3.5 h-3.5 text-slate-400" /> মোট পদসংখ্যা ও কোটা
               </span>
-              <div className="text-sm sm:text-base font-extrabold text-slate-900">
+              <div className="text-sm sm:text-base font-extrabold text-slate-900 font-sans">
                 {job.vacancyCount || 1} জন কর্মী
+                <span className="text-xs font-semibold text-emerald-700 ml-1.5 bg-emerald-100 px-1.5 py-0.5 rounded font-bengali">
+                  {remainingVacancies} টি অবশিষ্ট
+                </span>
               </div>
             </div>
 
@@ -200,7 +246,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5 text-slate-400" /> আবেদনের শেষ তারিখ
               </span>
-              <div className="text-sm sm:text-base font-extrabold text-slate-900">
+              <div className="text-sm sm:text-base font-extrabold text-slate-900 font-sans">
                 {formatDeadline(job.applicationDeadline)}
               </div>
             </div>
@@ -218,7 +264,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                 কাজের বিস্তারিত বিবরণ ও দায়িত্বসমূহ
               </h2>
               <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
-                {job.description}
+                {job.description || 'এই পদের জন্য বিস্তারিত বিবরণ সরাসরি অফিসে অথবা অনলাইনে আবেদন করার পর অবহিত করা হবে।'}
               </div>
             </div>
 
@@ -302,48 +348,139 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
               <div className="space-y-1">
                 <span className="font-extrabold block text-amber-900">সরকারি নীতিমালা ও প্রতারণা সতর্কতা:</span>
                 <p>
-                  SHAKIL GLOBAL MANPOWER (RL-1892) বাংলাদেশ সরকারের প্রবাসী কল্যাণ ও বৈদেশিক কর্মসংস্থান মন্ত্রণালয় এবং BMET এর পূর্ণাঙ্গ নীতি অনুসরণ করে। কোনো মধ্যস্বত্বভোগী বা দালালের সাথে আর্থিক লেনদেন করবেন না। সমস্ত ফি অফিসের অফিসিয়াল রসিদের মাধ্যমে প্রদেয়।
+                  SHAKIL GLOBAL RECRUITMENT (RL-1892) বাংলাদেশ সরকারের প্রবাসী কল্যাণ ও বৈদেশিক কর্মসংস্থান মন্ত্রণালয় এবং BMET এর পূর্ণাঙ্গ নীতি অনুসরণ করে। কোনো মধ্যস্বত্বভোগী বা দালালের সাথে আর্থিক লেনদেন করবেন না। সমস্ত ফি অফিসের অফিসিয়াল রসিদের মাধ্যমে প্রদেয়।
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Right Sidebar Column: Apply Card & Employer Info */}
+          {/* Right Sidebar Column: Apply Card, Match Score & Employer Info */}
           <div className="lg:col-span-4 space-y-6">
+            {/* Candidate Match Score Card (If Candidate Logged In) */}
+            {candidateMatch && (
+              <div className="bg-gradient-to-br from-indigo-50 via-white to-indigo-100/40 rounded-2xl p-6 border border-indigo-200 shadow-sm space-y-3 font-bengali">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-indigo-950 flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-indigo-600" /> আপনার প্রোফাইল মিল (Match Score)
+                  </span>
+                  <span className="text-xs font-extrabold px-2 py-0.5 rounded-full bg-indigo-600 text-white font-sans">
+                    {candidateMatch.score}%
+                  </span>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${
+                        candidateMatch.score >= 80
+                          ? 'bg-emerald-500'
+                          : candidateMatch.score >= 60
+                          ? 'bg-indigo-600'
+                          : 'bg-amber-500'
+                      }`}
+                      style={{ width: `${candidateMatch.score}%` }}
+                    />
+                  </div>
+                  <div className="text-[11px] font-semibold text-slate-600 flex justify-between">
+                    <span>{candidateMatch.levelLabel}</span>
+                    <span>{candidateMatch.score >= 70 ? 'উচ্চ সম্ভাবনা' : 'আবেদন উপযোগী'}</span>
+                  </div>
+                </div>
+
+                {/* Key match points */}
+                <div className="pt-2 border-t border-indigo-100 text-[11px] text-slate-600 space-y-1">
+                  {candidateMatch.criteria?.slice(0, 3).map((c: any, i: number) => (
+                    <div key={i} className="flex items-center gap-1.5">
+                      <span className={c.matched ? 'text-emerald-600 font-bold' : 'text-slate-400'}>
+                        {c.matched ? '✓' : '•'}
+                      </span>
+                      <span className="truncate">{c.detail}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Quick Apply Card */}
             <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4 font-bengali sticky top-24">
               <h3 className="font-extrabold text-slate-900 text-base">আবেদন করার প্রক্রিয়া</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                অনলাইনে আপনার জীবনবৃত্তান্ত (CV) ও পাসপোর্ট কপি দিয়ে সরাসরি আবেদন করুন। আমাদের রিক্রুটমেন্ট টিম আপনার প্রোফাইল মূল্যায়ন করে ইন্টারভিউয়ের জন্য যোগাযোগ করবে।
+                অনলাইনে সরাসরি আবেদন করুন। আমাদের রিক্রুটমেন্ট টিম আপনার প্রোফাইল মূল্যায়ন করে ইন্টারভিউয়ের জন্য যোগাযোগ করবে।
               </p>
 
-              {/* Direct Apply Button */}
-              <Link href={`/portal/register?jobId=${job.id}`} className="block">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 text-sm flex items-center justify-center gap-2 shadow-md"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  অনলাইনে আবেদন করুন
-                </Button>
-              </Link>
-
-              {/* Existing User Login Link */}
-              <div className="text-center text-xs text-slate-500 pt-1">
-                ইতিমধ্যে একাউন্ট আছে?{' '}
-                <Link href="/portal/login" className="font-bold text-emerald-700 hover:underline">
-                  প্রার্থী লগইন করুন
+              {/* Dynamic Apply Action */}
+              {hasApplied ? (
+                <div className="w-full bg-emerald-50 border border-emerald-300 text-emerald-800 text-center font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  ইতিমধ্যে এই চাকরিতে আবেদন সম্পন্ন হয়েছে
+                </div>
+              ) : applicant ? (
+                <Link href={`/portal/jobs?applyJobId=${job.id}`} className="block">
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 text-sm flex items-center justify-center gap-2 shadow-md"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    সরাসরি আবেদন জমা দিন (1-Click Apply)
+                  </Button>
                 </Link>
-              </div>
+              ) : (
+                <div className="space-y-2">
+                  <Link href={`/portal/register?jobId=${job.id}`} className="block">
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 text-sm flex items-center justify-center gap-2 shadow-md"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      অনলাইনে আবেদন করুন (নতুন প্রার্থী)
+                    </Button>
+                  </Link>
+                  <Link href={`/portal/login?redirect=/jobs/${job.slug || job.id}`} className="block">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full text-xs text-slate-700 hover:bg-slate-50"
+                    >
+                      লগইন করে আবেদন করুন
+                    </Button>
+                  </Link>
+                </div>
+              )}
+
+              {/* Verified Employer Card */}
+              {job.employer && (
+                <div className="pt-4 border-t border-slate-100 space-y-2 text-xs">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                    নিয়োগকারী প্রতিষ্ঠান
+                  </span>
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <div className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                      <Building className="w-4 h-4 text-indigo-600" />
+                      {job.employer.companyName}
+                    </div>
+                    {job.employer.companyNameLocal && (
+                      <div className="text-[11px] text-slate-500 mt-0.5">
+                        {job.employer.companyNameLocal}
+                      </div>
+                    )}
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
+                        <ShieldCheck className="w-3.5 h-3.5" /> Verified Employer
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Destination Country Card */}
-              <div className="pt-4 border-t border-slate-100 space-y-3">
+              <div className="pt-2 border-t border-slate-100 space-y-3">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                   গন্তব্য দেশ সংক্রান্ত তথ্য
                 </span>
                 <Link
-                  href={`/countries/${job.country.slug}`}
+                  href={`/countries/${job.country.slug || job.country.id}`}
                   className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-emerald-300 bg-slate-50 transition-colors group"
                 >
                   <div className="relative w-10 h-8 rounded-md overflow-hidden flex-shrink-0">

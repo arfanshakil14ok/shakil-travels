@@ -11,8 +11,14 @@ export async function GET(
     await requirePermission('APPLICATION_VIEW');
     const { id } = await params;
 
-    const application = await prisma.application.findUnique({
-      where: { id },
+    const application = await prisma.application.findFirst({
+      where: {
+        OR: [
+          { id },
+          { applicationCode: id },
+          { applicationNumber: id },
+        ],
+      },
       include: {
         applicant: {
           include: {
@@ -20,6 +26,7 @@ export async function GET(
             preferredCountry: true,
             preferredJobCategory: true,
             assignedStaff: { select: { id: true, name: true, email: true } },
+            candidateSkills: true,
           },
         },
         employer: true,
@@ -33,6 +40,12 @@ export async function GET(
         },
         assignedStaff: {
           select: { id: true, name: true, email: true, phone: true },
+        },
+        screenings: {
+          orderBy: { createdAt: 'desc' },
+          include: {
+            screenedBy: { select: { id: true, name: true, email: true } },
+          },
         },
         statusHistory: {
           orderBy: { createdAt: 'desc' },
@@ -49,8 +62,16 @@ export async function GET(
         },
         interviews: {
           orderBy: { scheduledAt: 'desc' },
+          include: {
+            interviewerUser: { select: { id: true, name: true, email: true } },
+          },
         },
         visaApplications: true,
+        processingCase: {
+          include: {
+            assignedOfficer: { select: { id: true, name: true, email: true } },
+          },
+        },
         invoices: {
           orderBy: { createdAt: 'desc' },
           include: {
@@ -78,6 +99,7 @@ export async function GET(
             ...application.job,
             employer,
             country,
+            remainingVacancies: Math.max(0, (application.job.vacancyCount || 0) - (application.job.filledCount || 0)),
           }
         : null,
     };
@@ -101,8 +123,10 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
 
-    const existing = await prisma.application.findUnique({
-      where: { id },
+    const existing = await prisma.application.findFirst({
+      where: {
+        OR: [{ id }, { applicationCode: id }, { applicationNumber: id }],
+      },
     });
 
     if (!existing) {
@@ -110,11 +134,12 @@ export async function PUT(
     }
 
     const updated = await prisma.application.update({
-      where: { id },
+      where: { id: existing.id },
       data: {
         priority: body.priority !== undefined ? body.priority : existing.priority,
         assignedStaffId: body.assignedStaffId !== undefined ? body.assignedStaffId : (body.assignedToId !== undefined ? body.assignedToId : existing.assignedStaffId),
-        notes: body.notes !== undefined ? body.notes : (body.internalNotes !== undefined ? body.internalNotes : existing.notes),
+        notes: body.notes !== undefined ? body.notes : existing.notes,
+        internalNotes: body.internalNotes !== undefined ? body.internalNotes : existing.internalNotes,
       },
       include: {
         applicant: { select: { id: true, fullName: true, applicantNumber: true } },

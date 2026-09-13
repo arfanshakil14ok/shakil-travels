@@ -165,14 +165,24 @@ export default function PortalInvoicesPage() {
                   )}
                 </div>
 
-                <div className="text-right shrink-0">
-                  <div className="text-base font-bold text-slate-900">
-                    ৳{Number(inv.totalAmount).toLocaleString()}
+                <div className="flex sm:flex-col items-end justify-between sm:justify-center gap-2 shrink-0">
+                  <div className="text-right">
+                    <div className="text-base font-bold text-slate-900">
+                      ৳{Number(inv.totalAmount).toLocaleString()}
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      {t('পরিশোধিত:', 'Paid:')} ৳{Number(inv.paidAmount).toLocaleString()} |{' '}
+                      {t('বকেয়া:', 'Due:')} ৳{Number(inv.dueAmount).toLocaleString()}
+                    </div>
                   </div>
-                  <div className="text-xs text-slate-500">
-                    {t('পরিশোধিত:', 'Paid:')} ৳{Number(inv.paidAmount).toLocaleString()} |{' '}
-                    {t('বকেয়া:', 'Due:')} ৳{Number(inv.dueAmount).toLocaleString()}
-                  </div>
+                  <Link
+                    href={`/invoice/verify/${inv.invoiceNumber}`}
+                    target="_blank"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-navy-900 hover:bg-navy-800 text-white text-[11px] font-semibold transition-colors"
+                  >
+                    <span>{t('ইনভয়েস ও QR ভেরিফিকেশন', 'View & QR Verify')}</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
                 </div>
               </div>
             ))}

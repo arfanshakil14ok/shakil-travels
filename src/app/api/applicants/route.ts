@@ -78,10 +78,15 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
+    const sanitizedItems = items.map((item) => {
+      const { passwordHash: _, ...safeItem } = item as any;
+      return safeItem;
+    });
+
     return NextResponse.json({
       success: true,
       data: {
-        items,
+        items: sanitizedItems,
         pagination: {
           page,
           limit,
@@ -187,7 +192,8 @@ export async function POST(request: NextRequest) {
       newValue: { applicantNumber: applicant.applicantNumber, fullName: applicant.fullName },
     });
 
-    return NextResponse.json({ success: true, data: applicant }, { status: 201 });
+    const { passwordHash: _, ...safeApplicant } = applicant as any;
+    return NextResponse.json({ success: true, data: safeApplicant }, { status: 201 });
   } catch (error: any) {
     if (error.name === 'AuthorizationError' || error.name === 'AuthenticationError') {
       return NextResponse.json({ success: false, error: error.message }, { status: 403 });

@@ -42,7 +42,11 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
+      needsPhoto: !applicant.profilePhoto,
+      hasPhoto: !!applicant.profilePhoto,
       data: {
+        needsPhoto: !applicant.profilePhoto,
+        hasPhoto: !!applicant.profilePhoto,
         applicant: {
           id: applicant.id,
           applicantNumber: applicant.applicantNumber,
@@ -56,6 +60,9 @@ export async function GET() {
           nationality: applicant.nationality,
           preferredCountry: applicant.preferredCountry?.name || null,
           preferredJobCategory: applicant.preferredJobCategory?.name || null,
+          profilePhoto: applicant.profilePhoto || null,
+          hasPhoto: !!applicant.profilePhoto,
+          needsPhoto: !applicant.profilePhoto,
           isEmailVerified: applicant.isEmailVerified,
           isPhoneVerified: applicant.isPhoneVerified,
           profileCompletion: completion.percentage,

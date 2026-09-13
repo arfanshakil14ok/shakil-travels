@@ -121,10 +121,12 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       },
     });
 
+    const { passwordHash: _, ...safeUser } = updated;
+
     return NextResponse.json({
       success: true,
       message: 'User updated successfully',
-      data: updated,
+      data: safeUser,
     });
   } catch (error: any) {
     if (error.name === 'AuthorizationError' || error.name === 'AuthenticationError') {

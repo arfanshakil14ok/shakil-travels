@@ -54,47 +54,60 @@ export async function PUT(
     }
 
     // Check if this is an evaluation submission or a rescheduling
-    if (body.outcome || body.score !== undefined || body.feedback) {
-      const parsed = evaluateInterviewSchema.safeParse(body);
-      if (!parsed.success) {
-        return NextResponse.json(
-          { success: false, error: 'Validation failed', details: parsed.error.flatten() },
-          { status: 400 }
-        );
-      }
+    if (body.outcome || body.result || body.scorecard || body.score !== undefined || body.feedback) {
+      const outcome = body.result || body.outcome;
+      const normalizedResult = outcome === 'PASSED' ? 'PASS' : outcome === 'FAILED' ? 'FAIL' : outcome || 'PENDING';
 
-      const evalData = parsed.data;
+      // Compute average score from scorecard if provided
+      let calculatedScore = body.score !== undefined ? body.score : existing.score;
+      if (body.scorecard && typeof body.scorecard === 'object') {
+        const scores = Object.values(body.scorecard).filter((v) => typeof v === 'number') as number[];
+        if (scores.length > 0) {
+          calculatedScore = Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10);
+        }
+      }
 
       const result = await prisma.$transaction(async (tx) => {
         const updated = await tx.interview.update({
           where: { id },
           data: {
-            score: evalData.score !== undefined ? evalData.score : existing.score,
-            feedback: evalData.feedback || existing.feedback,
-            result: evalData.outcome,
-            status: evalData.outcome === 'DID_NOT_ATTEND' ? 'NO_SHOW' : 'COMPLETED',
+            score: calculatedScore,
+            scorecard: body.scorecard !== undefined ? body.scorecard : existing.scorecard,
+            candidateNotes: body.candidateNotes !== undefined ? body.candidateNotes : existing.candidateNotes,
+            feedback: body.feedback || existing.feedback,
+            notes: body.notes !== undefined ? body.notes : existing.notes,
+            result: normalizedResult,
+            status: normalizedResult === 'NO_SHOW' || normalizedResult === 'DID_NOT_ATTEND' ? 'NO_SHOW' : 'COMPLETED',
           },
         });
 
-        // If application linked and outcome is PASSED, transition application to INTERVIEW_PASSED
-        if (existing.applicationId && evalData.outcome === 'PASSED') {
+        // If application linked, update interviewedAt and application status
+        if (existing.applicationId) {
           const app = await tx.application.findUnique({
             where: { id: existing.applicationId },
           });
 
-          if (app && ['APPLIED', 'SCREENING', 'SHORTLISTED', 'INTERVIEW_SCHEDULED'].includes(app.currentStage)) {
+          if (app && app.status !== 'SELECTED' && app.status !== 'REJECTED' && app.status !== 'WITHDRAWN') {
+            const newStage = normalizedResult === 'PASS' ? 'INTERVIEWED' : 'INTERVIEWED';
             await tx.application.update({
               where: { id: app.id },
-              data: { currentStage: 'INTERVIEW_PASSED', status: 'INTERVIEW_PASSED' },
+              data: {
+                currentStage: newStage,
+                status: newStage,
+                interviewedAt: new Date(),
+              },
             });
 
             await tx.applicationStatusHistory.create({
               data: {
                 applicationId: app.id,
-                fromStage: app.currentStage,
-                toStage: 'INTERVIEW_PASSED',
+                fromStage: app.status,
+                toStage: newStage,
+                fromStatus: app.status,
+                toStatus: newStage,
                 changedById: currentUser.id,
-                notes: `Interview passed with score ${evalData.score || 'N/A'}/100. Feedback: ${evalData.feedback || 'None'}`,
+                changedByRole: (currentUser as any).role?.name || 'STAFF',
+                notes: `Interview evaluated: result = ${normalizedResult}, score = ${calculatedScore || 'N/A'}/100. Feedback: ${body.feedback || 'None'}`,
               },
             });
           }
@@ -109,9 +122,9 @@ export async function PUT(
         entity: 'INTERVIEW',
         entityId: id,
         newValue: {
-          outcome: evalData.outcome,
-          score: evalData.score,
-          applicant: existing.applicant.fullName,
+          result: normalizedResult,
+          score: calculatedScore,
+          applicant: existing.applicant?.fullName,
         },
       });
 
@@ -131,6 +144,7 @@ export async function PUT(
         location: body.location !== undefined ? body.location : existing.location,
         meetingLink: body.meetingLink !== undefined ? body.meetingLink : existing.meetingLink,
         notes: body.notes !== undefined ? body.notes : existing.notes,
+        candidateNotes: body.candidateNotes !== undefined ? body.candidateNotes : existing.candidateNotes,
         status: body.status || existing.status,
       },
     });

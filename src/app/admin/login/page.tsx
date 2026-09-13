@@ -5,11 +5,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ShieldCheck, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { BrandLogo } from '@/components/brand/brand-logo';
 import { BRAND } from '@/config/brand';
+import { sanitizeRedirectUrl } from '@/lib/security';
 
 function AdminLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const from = searchParams.get('from') || '/admin/dashboard';
+  const from = sanitizeRedirectUrl(searchParams.get('from'), '/admin/dashboard');
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,7 +33,7 @@ function AdminLoginForm() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cleanEmail, password }),
+        body: JSON.stringify({ email: cleanEmail, password, portalType: 'ADMIN' }),
       });
 
       const data = await res.json();

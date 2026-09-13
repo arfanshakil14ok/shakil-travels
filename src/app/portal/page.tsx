@@ -16,6 +16,8 @@ import {
   ShieldCheck,
   ChevronRight,
   Receipt,
+  Sparkles,
+  Building2,
 } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -29,25 +31,28 @@ export default function PortalDashboardPage() {
   const [interviews, setInterviews] = useState<any[]>([]);
   const [visaCases, setVisaCases] = useState<any[]>([]);
   const [financialSummary, setFinancialSummary] = useState<any | null>(null);
+  const [recommendedJobs, setRecommendedJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadDashboard() {
       try {
-        const [pRes, aRes, iRes, vRes, invRes] = await Promise.all([
+        const [pRes, aRes, iRes, vRes, invRes, recRes] = await Promise.all([
           fetch('/api/portal/profile'),
           fetch('/api/portal/applications'),
           fetch('/api/portal/interviews'),
           fetch('/api/portal/visa'),
           fetch('/api/portal/invoices'),
+          fetch('/api/portal/jobs/recommended'),
         ]);
 
-        const [pData, aData, iData, vData, invData] = await Promise.all([
+        const [pData, aData, iData, vData, invData, recData] = await Promise.all([
           pRes.json(),
           aRes.json(),
           iRes.json(),
           vRes.json(),
           invRes.json(),
+          recRes.json(),
         ]);
 
         if (pData.success) setProfile(pData.data);
@@ -55,6 +60,7 @@ export default function PortalDashboardPage() {
         if (iData.success) setInterviews(iData.data);
         if (vData.success) setVisaCases(vData.data);
         if (invData.success) setFinancialSummary(invData.data.summary);
+        if (recData?.success) setRecommendedJobs(recData.data || []);
       } catch {
         // silent
       } finally {
@@ -292,6 +298,86 @@ export default function PortalDashboardPage() {
           </div>
         </Link>
       </div>
+
+      {/* Recommended Jobs Section */}
+      {recommendedJobs.length > 0 && (
+        <div className="bg-gradient-to-r from-indigo-900 via-indigo-950 to-slate-900 rounded-xl p-5 sm:p-6 text-white shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-indigo-800/60 pb-3">
+            <div>
+              <h2 className="text-base sm:text-lg font-bold flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-amber-400" />
+                {t('আপনার জন্য বাছাইকৃত চাকরি', 'Recommended Jobs For You')}
+              </h2>
+              <p className="text-xs text-indigo-200 mt-0.5">
+                {t('আপনার দক্ষতা, অভিজ্ঞতা ও পছন্দের দেশের সাথে ১০০% মিল রেখে নির্ধারিত সার্কুলার।', 'Vacancies tailored to your skills, trade, and destination preference.')}
+              </p>
+            </div>
+            <Link
+              href="/portal/jobs"
+              className="text-xs font-semibold text-indigo-300 hover:text-white flex items-center gap-1"
+            >
+              <span>{t('সকল চাকরি দেখুন', 'View All Jobs')}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {recommendedJobs.slice(0, 3).map(({ job, match, hasApplied }: any) => (
+              <div
+                key={job.id}
+                className="bg-white/10 hover:bg-white/15 border border-white/10 rounded-xl p-4 transition-all flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                      {match.score}% {match.level}
+                    </span>
+                    <span className="text-xs text-slate-300 flex items-center gap-1">
+                      <span>{job.country?.flag || '🌐'}</span>
+                      <span>{job.country?.name}</span>
+                    </span>
+                  </div>
+
+                  <h3 className="font-bold text-sm text-white mt-2 line-clamp-1">
+                    {job.title}
+                  </h3>
+
+                  <div className="mt-1 text-xs text-indigo-200">
+                    {job.jobCategory?.name} • {job.salaryMin ? `${job.salaryMin} - ${job.salaryMax} ${job.currency}` : 'Negotiable'}
+                  </div>
+
+                  <div className="mt-2 text-[11px] text-slate-300 flex items-center gap-2">
+                    <span className="text-emerald-300 font-semibold">{job.remainingVacancies ?? job.vacancyCount} vacancies left</span>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
+                  <Link
+                    href={`/jobs/${job.slug}`}
+                    className="text-xs text-indigo-300 hover:text-white underline"
+                    target="_blank"
+                  >
+                    {t('বিস্তারিত', 'Details')}
+                  </Link>
+
+                  {hasApplied ? (
+                    <span className="text-xs text-emerald-400 font-semibold flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Applied
+                    </span>
+                  ) : (
+                    <Link
+                      href={`/portal/jobs?applyJobId=${job.id}`}
+                      className="px-3 py-1 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg shadow-xs"
+                    >
+                      {t('আবেদন করুন', 'Apply')}
+                    </Link>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Main 2-Column Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -14,6 +14,7 @@ export interface TabsProps {
   tabs?: TabItem[];
   activeTab?: string;
   onTabChange?: (id: string) => void;
+  onValueChange?: (id: string) => void;
   defaultValue?: string;
   value?: string;
   className?: string;
@@ -31,6 +32,7 @@ export const Tabs: React.FC<TabsProps> = ({
   tabs,
   activeTab,
   onTabChange,
+  onValueChange,
   defaultValue,
   value,
   className,
@@ -42,6 +44,7 @@ export const Tabs: React.FC<TabsProps> = ({
   const handleTabChange = (id: string) => {
     setInternalTab(id);
     if (onTabChange) onTabChange(id);
+    if (onValueChange) onValueChange(id);
   };
 
   // If children provided, render compound component pattern

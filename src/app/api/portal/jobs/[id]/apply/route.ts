@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma';
 import { requireApplicantAuth } from '@/lib/portal-auth';
 import { generateFormattedId } from '@/lib/id-generator';
 import { dispatchCommunication } from '@/lib/comms/dispatcher';
+import { calculateMatch } from '@/lib/matching';
 
 export async function POST(
   request: NextRequest,
@@ -31,11 +32,12 @@ export async function POST(
       );
     }
 
-    // 2. CRITICAL: Prevent duplicate application for the same job
+    // 2. CRITICAL: Prevent duplicate active application for the same job
     const existingApp = await prisma.application.findFirst({
       where: {
         applicantId: applicant.id,
         jobId,
+        status: { notIn: ['REJECTED', 'WITHDRAWN', 'CANCELLED'] },
       },
     });
 
@@ -43,9 +45,9 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: `You have already applied for this position (Application: ${existingApp.applicationCode}). Multiple submissions for the same job are not permitted.`,
+          error: `You have already applied for this position (Application: ${existingApp.applicationCode || existingApp.applicationNumber}). / এই পদের জন্য আপনার সক্রিয় আবেদন ইতোমধ্যে জমা রয়েছে।`,
           applicationId: existingApp.id,
-          applicationCode: existingApp.applicationCode,
+          applicationCode: existingApp.applicationCode || existingApp.applicationNumber,
         },
         { status: 409 }
       );
@@ -59,10 +61,18 @@ export async function POST(
       // notes is optional
     }
 
-    // 3. Generate sequential application code SGR-APP-2026-XXXXXX
+    // 3. Fetch applicant profile details for matching snapshot
+    const fullApplicant = await prisma.applicant.findUnique({
+      where: { id: applicant.id },
+      include: { preferredCountry: true, preferredJobCategory: true },
+    });
+
+    const matchSnapshot = calculateMatch(fullApplicant || applicant, job);
+
+    // 4. Generate sequential application code SGR-APP-2026-XXXXXX
     const applicationCode = await generateFormattedId(prisma, 'application');
 
-    // 4. Create application
+    // 5. Create application with matching snapshot
     const application = await prisma.application.create({
       data: {
         applicationCode,
@@ -71,13 +81,17 @@ export async function POST(
         jobId,
         employerId: job.employerId || null,
         countryId: job.countryId || null,
-        currentStage: 'SUBMITTED',
-        status: 'SUBMITTED',
+        currentStage: 'APPLIED',
+        status: 'APPLIED',
+        source: 'CANDIDATE_CREATED',
         priority: 'MEDIUM',
         notes: notes || null,
+        matchingSnapshot: matchSnapshot as any,
         statusHistory: {
           create: {
-            toStage: 'SUBMITTED',
+            toStage: 'APPLIED',
+            toStatus: 'APPLIED',
+            changedByRole: 'APPLICANT',
             notes: 'Applicant self-applied via applicant portal',
           },
         },
@@ -108,7 +122,7 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      message: `Successfully applied to ${job.title}! Your application code is ${application.applicationCode}.`,
+      message: `Successfully applied to ${job.title}! Your application code is ${application.applicationCode}. / সফলভাবে আবেদন সম্পন্ন হয়েছে। আপনার আবেদন কোড: ${application.applicationCode}`,
       data: application,
     }, { status: 201 });
   } catch (error: any) {

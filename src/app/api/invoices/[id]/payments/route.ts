@@ -41,18 +41,40 @@ export async function POST(
       notes: data.notes || null,
     });
 
+    const invoice = await prisma.invoice.findUnique({
+      where: { id },
+      select: { invoiceNumber: true, applicantId: true, totalAmount: true, dueAmount: true },
+    });
+
     await createAuditLog({
       userId: currentUser.id,
+      applicantId: invoice?.applicantId || undefined,
+      actorType: 'STAFF',
       action: 'PAYMENT_CREATE',
       entity: 'PAYMENT',
       entityId: payment.id,
+      description: `Payment ${payment.paymentNumber} of ${payment.currency} ${payment.amount} recorded against Invoice ${invoice?.invoiceNumber || id}. Receipt: ${payment.receiptNumber}`,
       newValue: {
         paymentNumber: payment.paymentNumber,
         receiptNumber: payment.receiptNumber,
         amount: payment.amount.toString(),
         method: payment.paymentMethod,
+        invoiceNumber: invoice?.invoiceNumber,
+        applicantId: invoice?.applicantId,
       },
     });
+
+    if (invoice?.applicantId) {
+      await prisma.notification.create({
+        data: {
+          applicantId: invoice.applicantId,
+          type: 'PAYMENT_RECEIVED',
+          title: 'পেমেন্ট জমা সম্পন্ন',
+          message: `ইনভয়েস #${invoice.invoiceNumber} এর অনুকূলে ৳${Number(payment.amount).toLocaleString()} পেমেন্ট সফলভাবে জমা হয়েছে। রসিদ নম্বর: #${payment.receiptNumber}।`,
+          link: '/portal/payments',
+        },
+      });
+    }
 
     return NextResponse.json(
       {

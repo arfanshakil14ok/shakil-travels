@@ -26,6 +26,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Modal } from '@/components/ui/modal';
 import { useToast } from '@/components/ui/toast';
 import { formatDate } from '@/lib/utils';
+import { ProfileAvatar } from '@/components/ui/profile-avatar';
 
 export default function ApplicantsPage() {
   const { success, error } = useToast();
@@ -444,15 +445,24 @@ export default function ApplicantsPage() {
 
                       {/* Candidate Name & SGR ID */}
                       <td className="p-3.5">
-                        <Link
-                          href={`/admin/applicants/${a.id}`}
-                          className="font-semibold text-slate-900 hover:text-emerald-600 block truncate max-w-[180px]"
-                        >
-                          {a.fullName}
-                        </Link>
-                        <span className="font-mono text-[10px] text-slate-500 block mt-0.5">
-                          {a.applicantNumber}
-                        </span>
+                        <div className="flex items-center gap-2.5">
+                          <ProfileAvatar
+                            name={a.fullName}
+                            photoUrl={a.profilePhoto}
+                            size="sm"
+                          />
+                          <div className="min-w-0">
+                            <Link
+                              href={`/admin/applicants/${a.id}`}
+                              className="font-semibold text-slate-900 hover:text-emerald-600 block truncate max-w-[150px]"
+                            >
+                              {a.fullName}
+                            </Link>
+                            <span className="font-mono text-[10px] text-slate-500 block mt-0.5">
+                              {a.applicantNumber}
+                            </span>
+                          </div>
+                        </div>
                       </td>
 
                       {/* Phone & District */}

@@ -138,13 +138,26 @@ export async function POST(request: NextRequest) {
 
     await createAuditLog({
       userId: currentUser.id,
+      applicantId: data.applicantId,
+      actorType: 'STAFF',
       action: 'INTERVIEW_CREATE',
       entity: 'INTERVIEW',
       entityId: interview.id,
+      description: `Interview scheduled for ${interview.applicant.fullName}: ${interview.interviewType} on ${new Date(interview.scheduledAt).toLocaleString()}`,
       newValue: {
         applicant: interview.applicant.fullName,
         scheduledDate: interview.scheduledAt,
         type: interview.interviewType,
+      },
+    });
+
+    await prisma.notification.create({
+      data: {
+        applicantId: data.applicantId,
+        type: 'INTERVIEW_SCHEDULED',
+        title: 'সাক্ষাৎকার / ইন্টারভিউ নির্ধারিত হয়েছে',
+        message: `আপনার জন্য একটি ${interview.interviewType} ইন্টারভিউ নির্ধারণ করা হয়েছে: ${new Date(interview.scheduledAt).toLocaleDateString()}। বিস্তারিত জানতে ইন্টারভিউ সেকশনে যান।`,
+        link: '/portal/interviews',
       },
     });
 

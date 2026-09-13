@@ -11,29 +11,39 @@ export const metadata = {
 };
 
 interface JobsPageProps {
-  searchParams?: {
+  searchParams?: Promise<{
     q?: string;
     country?: string;
     category?: string;
-  };
+  }>;
 }
 
 export default async function JobsPublicPage({ searchParams }: JobsPageProps) {
-  const query = searchParams?.q?.trim();
-  const countrySlug = searchParams?.country?.trim();
+  const resolvedParams = searchParams ? await searchParams : {};
+  const query = resolvedParams.q?.trim();
+  const countrySlug = resolvedParams.country?.trim();
+  const categorySlug = resolvedParams.category?.trim();
 
-  // Query database with search parameters
+  // Query database with search parameters and strictly verified & active employers
   const jobs = await prisma.job.findMany({
     where: {
       status: 'PUBLISHED',
+      employer: {
+        is: {
+          verificationStatus: 'VERIFIED',
+          status: 'ACTIVE',
+        },
+      },
       ...(query
         ? {
             OR: [
               { title: { contains: query, mode: 'insensitive' } },
+              { titleLocal: { contains: query, mode: 'insensitive' } },
               { description: { contains: query, mode: 'insensitive' } },
               { skillsRequired: { contains: query, mode: 'insensitive' } },
               { country: { name: { contains: query, mode: 'insensitive' } } },
               { jobCategory: { name: { contains: query, mode: 'insensitive' } } },
+              { employer: { companyName: { contains: query, mode: 'insensitive' } } },
             ],
           }
         : {}),
@@ -41,6 +51,13 @@ export default async function JobsPublicPage({ searchParams }: JobsPageProps) {
         ? {
             country: {
               OR: [{ slug: countrySlug }, { code: countrySlug.toUpperCase() }],
+            },
+          }
+        : {}),
+      ...(categorySlug
+        ? {
+            jobCategory: {
+              OR: [{ slug: categorySlug }, { id: categorySlug }],
             },
           }
         : {}),
@@ -53,7 +70,7 @@ export default async function JobsPublicPage({ searchParams }: JobsPageProps) {
         select: { id: true, name: true, slug: true },
       },
       employer: {
-        select: { companyName: true },
+        select: { companyName: true, companyNameLocal: true, verificationStatus: true },
       },
     },
     orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }],

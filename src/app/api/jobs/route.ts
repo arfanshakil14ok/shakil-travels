@@ -34,10 +34,17 @@ export async function GET(request: NextRequest) {
 
     const where: any = {};
 
-    // If user is not authenticated or not staff, strictly only allow PUBLISHED jobs
+    // If user is not authenticated or candidate, strictly only allow PUBLISHED jobs from VERIFIED and ACTIVE employers
     const isStaff = Boolean(user && user.role?.name !== 'CANDIDATE');
     if (!isStaff) {
       where.status = 'PUBLISHED';
+      where.employer = {
+        is: {
+          verificationStatus: 'VERIFIED',
+          status: 'ACTIVE',
+        },
+      };
+      // For public marketplace, optionally filter past deadlines if requested or keep visible with badge
     } else if (requestedStatus && requestedStatus !== 'ALL') {
       where.status = requestedStatus;
     }
@@ -45,9 +52,12 @@ export async function GET(request: NextRequest) {
     if (search) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
+        { titleLocal: { contains: search, mode: 'insensitive' } },
         { jobCode: { contains: search, mode: 'insensitive' } },
         { description: { contains: search, mode: 'insensitive' } },
         { skillsRequired: { contains: search, mode: 'insensitive' } },
+        { city: { contains: search, mode: 'insensitive' } },
+        { employer: { companyName: { contains: search, mode: 'insensitive' } } },
       ];
     }
 
@@ -71,7 +81,7 @@ export async function GET(request: NextRequest) {
       where.salaryMin = { gte: Number(minSalary) };
     }
 
-    const [total, items] = await Promise.all([
+    const [total, rawItems] = await Promise.all([
       prisma.job.count({ where }),
       prisma.job.findMany({
         where,
@@ -81,13 +91,45 @@ export async function GET(request: NextRequest) {
         include: {
           country: { select: { id: true, name: true, code: true, flag: true, slug: true } },
           jobCategory: { select: { id: true, name: true, slug: true, icon: true } },
-          employer: { select: { id: true, companyName: true, verificationStatus: true } },
+          employer: {
+            select: {
+              id: true,
+              employerCode: true,
+              companyName: true,
+              companyNameLocal: true,
+              verificationStatus: true,
+              status: true,
+              city: true,
+            },
+          },
           _count: {
             select: { applications: true },
           },
         },
       }),
     ]);
+
+    // Format items with remaining vacancies and sanitization for public
+    const items = rawItems.map((job) => {
+      const remainingVacancies = Math.max(0, (job.vacancyCount || 0) - (job.filledCount || 0));
+      const isExpired = job.applicationDeadline ? new Date(job.applicationDeadline) < new Date() : false;
+
+      if (!isStaff) {
+        // Public sanitized DTO
+        const { reviewNotes, createdBy, ...publicData } = job as any;
+        return {
+          ...publicData,
+          remainingVacancies,
+          isExpired,
+        };
+      }
+
+      return {
+        ...job,
+        remainingVacancies,
+        isExpired,
+      };
+    });
 
     return NextResponse.json({
       success: true,
@@ -122,14 +164,35 @@ export async function POST(request: NextRequest) {
 
     const data = parsed.data;
 
-    if (data.status === 'PUBLISHED' && (!data.employerId || !data.employerId.trim())) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'An employer must be assigned before publishing a job vacancy. / চাকরি প্রকাশ করার পূর্বে নিয়োগকর্তা নির্বাচন বাধ্যতামূলক।',
-        },
-        { status: 400 }
-      );
+    // Invariant check if attempting to create as PUBLISHED
+    if (data.status === 'PUBLISHED') {
+      if (!data.employerId || !data.employerId.trim()) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'An employer must be assigned before publishing a job vacancy. / চাকরি প্রকাশ করার পূর্বে নিয়োগকর্তা নির্বাচন বাধ্যতামূলক।',
+          },
+          { status: 400 }
+        );
+      }
+
+      const assignedEmployer = await prisma.employer.findUnique({
+        where: { id: data.employerId },
+      });
+
+      if (!assignedEmployer) {
+        return NextResponse.json({ success: false, error: 'Employer not found' }, { status: 404 });
+      }
+
+      if (assignedEmployer.verificationStatus !== 'VERIFIED' || assignedEmployer.status !== 'ACTIVE') {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Only verified and active employers can have published job vacancies. Please verify the employer first or save job as DRAFT. / শুধুমাত্র যাচাইকৃত ও সক্রিয় নিয়োগকর্তার চাকরি প্রকাশ করা যাবে।',
+          },
+          { status: 400 }
+        );
+      }
     }
 
     // Generate unique jobCode: SGR-JOB-2026-XXXXXX
@@ -147,18 +210,24 @@ export async function POST(request: NextRequest) {
       uniqueSlug = `${uniqueSlug}-${Date.now().toString(36)}`;
     }
 
+    const isPublished = data.status === 'PUBLISHED';
+
     const job = await prisma.job.create({
       data: {
         jobCode,
         title: data.title,
+        titleLocal: data.titleLocal || null,
         slug: uniqueSlug,
         countryId: data.countryId,
+        city: data.city || null,
         jobCategoryId: data.jobCategoryId,
         employerId: data.employerId || null,
         description: data.description,
+        descriptionLocal: data.descriptionLocal || null,
         salaryMin: data.salaryMin !== undefined && data.salaryMin !== null ? data.salaryMin : null,
         salaryMax: data.salaryMax !== undefined && data.salaryMax !== null ? data.salaryMax : null,
         currency: data.currency || 'BDT',
+        salaryPeriod: data.salaryPeriod || 'MONTHLY',
         experienceRequired: data.experienceRequired,
         educationRequired: data.educationRequired || null,
         ageMin: data.ageMin || null,
@@ -166,6 +235,7 @@ export async function POST(request: NextRequest) {
         languageRequirements: data.languageRequirements || null,
         skillsRequired: data.skillsRequired || null,
         vacancyCount: data.vacancyCount,
+        filledCount: data.filledCount || 0,
         accommodation: data.accommodation,
         food: data.food,
         transportation: data.transportation,
@@ -177,6 +247,8 @@ export async function POST(request: NextRequest) {
         status: data.status,
         featured: data.featured,
         createdBy: currentUser.id,
+        publishedAt: isPublished ? new Date() : null,
+        publishedById: isPublished ? currentUser.id : null,
       },
       include: {
         country: true,

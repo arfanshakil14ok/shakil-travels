@@ -11,10 +11,13 @@ import {
   Briefcase,
   GraduationCap,
   Plane,
+  Camera,
+  Upload,
 } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { LoadingState } from '@/components/ui/loading-state';
 import { useToast } from '@/components/ui/toast';
+import { ProfileAvatar } from '@/components/ui/profile-avatar';
 
 export default function PortalProfilePage() {
   const { success, error } = useToast();
@@ -130,6 +133,28 @@ export default function PortalProfilePage() {
     }
   };
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const form = new FormData();
+    form.append('file', file);
+
+    try {
+      const res = await fetch('/api/portal/profile/upload-photo', {
+        method: 'POST',
+        body: form,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed');
+
+      success(t('প্রোফাইল ছবি সফলভাবে আপডেট করা হয়েছে।', 'Profile photo updated successfully'));
+      setProfile((prev: any) => ({ ...prev, profilePhoto: data.photoUrl }));
+    } catch (err: any) {
+      error(err.message || 'Failed to upload photo');
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-6 max-w-4xl mx-auto">
@@ -174,6 +199,52 @@ export default function PortalProfilePage() {
               className={`h-1.5 rounded-full ${completion >= 80 ? 'bg-emerald-600' : 'bg-amber-500'}`}
               style={{ width: `${completion}%` }}
             />
+          </div>
+        </div>
+      </div>
+
+      {/* Profile Photo Management Card */}
+      <div className="bg-white border border-slate-200/90 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row items-center gap-6">
+        <div className="relative group">
+          <ProfileAvatar
+            name={profile?.fullName || 'Applicant'}
+            photoUrl={profile?.profilePhoto}
+            size="2xl"
+            className="w-24 h-24 sm:w-28 sm:h-28 ring-4 ring-emerald-500/20"
+          />
+          <label className="absolute inset-0 bg-slate-950/40 rounded-full flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+            <Camera className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px] font-bold">Change</span>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handlePhotoUpload}
+              className="hidden"
+            />
+          </label>
+        </div>
+
+        <div className="space-y-1.5 text-center sm:text-left flex-1">
+          <h3 className="font-bold text-base text-slate-900">
+            {t('প্রোফাইল ছবি *', 'Mandatory Profile Photo *')}
+          </h3>
+          <p className="text-xs text-slate-500 max-w-md">
+            {t(
+              'স্পষ্ট মুখমন্ডলের পাসপোর্ট সাইজ ছবি আপলোড করুন (JPEG, PNG, WebP, সর্বোচ্চ ৫MB)।',
+              'Upload a clear, front-facing passport style photograph (JPEG, PNG, WebP, max 5MB).'
+            )}
+          </p>
+          <div className="pt-2">
+            <label className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded-lg cursor-pointer transition-colors border border-slate-200">
+              <Upload className="w-3.5 h-3.5 text-slate-600" />
+              <span>{t('নতুন ছবি আপলোড করুন', 'Upload New Photo')}</span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handlePhotoUpload}
+                className="hidden"
+              />
+            </label>
           </div>
         </div>
       </div>

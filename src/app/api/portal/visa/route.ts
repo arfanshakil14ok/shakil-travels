@@ -60,9 +60,37 @@ export async function GET() {
       })
     );
 
+    // Also fetch post-selection records for this applicant
+    const [medicalRecords, clearanceRecords, departureRecords] = await Promise.all([
+      prisma.medicalRecord.findMany({
+        where: { applicantId: applicant.id },
+        include: {
+          application: { select: { id: true, applicationCode: true, job: { select: { title: true } } } },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.clearanceRecord.findMany({
+        where: { applicantId: applicant.id },
+        include: {
+          application: { select: { id: true, applicationCode: true, job: { select: { title: true } } } },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.departureRecord.findMany({
+        where: { applicantId: applicant.id },
+        include: {
+          application: { select: { id: true, applicationCode: true, job: { select: { title: true } } } },
+        },
+        orderBy: { departureDate: 'asc' },
+      }),
+    ]);
+
     return NextResponse.json({
       success: true,
       data: results,
+      medicalRecords,
+      clearanceRecords,
+      departureRecords,
     });
   } catch (error: any) {
     if (error.message?.includes('Unauthenticated')) {

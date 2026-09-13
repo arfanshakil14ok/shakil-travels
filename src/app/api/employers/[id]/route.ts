@@ -12,10 +12,18 @@ export async function GET(
     await requirePermission('EMPLOYER_VIEW');
     const { id } = await params;
 
-    const employer = await prisma.employer.findUnique({
-      where: { id },
+    const employer = await prisma.employer.findFirst({
+      where: {
+        OR: [{ id }, { employerCode: id }],
+      },
       include: {
         country: true,
+        contacts: {
+          orderBy: [{ isPrimary: 'desc' }, { createdAt: 'asc' }],
+        },
+        documents: {
+          orderBy: { createdAt: 'desc' },
+        },
         jobs: {
           orderBy: { createdAt: 'desc' },
           include: {
@@ -31,7 +39,28 @@ export async function GET(
       return NextResponse.json({ success: false, error: 'Employer not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, data: employer });
+    // Compute summary metrics
+    const totalJobs = employer.jobs.length;
+    const activeJobs = employer.jobs.filter((j) => j.status === 'PUBLISHED').length;
+    const totalVacancies = employer.jobs.reduce((sum, j) => sum + (j.vacancyCount || 0), 0);
+    const filledVacancies = employer.jobs.reduce((sum, j) => sum + (j.filledCount || 0), 0);
+    const remainingVacancies = Math.max(0, totalVacancies - filledVacancies);
+    const totalApplications = employer.jobs.reduce((sum, j) => sum + (j._count?.applications || 0), 0);
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        ...employer,
+        metrics: {
+          totalJobs,
+          activeJobs,
+          totalVacancies,
+          filledVacancies,
+          remainingVacancies,
+          totalApplications,
+        },
+      },
+    });
   } catch (error: any) {
     if (error.name === 'AuthorizationError' || error.name === 'AuthenticationError') {
       return NextResponse.json({ success: false, error: error.message }, { status: 403 });
@@ -50,8 +79,8 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
 
-    const existing = await prisma.employer.findUnique({
-      where: { id },
+    const existing = await prisma.employer.findFirst({
+      where: { OR: [{ id }, { employerCode: id }] },
       include: { customer: true },
     });
 
@@ -71,10 +100,12 @@ export async function PUT(
 
     const updated = await prisma.$transaction(async (tx) => {
       const emp = await tx.employer.update({
-        where: { id },
+        where: { id: existing.id },
         data: {
           companyName: data.companyName !== undefined ? data.companyName : undefined,
+          companyNameLocal: data.companyNameLocal !== undefined ? data.companyNameLocal : undefined,
           countryId: data.countryId !== undefined ? data.countryId : undefined,
+          city: data.city !== undefined ? data.city : undefined,
           industry: data.industry !== undefined ? data.industry : undefined,
           contactPerson: data.contactPerson !== undefined ? data.contactPerson : undefined,
           email: data.email !== undefined ? data.email : undefined,
@@ -82,9 +113,14 @@ export async function PUT(
           address: data.address !== undefined ? data.address : undefined,
           website: data.website !== undefined ? data.website : undefined,
           verificationStatus: data.verificationStatus !== undefined ? data.verificationStatus : undefined,
+          status: data.status !== undefined ? data.status : undefined,
           notes: data.notes !== undefined ? data.notes : undefined,
         },
-        include: { country: true },
+        include: {
+          country: true,
+          contacts: true,
+          documents: true,
+        },
       });
 
       if (existing.customer && (data.companyName || data.phone || data.email)) {
@@ -105,7 +141,7 @@ export async function PUT(
       userId: currentUser.id,
       action: 'EMPLOYER_UPDATE',
       entity: 'Employer',
-      entityId: id,
+      entityId: existing.id,
       oldValue: existing,
       newValue: updated,
     });
@@ -128,8 +164,8 @@ export async function DELETE(
     const currentUser = await requirePermission('EMPLOYER_DELETE');
     const { id } = await params;
 
-    const existing = await prisma.employer.findUnique({
-      where: { id },
+    const existing = await prisma.employer.findFirst({
+      where: { OR: [{ id }, { employerCode: id }] },
       include: { jobs: true },
     });
 
@@ -139,33 +175,38 @@ export async function DELETE(
 
     if (existing.jobs.length > 0) {
       const updated = await prisma.employer.update({
-        where: { id },
-        data: { verificationStatus: 'INACTIVE' },
+        where: { id: existing.id },
+        data: {
+          verificationStatus: 'INACTIVE',
+          status: 'INACTIVE',
+        },
       });
       await createAuditLog({
         userId: currentUser.id,
         action: 'EMPLOYER_DEACTIVATE',
         entity: 'Employer',
-        entityId: id,
+        entityId: existing.id,
       });
       return NextResponse.json({
         success: true,
-        message: 'Employer has existing job demands. Verification set to INACTIVE.',
+        message: 'Employer has existing job demands. Status set to INACTIVE.',
         data: updated,
       });
     }
 
     await prisma.$transaction([
-      prisma.customer.deleteMany({ where: { employerId: id } }),
-      prisma.employer.delete({ where: { id } }),
+      prisma.employerContact.deleteMany({ where: { employerId: existing.id } }),
+      prisma.employerDocument.deleteMany({ where: { employerId: existing.id } }),
+      prisma.customer.deleteMany({ where: { employerId: existing.id } }),
+      prisma.employer.delete({ where: { id: existing.id } }),
     ]);
 
     await createAuditLog({
       userId: currentUser.id,
       action: 'EMPLOYER_DELETE',
       entity: 'Employer',
-      entityId: id,
-      oldValue: { id, companyName: existing.companyName },
+      entityId: existing.id,
+      oldValue: { id: existing.id, companyName: existing.companyName },
     });
 
     return NextResponse.json({ success: true, message: 'Employer deleted successfully' });

@@ -5,11 +5,12 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ShieldCheck, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { BrandLogo } from '@/components/brand/brand-logo';
+import { sanitizeRedirectUrl } from '@/lib/security';
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams.get('redirect') || '/portal';
+  const redirectUrl = sanitizeRedirectUrl(searchParams.get('redirect') || searchParams.get('from'), '/portal');
 
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');

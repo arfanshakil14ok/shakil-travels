@@ -9,6 +9,7 @@ import {
   Menu,
   X,
   LogIn,
+  LogOut,
   UserPlus,
   Search,
   Globe,
@@ -24,6 +25,8 @@ import {
   Sparkles,
   ArrowRight,
   ShieldAlert,
+  LayoutDashboard,
+  FileCheck2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
@@ -31,26 +34,76 @@ import { cn } from '@/lib/utils';
 import { POPULAR_COUNTRIES_NAV } from '@/lib/image-constants';
 import { BRAND } from '@/config/brand';
 import { BrandLogo } from '@/components/brand/brand-logo';
+import { ProfileAvatar } from '@/components/ui/profile-avatar';
+
+interface SessionState {
+  authenticated: boolean;
+  type?: 'APPLICANT' | 'STAFF' | null;
+  role?: string | null;
+  user?: {
+    id?: string;
+    name?: string;
+    email?: string | null;
+    phone?: string | null;
+    applicantNumber?: string | null;
+    roleTitle?: string | null;
+    avatarUrl?: string | null;
+  } | null;
+  dashboardUrl?: string | null;
+}
 
 export const PublicHeader: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSignInDropdownOpen, setIsSignInDropdownOpen] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isCountriesDropdownOpen, setIsCountriesDropdownOpen] = useState(false);
   const [language, setLanguage] = useState<'bn' | 'en'>('bn');
 
+  const [session, setSession] = useState<SessionState>({
+    authenticated: false,
+  });
+
   const signInRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   const countriesRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const pathname = usePathname();
   const router = useRouter();
+
+  // Load session state safely without blocking SSR
+  useEffect(() => {
+    let isMounted = true;
+    async function checkSession() {
+      try {
+        const res = await fetch('/api/auth/session-state', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted) {
+            setSession(data);
+          }
+        }
+      } catch {
+        if (isMounted) {
+          setSession({ authenticated: false });
+        }
+      }
+    }
+    checkSession();
+    return () => {
+      isMounted = false;
+    };
+  }, [pathname]);
 
   // Close dropdowns on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (signInRef.current && !signInRef.current.contains(event.target as Node)) {
         setIsSignInDropdownOpen(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserDropdownOpen(false);
       }
       if (countriesRef.current && !countriesRef.current.contains(event.target as Node)) {
         setIsCountriesDropdownOpen(false);
@@ -76,15 +129,22 @@ export const PublicHeader: React.FC = () => {
     }
   };
 
-  const navLinks = [
-    { href: '/', labelBn: 'হোম', labelEn: 'Home' },
-    { href: '/jobs', labelBn: 'চাকরি', labelEn: 'Jobs' },
-    { href: '/countries', labelBn: 'দেশসমূহ', labelEn: 'Countries' },
-    { href: '/visa-information', labelBn: 'ভিসা তথ্য', labelEn: 'Visa Info' },
-    { href: '/migrant-information', labelBn: 'প্রবাসী তথ্য', labelEn: 'Migrant Info' },
-    { href: '/about', labelBn: 'আমাদের সম্পর্কে', labelEn: 'About Us' },
-    { href: '/contact', labelBn: 'যোগাযোগ', labelEn: 'Contact' },
-  ];
+  const handleLogout = async () => {
+    try {
+      if (session.type === 'APPLICANT') {
+        await fetch('/api/portal/auth/logout', { method: 'POST' });
+      } else {
+        await fetch('/api/auth/logout', { method: 'POST' });
+      }
+      setSession({ authenticated: false });
+      setIsUserDropdownOpen(false);
+      setIsMobileMenuOpen(false);
+      router.push('/');
+      router.refresh();
+    } catch {
+      router.push('/');
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-xs transition-all">
@@ -137,7 +197,7 @@ export const PublicHeader: React.FC = () => {
 
       {/* Main Navigation Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        {/* Brand Logo */}
+        {/* Brand Logo (Always links directly to / without resetting session) */}
         <BrandLogo href="/" size="md" variant="horizontal" />
 
         {/* Desktop Nav Links */}
@@ -235,6 +295,32 @@ export const PublicHeader: React.FC = () => {
           </div>
 
           <Link
+            href="/skill-training"
+            className={cn(
+              'px-3 py-2 rounded-lg text-xs xl:text-sm font-semibold transition-colors font-bengali flex items-center gap-1',
+              pathname?.startsWith('/skill-training')
+                ? 'text-emerald-800 bg-emerald-50'
+                : 'text-slate-700 hover:text-navy-950 hover:bg-slate-100/70'
+            )}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-gold-500" />
+            <span>{language === 'bn' ? 'স্কিল ট্রেনিং' : 'Training'}</span>
+          </Link>
+
+          <Link
+            href="/verify-certificate"
+            className={cn(
+              'px-3 py-2 rounded-lg text-xs xl:text-sm font-semibold transition-colors font-bengali flex items-center gap-1',
+              pathname?.startsWith('/verify-certificate')
+                ? 'text-emerald-800 bg-emerald-50'
+                : 'text-slate-700 hover:text-navy-950 hover:bg-slate-100/70'
+            )}
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+            <span>{language === 'bn' ? 'সার্টিফিকেট যাচাই' : 'Verify Certificate'}</span>
+          </Link>
+
+          <Link
             href="/visa-information"
             className={cn(
               'px-3 py-2 rounded-lg text-xs xl:text-sm font-semibold transition-colors font-bengali',
@@ -283,7 +369,7 @@ export const PublicHeader: React.FC = () => {
           </Link>
         </nav>
 
-        {/* Right Action Bar: Search, Language, Dual Sign In & Sign Up */}
+        {/* Right Action Bar: Search, Language, Auth / Dashboard CTAs */}
         <div className="flex items-center gap-2 sm:gap-2.5">
           {/* Desktop Search Trigger / Input */}
           <div className="relative hidden md:block">
@@ -329,77 +415,207 @@ export const PublicHeader: React.FC = () => {
             <span>{language === 'bn' ? 'EN' : 'বাং'}</span>
           </button>
 
-          {/* Sign In Dropdown (Applicant Portal & Staff ERP) */}
-          <div className="relative" ref={signInRef}>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsSignInDropdownOpen(!isSignInDropdownOpen)}
-              leftIcon={<LogIn className="w-3.5 h-3.5 text-slate-700" />}
-              rightIcon={<ChevronDown className={cn("w-3 h-3 text-slate-500 transition-transform duration-200", isSignInDropdownOpen && "rotate-180 text-emerald-600")} />}
-              className="text-xs font-semibold border-slate-300 text-slate-800 hover:bg-slate-50 font-bengali"
-            >
-              {language === 'bn' ? 'লগইন' : 'Sign In'}
-            </Button>
-
-            {isSignInDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-72 bg-white border border-slate-200 rounded-2xl shadow-2xl py-2 z-50 text-slate-800 animate-fadeIn font-sans">
-                <div className="px-3.5 py-2 text-[10px] font-black text-slate-400 uppercase tracking-wider border-b border-slate-100">
-                  {language === 'bn' ? 'লগইন পোর্টাল নির্বাচন করুন' : 'Select Access Portal'}
+          {/* Dynamic Authenticated State VS Unauthenticated Sign In */}
+          {session.authenticated ? (
+            /* Authenticated User Menu */
+            <div className="relative" ref={userMenuRef}>
+              <button
+                onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                className="flex items-center gap-2 p-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors"
+                aria-label="User profile menu"
+              >
+                <ProfileAvatar
+                  name={session.user?.name || 'User'}
+                  photoUrl={session.user?.avatarUrl}
+                  size="sm"
+                  className="w-7 h-7"
+                />
+                <div className="hidden xl:flex flex-col text-left leading-tight pr-1">
+                  <span className="text-xs font-bold text-slate-800 truncate max-w-[120px]">
+                    {session.user?.name || 'My Account'}
+                  </span>
+                  <span className="text-[10px] text-emerald-700 font-medium">
+                    {session.type === 'APPLICANT' ? (language === 'bn' ? 'প্রার্থী' : 'Applicant') : (session.user?.roleTitle || 'Staff')}
+                  </span>
                 </div>
+                <ChevronDown
+                  className={cn(
+                    'w-3.5 h-3.5 text-slate-400 transition-transform duration-200',
+                    isUserDropdownOpen && 'rotate-180 text-emerald-600'
+                  )}
+                />
+              </button>
 
-                {/* Option 1: Applicant Portal */}
-                <Link
-                  href="/portal/login"
-                  onClick={() => setIsSignInDropdownOpen(false)}
-                  className="flex items-start gap-3 px-4 py-3 hover:bg-emerald-50 text-left transition-colors group"
-                >
-                  <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-2xs">
-                    <UserRound className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="font-bold text-xs text-slate-900 group-hover:text-emerald-800 font-bengali">
-                      {language === 'bn' ? 'প্রার্থী পোর্টাল লগইন' : 'Applicant Portal Login'}
-                    </div>
-                    <div className="text-[11px] text-slate-500 leading-tight mt-0.5 font-bengali">
-                      {language === 'bn' ? 'আবেদন ও ভিসা স্ট্যাটাস ট্র্যাক করুন' : 'Track your applications & visa'}
+              {isUserDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-64 bg-white border border-slate-200 rounded-2xl shadow-2xl py-2 z-50 text-slate-800 animate-fadeIn font-sans">
+                  <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50 rounded-t-2xl">
+                    <p className="text-xs font-bold text-slate-900 truncate">
+                      {session.user?.name}
+                    </p>
+                    <p className="text-[11px] text-slate-500 truncate font-mono">
+                      {session.user?.phone || session.user?.email || session.user?.applicantNumber || 'Active User'}
+                    </p>
+                    <div className="mt-1.5 inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                      {session.type === 'APPLICANT' ? 'Candidate Portal' : (session.user?.roleTitle || 'Staff Console')}
                     </div>
                   </div>
-                </Link>
 
-                {/* Option 2: Staff ERP */}
-                <Link
-                  href="/admin/login"
-                  onClick={() => setIsSignInDropdownOpen(false)}
-                  className="flex items-start gap-3 px-4 py-3 hover:bg-navy-50 text-left transition-colors group border-t border-slate-100"
-                >
-                  <div className="w-9 h-9 rounded-xl bg-navy-100 text-navy-800 flex items-center justify-center flex-shrink-0 group-hover:bg-navy-950 group-hover:text-white transition-all shadow-2xs">
-                    <Lock className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="font-bold text-xs text-slate-900 group-hover:text-navy-900 font-bengali">
-                      {language === 'bn' ? 'স্টাফ / অফিস ERP লগইন' : 'Staff ERP Login'}
-                    </div>
-                    <div className="text-[11px] text-slate-500 leading-tight mt-0.5 font-bengali">
-                      {language === 'bn' ? 'অফিসিয়াল কার্যক্রম ও একাউন্টস' : 'Internal management & accounts'}
-                    </div>
-                  </div>
-                </Link>
-              </div>
-            )}
-          </div>
+                  <div className="py-1 font-bengali text-xs">
+                    <Link
+                      href={session.dashboardUrl || '/portal'}
+                      onClick={() => setIsUserDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-slate-50 text-slate-700 font-semibold"
+                    >
+                      <LayoutDashboard className="w-4 h-4 text-emerald-600" />
+                      <span>{language === 'bn' ? 'ড্যাশবোর্ড' : 'Dashboard'}</span>
+                    </Link>
 
-          {/* High-Visibility Sign Up Button */}
-          <Link href="/portal/register" className="hidden sm:block">
-            <Button
-              variant="primary"
-              size="sm"
-              leftIcon={<UserPlus className="w-3.5 h-3.5 text-white" />}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md hover:shadow-emerald-600/25 transition-all px-3.5 font-bengali"
-            >
-              {language === 'bn' ? 'অ্যাকাউন্ট খুলুন' : 'Create Account'}
-            </Button>
-          </Link>
+                    {session.type === 'APPLICANT' && (
+                      <>
+                        <Link
+                          href="/portal/profile"
+                          onClick={() => setIsUserDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-50 text-slate-700"
+                        >
+                          <UserRound className="w-4 h-4 text-slate-400" />
+                          <span>{language === 'bn' ? 'আমার প্রোফাইল' : 'My Profile'}</span>
+                        </Link>
+                        <Link
+                          href="/portal/applications"
+                          onClick={() => setIsUserDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-50 text-slate-700"
+                        >
+                          <FileCheck2 className="w-4 h-4 text-slate-400" />
+                          <span>{language === 'bn' ? 'আমার আবেদনসমূহ' : 'My Applications'}</span>
+                        </Link>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="border-t border-slate-100 pt-1">
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs text-rose-600 hover:bg-rose-50 font-bold transition-colors font-bengali text-left"
+                    >
+                      <LogOut className="w-4 h-4 text-rose-500" />
+                      <span>{language === 'bn' ? 'সাইন আউট (লগআউট)' : 'Sign Out'}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Unauthenticated Sign In Dropdown */
+            <div className="relative" ref={signInRef}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsSignInDropdownOpen(!isSignInDropdownOpen)}
+                leftIcon={<LogIn className="w-3.5 h-3.5 text-slate-700" />}
+                rightIcon={
+                  <ChevronDown
+                    className={cn(
+                      'w-3 h-3 text-slate-500 transition-transform duration-200',
+                      isSignInDropdownOpen && 'rotate-180 text-emerald-600'
+                    )}
+                  />
+                }
+                className="text-xs font-semibold border-slate-300 text-slate-800 hover:bg-slate-50 font-bengali"
+              >
+                {language === 'bn' ? 'লগইন' : 'Sign In'}
+              </Button>
+
+              {isSignInDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-72 bg-white border border-slate-200 rounded-2xl shadow-2xl py-2 z-50 text-slate-800 animate-fadeIn font-sans">
+                  <div className="px-3.5 py-2 text-[10px] font-black text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                    {language === 'bn' ? 'লগইন পোর্টাল নির্বাচন করুন' : 'Select Access Portal'}
+                  </div>
+
+                  {/* Option 1: Applicant Portal */}
+                  <Link
+                    href="/portal/login"
+                    onClick={() => setIsSignInDropdownOpen(false)}
+                    className="flex items-start gap-3 px-4 py-3 hover:bg-emerald-50 text-left transition-colors group"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-2xs">
+                      <UserRound className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-xs text-slate-900 group-hover:text-emerald-800 font-bengali">
+                        {language === 'bn' ? 'প্রার্থী পোর্টাল লগইন' : 'Applicant Portal Login'}
+                      </div>
+                      <div className="text-[11px] text-slate-500 leading-tight mt-0.5 font-bengali">
+                        {language === 'bn' ? 'আবেদন, ট্রেনিং ও ভিসা স্ট্যাটাস ট্র্যাক করুন' : 'Track your applications, training & visa'}
+                      </div>
+                    </div>
+                  </Link>
+
+                  {/* Option 2: Staff ERP */}
+                  <Link
+                    href="/staff/login"
+                    onClick={() => setIsSignInDropdownOpen(false)}
+                    className="flex items-start gap-3 px-4 py-3 hover:bg-navy-50 text-left transition-colors group border-t border-slate-100"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-navy-100 text-navy-800 flex items-center justify-center flex-shrink-0 group-hover:bg-navy-950 group-hover:text-white transition-all shadow-2xs">
+                      <Briefcase className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-xs text-slate-900 group-hover:text-navy-900 font-bengali">
+                        {language === 'bn' ? 'স্টাফ / অফিসার ERP লগইন' : 'Staff ERP Login'}
+                      </div>
+                      <div className="text-[11px] text-slate-500 leading-tight mt-0.5 font-bengali">
+                        {language === 'bn' ? 'ট্রেনিং, ভিসা ও পোস্ট-সিলেকশন অফিসার' : 'Departmental officers & staff operations'}
+                      </div>
+                    </div>
+                  </Link>
+
+                  {/* Option 3: Super Admin */}
+                  <Link
+                    href="/admin/login"
+                    onClick={() => setIsSignInDropdownOpen(false)}
+                    className="flex items-start gap-3 px-4 py-3 hover:bg-slate-100 text-left transition-colors group border-t border-slate-100"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center flex-shrink-0 group-hover:bg-slate-800 group-hover:text-white transition-all shadow-2xs">
+                      <Lock className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-xs text-slate-900 group-hover:text-slate-900 font-bengali">
+                        {language === 'bn' ? 'সুপার অ্যাডমিন কনসোল' : 'Super Admin Console'}
+                      </div>
+                      <div className="text-[11px] text-slate-500 leading-tight mt-0.5 font-bengali">
+                        {language === 'bn' ? 'পূর্ণাঙ্গ সিস্টেম ও হিসাব নিয়ন্ত্রণ' : 'Master management, security & audit'}
+                      </div>
+                    </div>
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* High-Visibility Quick Action: Dashboard if logged in, Create Account if not */}
+          {session.authenticated ? (
+            <Link href={session.dashboardUrl || '/portal'} className="hidden sm:block">
+              <Button
+                variant="primary"
+                size="sm"
+                leftIcon={<LayoutDashboard className="w-3.5 h-3.5 text-white" />}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md hover:shadow-emerald-600/25 transition-all px-3.5 font-bengali"
+              >
+                {language === 'bn' ? 'ড্যাশবোর্ড' : 'Dashboard'}
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/portal/register" className="hidden sm:block">
+              <Button
+                variant="primary"
+                size="sm"
+                leftIcon={<UserPlus className="w-3.5 h-3.5 text-white" />}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md hover:shadow-emerald-600/25 transition-all px-3.5 font-bengali"
+              >
+                {language === 'bn' ? 'অ্যাকাউন্ট খুলুন' : 'Create Account'}
+              </Button>
+            </Link>
+          )}
 
           {/* Mobile Hamburger Toggle */}
           <IconButton
@@ -439,6 +655,32 @@ export const PublicHeader: React.FC = () => {
                 </IconButton>
               </div>
 
+              {/* Mobile Auth Status Banner */}
+              {session.authenticated && (
+                <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between font-bengali">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs">
+                      {session.user?.name ? session.user.name.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-slate-900 truncate max-w-[140px]">
+                        {session.user?.name}
+                      </div>
+                      <div className="text-[10px] text-emerald-800 font-mono">
+                        {session.type === 'APPLICANT' ? 'Candidate' : (session.user?.roleTitle || 'Staff')}
+                      </div>
+                    </div>
+                  </div>
+                  <Link
+                    href={session.dashboardUrl || '/portal'}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="px-2.5 py-1 bg-emerald-600 text-white text-[11px] font-bold rounded-lg hover:bg-emerald-700"
+                  >
+                    ড্যাশবোর্ড
+                  </Link>
+                </div>
+              )}
+
               {/* Mobile Search */}
               <form onSubmit={handleSearchSubmit} className="relative">
                 <input
@@ -476,6 +718,46 @@ export const PublicHeader: React.FC = () => {
                   <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full">
                     চলমান
                   </span>
+                </Link>
+
+                <Link
+                  href="/skill-training"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={cn(
+                    'flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors',
+                    pathname?.startsWith('/skill-training') ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700 hover:bg-slate-50'
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-gold-500" />
+                    <span>{language === 'bn' ? 'স্কিল ট্রেনিং ও কোর্স' : 'Skill Training'}</span>
+                  </div>
+                  <span className="px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-full">
+                    ট্রেনিং
+                  </span>
+                </Link>
+
+                <Link
+                  href="/training-centers"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={cn(
+                    'block px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors',
+                    pathname === '/training-centers' ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700 hover:bg-slate-50'
+                  )}
+                >
+                  {language === 'bn' ? 'অনুমোদিত ট্রেনিং সেন্টার' : 'Accredited Centers'}
+                </Link>
+
+                <Link
+                  href="/verify-certificate"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={cn(
+                    'flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors',
+                    pathname?.startsWith('/verify-certificate') ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700 hover:bg-slate-50'
+                  )}
+                >
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  <span>{language === 'bn' ? 'সার্টিফিকেট যাচাই' : 'Verify Certificate'}</span>
                 </Link>
 
                 <Link
@@ -559,47 +841,75 @@ export const PublicHeader: React.FC = () => {
 
             {/* Mobile Footer CTAs */}
             <div className="p-6 bg-slate-50 border-t border-slate-100 space-y-3 font-bengali">
-              {/* Create Applicant Account */}
-              <Link
-                href="/portal/register"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block"
-              >
-                <Button
-                  variant="primary"
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white justify-center text-xs font-bold py-3 flex items-center gap-2 shadow-md"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  {language === 'bn' ? 'প্রার্থী অ্যাকাউন্ট খুলুন' : 'Create Applicant Account'}
-                </Button>
-              </Link>
+              {session.authenticated ? (
+                <>
+                  <Link
+                    href={session.dashboardUrl || '/portal'}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block"
+                  >
+                    <Button
+                      variant="primary"
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white justify-center text-xs font-bold py-3 flex items-center gap-2 shadow-md"
+                    >
+                      <LayoutDashboard className="w-4 h-4" />
+                      {language === 'bn' ? 'আমার ড্যাশবোর্ডে যান' : 'Go to Dashboard'}
+                    </Button>
+                  </Link>
 
-              {/* Applicant Login */}
-              <Link
-                href="/portal/login"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block"
-              >
-                <Button
-                  variant="outline"
-                  className="w-full border-slate-300 text-slate-800 justify-center text-xs font-bold py-2.5 flex items-center gap-2 hover:bg-white"
-                >
-                  <UserRound className="w-4 h-4 text-emerald-600" />
-                  {language === 'bn' ? 'প্রার্থী লগইন (Applicant Portal)' : 'Applicant Portal Login'}
-                </Button>
-              </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full p-2.5 rounded-xl border border-rose-200 text-rose-600 bg-rose-50 hover:bg-rose-100 text-xs font-bold flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    {language === 'bn' ? 'সাইন আউট (লগআউট)' : 'Sign Out'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  {/* Create Applicant Account */}
+                  <Link
+                    href="/portal/register"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block"
+                  >
+                    <Button
+                      variant="primary"
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white justify-center text-xs font-bold py-3 flex items-center gap-2 shadow-md"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      {language === 'bn' ? 'প্রার্থী অ্যাকাউন্ট খুলুন' : 'Create Applicant Account'}
+                    </Button>
+                  </Link>
 
-              {/* Staff Login */}
-              <Link
-                href="/admin/login"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block text-center pt-1"
-              >
-                <span className="text-xs text-slate-500 hover:text-navy-950 font-semibold inline-flex items-center gap-1">
-                  <Lock className="w-3 h-3" />
-                  {language === 'bn' ? 'স্টাফ / অ্যাডমিন ERP লগইন' : 'Staff ERP Login'}
-                </span>
-              </Link>
+                  {/* Applicant Login */}
+                  <Link
+                    href="/portal/login"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block"
+                  >
+                    <Button
+                      variant="outline"
+                      className="w-full border-slate-300 text-slate-800 justify-center text-xs font-bold py-2.5 flex items-center gap-2 hover:bg-white"
+                    >
+                      <UserRound className="w-4 h-4 text-emerald-600" />
+                      {language === 'bn' ? 'প্রার্থী লগইন (Applicant Portal)' : 'Applicant Portal Login'}
+                    </Button>
+                  </Link>
+
+                  {/* Staff Login */}
+                  <Link
+                    href="/admin/login"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block text-center pt-1"
+                  >
+                    <span className="text-xs text-slate-500 hover:text-navy-950 font-semibold inline-flex items-center gap-1">
+                      <Lock className="w-3 h-3" />
+                      {language === 'bn' ? 'স্টাফ / অ্যাডমিন ERP লগইন' : 'Staff ERP Login'}
+                    </span>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

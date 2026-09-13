@@ -45,3 +45,29 @@ export async function requirePermission(code: PermissionCode): Promise<AuthUser>
   }
   return user;
 }
+
+/**
+ * Server-side guard: Ensures user has one of the allowed roles, or is SUPER_ADMIN
+ */
+export async function requireRole(allowedRoles: string[]): Promise<AuthUser> {
+  const user = await requireAuth();
+  if (user.role.name === 'SUPER_ADMIN') {
+    return user;
+  }
+  if (!allowedRoles.includes(user.role.name)) {
+    throw new AuthorizationError(`Access denied: requires one of [${allowedRoles.join(', ')}] role`);
+  }
+  return user;
+}
+
+/**
+ * Server-side guard: Ensures user is explicitly SUPER_ADMIN
+ */
+export async function requireSuperAdmin(): Promise<AuthUser> {
+  const user = await requireAuth();
+  if (user.role.name !== 'SUPER_ADMIN') {
+    throw new AuthorizationError('Access denied: requires SUPER_ADMIN privilege');
+  }
+  return user;
+}
+

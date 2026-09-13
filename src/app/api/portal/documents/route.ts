@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma';
 import { requireApplicantAuth } from '@/lib/portal-auth';
 import { validateDocumentFile, storage } from '@/lib/storage';
 import { createAuditLog } from '@/lib/audit';
+import { checkRateLimit } from '@/lib/rate-limit';
 import crypto from 'crypto';
 import path from 'path';
 import { z } from 'zod';
@@ -58,6 +59,14 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const applicant = await requireApplicantAuth();
+
+    const rateCheck = checkRateLimit(`upload:${applicant.id}`, 20, 300);
+    if (!rateCheck.success) {
+      return NextResponse.json(
+        { success: false, error: 'Too many upload requests. Please wait a few minutes before uploading more documents.' },
+        { status: 429 }
+      );
+    }
     const contentType = request.headers.get('content-type') || '';
 
     let documentTypeId = '';

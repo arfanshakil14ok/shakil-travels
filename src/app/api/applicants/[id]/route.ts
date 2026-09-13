@@ -31,6 +31,20 @@ export async function GET(
         },
         documents: {
           orderBy: { createdAt: 'desc' },
+          include: {
+            documentType: true,
+            verifiedBy: { select: { id: true, name: true, email: true } },
+          },
+        },
+        invoices: {
+          orderBy: { invoiceDate: 'desc' },
+          include: {
+            items: true,
+            payments: {
+              where: { status: 'COMPLETED' },
+              orderBy: { paymentDate: 'desc' },
+            },
+          },
         },
         applications: {
           orderBy: { createdAt: 'desc' },
@@ -40,6 +54,12 @@ export async function GET(
                 country: true,
                 jobCategory: true,
                 employer: true,
+              },
+            },
+            statusHistory: {
+              orderBy: { createdAt: 'desc' },
+              include: {
+                changedBy: { select: { id: true, name: true } },
               },
             },
           },
@@ -54,10 +74,12 @@ export async function GET(
     // Calculate top matching jobs using rule-based engine
     const matchingJobs = await getMatchingJobsForApplicant(prisma, applicant.id, 6);
 
+    const { passwordHash: _, ...safeApplicant } = applicant as any;
+
     return NextResponse.json({
       success: true,
       data: {
-        ...applicant,
+        ...safeApplicant,
         matchingJobs,
       },
     });
@@ -173,7 +195,8 @@ export async function PUT(
       newValue: updated,
     });
 
-    return NextResponse.json({ success: true, data: updated });
+    const { passwordHash: _, ...safeUpdated } = updated as any;
+    return NextResponse.json({ success: true, data: safeUpdated });
   } catch (error: any) {
     if (error.name === 'AuthorizationError' || error.name === 'AuthenticationError') {
       return NextResponse.json({ success: false, error: error.message }, { status: 403 });

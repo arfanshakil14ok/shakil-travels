@@ -25,8 +25,10 @@ export async function POST(
     const { toStatus, notes } = parsed.data;
     const forceOverride = body.forceOverride === true;
 
-    const application = await prisma.application.findUnique({
-      where: { id },
+    const application = await prisma.application.findFirst({
+      where: {
+        OR: [{ id }, { applicationCode: id }, { applicationNumber: id }],
+      },
       include: {
         applicant: true,
         job: true,
@@ -66,14 +68,38 @@ export async function POST(
 
       if (toStatus === 'SELECTED' && !application.selectedAt) {
         updateData.selectedAt = new Date();
+        await tx.job.update({
+          where: { id: application.jobId },
+          data: { filledCount: { increment: 1 } },
+        });
+      } else if (toStatus === 'SHORTLISTED' && !application.shortlistedAt) {
+        updateData.shortlistedAt = new Date();
+      } else if (toStatus === 'INTERVIEWED' && !application.interviewedAt) {
+        updateData.interviewedAt = new Date();
       } else if (toStatus === 'REJECTED') {
+        updateData.rejectedAt = new Date();
         updateData.rejectionReason = notes || 'Application rejected';
+        if (fromStatus === 'SELECTED') {
+          await tx.job.update({
+            where: { id: application.jobId },
+            data: { filledCount: { decrement: 1 } },
+          });
+        }
+      } else if (toStatus === 'WITHDRAWN') {
+        updateData.withdrawnAt = new Date();
+        updateData.withdrawalReason = notes || 'Application withdrawn';
+        if (fromStatus === 'SELECTED') {
+          await tx.job.update({
+            where: { id: application.jobId },
+            data: { filledCount: { decrement: 1 } },
+          });
+        }
       } else if (toStatus === 'RECRUITMENT_COMPLETED' && !application.completedAt) {
         updateData.completedAt = new Date();
       }
 
       const updatedApplication = await tx.application.update({
-        where: { id },
+        where: { id: application.id },
         data: updateData,
         include: {
           applicant: true,
@@ -85,10 +111,13 @@ export async function POST(
       // Insert status history entry
       const historyEntry = await tx.applicationStatusHistory.create({
         data: {
-          applicationId: id,
+          applicationId: application.id,
           fromStage: fromStatus,
           toStage: toStatus,
+          fromStatus,
+          toStatus,
           changedById: currentUser.id,
+          changedByRole: (currentUser as any).role?.name || 'STAFF',
           notes: notes || `Recruitment status moved from ${fromStatus} to ${toStatus}`,
         },
       });
@@ -99,7 +128,7 @@ export async function POST(
         newApplicantStatus = 'SELECTED';
       } else if (toStatus === 'VISA_STAMPED' || toStatus === 'TICKET_CONFIRMED' || toStatus === 'DEPLOYED' || toStatus === 'RECRUITMENT_COMPLETED') {
         newApplicantStatus = 'DEPLOYED';
-      } else if (toStatus === 'REJECTED' && application.applicant.status !== 'DEPLOYED') {
+      } else if ((toStatus === 'REJECTED' || toStatus === 'WITHDRAWN') && application.applicant.status !== 'DEPLOYED') {
         newApplicantStatus = 'ACTIVE';
       }
 
@@ -116,14 +145,28 @@ export async function POST(
     // Audit log
     await createAuditLog({
       userId: currentUser.id,
+      applicantId: application.applicantId,
+      actorType: 'STAFF',
       action: 'APPLICATION_STATUS_CHANGE',
       entity: 'APPLICATION',
       entityId: id,
+      description: `Application ${application.applicationNumber} stage advanced from ${fromStatus} to ${toStatus} by ${currentUser.name}`,
       oldValue: { status: fromStatus },
       newValue: {
         status: toStatus,
         notes,
         applicationNumber: application.applicationNumber,
+      },
+    });
+
+    // Notify candidate in portal
+    await prisma.notification.create({
+      data: {
+        applicantId: application.applicantId,
+        type: 'STATUS_UPDATED',
+        title: 'আবেদনের অগ্রগতির স্ট্যাটাস আপডেট',
+        message: `আপনার আবেদনের (${application.applicationNumber}) বর্তমান ধাপ পরিবর্তিত হয়ে "${toStatus.replace(/_/g, ' ')}" নির্ধারণ করা হয়েছে।`,
+        link: '/portal/applications',
       },
     });
 

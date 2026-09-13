@@ -295,10 +295,16 @@ async function runAllTests() {
     // -----------------------------------------------------------------
     console.log('\n👉 Phase 3: Recruitment Application & Workflow');
     let activeJob = await prisma.job.findFirst({
-      where: { status: 'ACTIVE' },
+      where: { status: { in: ['PUBLISHED', 'ACTIVE'] } },
     });
     if (!activeJob) {
       activeJob = await prisma.job.findFirst();
+      if (activeJob) {
+        activeJob = await prisma.job.update({
+          where: { id: activeJob.id },
+          data: { status: 'PUBLISHED' },
+        });
+      }
     }
     testJobId = activeJob!.id;
 

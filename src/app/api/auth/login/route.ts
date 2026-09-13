@@ -100,6 +100,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 5.1 Enforce Portal Isolation: Admin Login requires SUPER_ADMIN or ADMIN role
+    const portalType = (body.portalType || '').toUpperCase();
+    if (portalType === 'ADMIN') {
+      const isAdmin = user.role.name === 'SUPER_ADMIN' || user.role.name === 'ADMIN';
+      if (!isAdmin) {
+        await createAuditLog({
+          userId: user.id,
+          action: 'LOGIN_FAILED',
+          entity: 'AUTH',
+          ipAddress: ip,
+          userAgent: ua,
+          newValue: { email: user.email, reason: 'UNAUTHORIZED_ADMIN_PORTAL_ATTEMPT', attemptedRole: user.role.name },
+        });
+        return NextResponse.json(
+          { success: false, error: 'Invalid credentials or insufficient administrative permissions.' },
+          { status: 403 }
+        );
+      }
+    }
+
     // 6. Update Last Login Timestamp
     await prisma.user.update({
       where: { id: user.id },

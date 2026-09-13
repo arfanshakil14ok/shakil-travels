@@ -8,6 +8,8 @@ import {
   calculateProfileCompletion,
 } from '@/lib/portal-auth';
 import { z } from 'zod';
+import { checkRateLimit } from '@/lib/rate-limit';
+import { createAuditLog } from '@/lib/audit';
 
 const loginSchema = z.object({
   identifier: z.string().min(3, 'Phone, Applicant ID, or Email is required'),
@@ -16,6 +18,21 @@ const loginSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1';
+    const ua = request.headers.get('user-agent') || 'Unknown Browser';
+
+    // 1. Rate Limiting Check (5 attempts per IP per 15 mins)
+    const rateCheck = checkRateLimit(`portal_login:${ip}`, 5, 900);
+    if (!rateCheck.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Too many failed login attempts. Please try again after 15 minutes.',
+        },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     const parsed = loginSchema.safeParse(body);
 
@@ -44,13 +61,28 @@ export async function POST(request: NextRequest) {
     });
 
     if (!applicant) {
+      await createAuditLog({
+        action: 'LOGIN_FAILED',
+        entity: 'CANDIDATE_AUTH',
+        ipAddress: ip,
+        userAgent: ua,
+        newValue: { identifier: trimmed, reason: 'APPLICANT_NOT_FOUND' },
+      });
       return NextResponse.json(
-        { success: false, error: 'Invalid credentials. Please check your details or register.' },
+        { success: false, error: 'Invalid credentials. Please check your details.' },
         { status: 401 }
       );
     }
 
     if (!applicant.isActive) {
+      await createAuditLog({
+        applicantId: applicant.id,
+        action: 'LOGIN_FAILED',
+        entity: 'CANDIDATE_AUTH',
+        ipAddress: ip,
+        userAgent: ua,
+        newValue: { identifier: trimmed, reason: 'ACCOUNT_INACTIVE' },
+      });
       return NextResponse.json(
         { success: false, error: 'Your portal account is currently suspended. Please contact support.' },
         { status: 403 }
@@ -70,8 +102,16 @@ export async function POST(request: NextRequest) {
 
     const isValid = await verifyApplicantPassword(password, applicant.passwordHash);
     if (!isValid) {
+      await createAuditLog({
+        applicantId: applicant.id,
+        action: 'LOGIN_FAILED',
+        entity: 'CANDIDATE_AUTH',
+        ipAddress: ip,
+        userAgent: ua,
+        newValue: { identifier: trimmed, reason: 'INVALID_PASSWORD' },
+      });
       return NextResponse.json(
-        { success: false, error: 'Invalid credentials. Please check your password.' },
+        { success: false, error: 'Invalid credentials. Please check your details.' },
         { status: 401 }
       );
     }
@@ -86,6 +126,18 @@ export async function POST(request: NextRequest) {
     });
 
     await setPortalCookie(token);
+
+    // Audit successful login
+    await createAuditLog({
+      applicantId: applicant.id,
+      actorType: 'APPLICANT',
+      action: 'LOGIN_SUCCESS',
+      entity: 'CANDIDATE_AUTH',
+      entityId: applicant.id,
+      ipAddress: ip,
+      userAgent: ua,
+      newValue: { applicantNumber: applicant.applicantNumber, phone: applicant.phone },
+    });
 
     const completion = calculateProfileCompletion(applicant);
 

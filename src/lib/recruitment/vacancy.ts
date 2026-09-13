@@ -18,19 +18,19 @@ export async function getJobVacancyStats(
 ): Promise<VacancyStats | null> {
   const job = await prisma.job.findUnique({
     where: { id: jobId },
-    select: { vacancyCount: true },
+    select: { vacancyCount: true, filledCount: true },
   });
 
   if (!job) return null;
 
-  const [totalApplications, shortlistedCount, selectedCount] = await Promise.all([
+  const [totalApplications, shortlistedCount, appSelectedCount] = await Promise.all([
     prisma.application.count({
       where: { jobId },
     }),
     prisma.application.count({
       where: {
         jobId,
-        status: { in: ['SHORTLISTED', 'INTERVIEW_SCHEDULED', 'INTERVIEW_COMPLETED'] },
+        status: { in: ['SHORTLISTED', 'INTERVIEW_SCHEDULED', 'INTERVIEWED', 'INTERVIEW_COMPLETED'] },
       },
     }),
     prisma.application.count({
@@ -55,6 +55,7 @@ export async function getJobVacancyStats(
   ]);
 
   const vacancies = job.vacancyCount || 1;
+  const selectedCount = Math.max(appSelectedCount, job.filledCount || 0);
   const remaining = Math.max(0, vacancies - selectedCount);
 
   return {

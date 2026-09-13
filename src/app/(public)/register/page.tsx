@@ -1,6 +1,5 @@
-import { redirect } from 'next/navigation';
+import PortalRegisterPage from '@/app/portal/register/page';
 
-export default function PublicRegisterPage() {
-  redirect('/portal/register');
-}
+export default PortalRegisterPage;
+
 

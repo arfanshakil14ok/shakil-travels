@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import path from 'path';
+import fs from 'fs';
 import prisma from '@/lib/prisma';
 import { generateApplicantNumber } from '@/lib/id-generator';
 import {
@@ -8,6 +10,9 @@ import {
   attachPortalCookie,
   calculateProfileCompletion,
 } from '@/lib/portal-auth';
+import { createAuditLog } from '@/lib/audit';
+import { validateProfilePhoto, parseBase64Photo } from '@/lib/validations/photo';
+import { storage } from '@/lib/storage';
 import { z } from 'zod';
 
 const registerSchema = z.object({
@@ -15,13 +20,19 @@ const registerSchema = z.object({
   phone: z.string().trim().min(6, 'Valid phone number is required'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string().optional(),
-  email: z.string().trim().email('Valid email is required'),
+  passwordConfirmation: z.string().optional(),
+  email: z.string().trim().email('Valid email is required').optional().or(z.literal('')),
+  candidateType: z.enum(['SKILLED', 'UNSKILLED']).default('SKILLED'),
+  profilePhoto: z.string().min(1, 'Profile Photo is required.'),
   district: z.string().optional().nullable(),
   preferredCountryId: z.string().optional().nullable(),
   preferredJobCategoryId: z.string().optional().nullable(),
   agreeTerms: z.boolean().optional(),
 }).refine(
-  (data) => !data.confirmPassword || data.password === data.confirmPassword,
+  (data) => {
+    const confirmation = data.confirmPassword || data.passwordConfirmation;
+    return !confirmation || data.password === confirmation;
+  },
   {
     message: 'Passwords do not match',
     path: ['confirmPassword'],
@@ -38,7 +49,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: issue?.message || 'Validation failed',
+          error: issue?.message || 'Profile Photo is required.',
           details: parsed.error.flatten(),
         },
         { status: 400 }
@@ -46,15 +57,39 @@ export async function POST(request: NextRequest) {
     }
 
     const data = parsed.data;
+
+    // Strict profile photo validation
+    const parsedPhoto = parseBase64Photo(data.profilePhoto);
+    if (!parsedPhoto) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid profile photo data format. Please upload a valid image file.',
+        },
+        { status: 400 }
+      );
+    }
+
+    const photoValidation = validateProfilePhoto(parsedPhoto.buffer, 'profile_photo.jpg', parsedPhoto.mimeType);
+    if (!photoValidation.valid) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: photoValidation.error || 'Profile photo validation failed.',
+        },
+        { status: 400 }
+      );
+    }
+
     const phone = data.phone;
-    const email = data.email.toLowerCase();
+    const email = data.email ? data.email.toLowerCase() : null;
 
     // Check if an applicant already exists with this phone or email
     const existingApplicant = await prisma.applicant.findFirst({
       where: {
         OR: [
           { phone },
-          { email },
+          ...(email ? [{ email }] : []),
         ],
       },
     });
@@ -72,6 +107,18 @@ export async function POST(request: NextRequest) {
 
     const passwordHash = await hashApplicantPassword(data.password);
 
+    // Save photo file to disk / storage
+    const ext = photoValidation.extension || '.jpg';
+    const tempFileName = `reg_${Date.now()}_${Math.random().toString(36).substring(7)}${ext}`;
+    
+    // Save to public uploads
+    const publicUploadsDir = path.resolve(process.cwd(), 'public/uploads/photos');
+    if (!fs.existsSync(publicUploadsDir)) {
+      fs.mkdirSync(publicUploadsDir, { recursive: true });
+    }
+    await fs.promises.writeFile(path.join(publicUploadsDir, tempFileName), parsedPhoto.buffer);
+    const photoUrl = `/uploads/photos/${tempFileName}`;
+
     // Transactional creation of Applicant, Profile, and Customer
     const applicant = await prisma.$transaction(async (tx) => {
       let candidate;
@@ -85,6 +132,8 @@ export async function POST(request: NextRequest) {
             passwordHash,
             isActive: true,
             email,
+            profilePhoto: photoUrl,
+            candidateType: data.candidateType || existingApplicant.candidateType || 'SKILLED',
             district: data.district || existingApplicant.district,
             preferredCountryId: data.preferredCountryId || existingApplicant.preferredCountryId,
             preferredJobCategoryId: data.preferredJobCategoryId || existingApplicant.preferredJobCategoryId,
@@ -100,6 +149,8 @@ export async function POST(request: NextRequest) {
             phone,
             email,
             passwordHash,
+            profilePhoto: photoUrl,
+            candidateType: data.candidateType || 'SKILLED',
             isActive: true,
             source: 'PORTAL_REGISTRATION',
             status: 'NEW',
@@ -118,7 +169,7 @@ export async function POST(request: NextRequest) {
           skills: null,
           experienceYears: 0,
           education: null,
-          notes: 'Auto-initialized during portal registration',
+          notes: 'Auto-initialized during portal registration with mandatory profile photo',
         },
         update: {},
       });
@@ -140,7 +191,45 @@ export async function POST(request: NextRequest) {
         },
       });
 
+      // Welcome notification in candidate inbox
+      await tx.notification.create({
+        data: {
+          applicantId: candidate.id,
+          type: 'WELCOME',
+          title: 'স্বাগতম - শাকিল গ্লোবাল ম্যানপাওয়ার',
+          message: `শাকিল গ্লোবাল ম্যানপাওয়ার ক্যান্ডিডেট পোর্টালে আপনার অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে। আপনার আইডি: ${candidate.applicantNumber}।`,
+          link: '/portal/profile',
+        },
+      });
+
       return candidate;
+    });
+
+    // Also persist in storage
+    await storage.saveFile(`photos/applicant_${applicant.id}${ext}`, parsedPhoto.buffer, {
+      originalName: 'profile_photo.jpg',
+      mimeType: photoValidation.mimeType || 'image/jpeg',
+      size: parsedPhoto.buffer.length,
+      uploadedAt: new Date(),
+      applicantId: applicant.id,
+      documentType: 'PROFILE_PHOTO',
+    }).catch(() => {});
+
+    // Record registration in unified AuditLog
+    await createAuditLog({
+      applicantId: applicant.id,
+      actorType: 'APPLICANT',
+      action: 'APPLICANT_REGISTERED',
+      entity: 'APPLICANT',
+      entityId: applicant.id,
+      description: `Candidate self-registered on portal with mandatory profile photo: ${applicant.fullName} (${applicant.applicantNumber})`,
+      newValue: {
+        applicantNumber: applicant.applicantNumber,
+        phone: applicant.phone,
+        email: applicant.email,
+        profilePhoto: photoUrl,
+        source: 'PORTAL_REGISTRATION',
+      },
     });
 
     // Generate JWT token for session
@@ -159,7 +248,7 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json(
       {
         success: true,
-        message: 'Account registered successfully',
+        message: 'Account registered successfully with profile photo',
         data: {
           applicant: {
             id: applicant.id,
@@ -167,6 +256,7 @@ export async function POST(request: NextRequest) {
             fullName: applicant.fullName,
             phone: applicant.phone,
             email: applicant.email,
+            profilePhoto: applicant.profilePhoto,
             profileCompletion: completion.percentage,
           },
         },
@@ -183,4 +273,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

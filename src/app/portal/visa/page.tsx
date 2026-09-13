@@ -11,6 +11,10 @@ import {
   ShieldCheck,
   ChevronRight,
   Plane,
+  HeartPulse,
+  CreditCard,
+  Clock,
+  FileCheck,
 } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -19,6 +23,9 @@ import { LoadingState } from '@/components/ui/loading-state';
 export default function PortalVisaTrackingPage() {
   const { language, t } = useLanguage();
   const [visaCases, setVisaCases] = useState<any[]>([]);
+  const [medicalRecords, setMedicalRecords] = useState<any[]>([]);
+  const [clearanceRecords, setClearanceRecords] = useState<any[]>([]);
+  const [departureRecords, setDepartureRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,7 +34,10 @@ export default function PortalVisaTrackingPage() {
         const res = await fetch('/api/portal/visa');
         const data = await res.json();
         if (data.success) {
-          setVisaCases(data.data);
+          setVisaCases(data.data || []);
+          setMedicalRecords(data.medicalRecords || []);
+          setClearanceRecords(data.clearanceRecords || []);
+          setDepartureRecords(data.departureRecords || []);
         }
       } catch {
         // silent
@@ -58,15 +68,15 @@ export default function PortalVisaTrackingPage() {
         </p>
       </div>
 
-      {/* Visa Cases List */}
+      {/* Post-Selection Overview Cards */}
       {loading ? (
-        <LoadingState text={t('ভিসা ফাইল যাচাই করা হচ্ছে...', 'Checking visa records...')} />
-      ) : visaCases.length === 0 ? (
+        <LoadingState text={t('ভিসা ও বহির্গমন ফাইল যাচাই করা হচ্ছে...', 'Checking visa & departure records...')} />
+      ) : visaCases.length === 0 && medicalRecords.length === 0 && clearanceRecords.length === 0 && departureRecords.length === 0 ? (
         <EmptyState
-          title={t('কোনো চলমান ভিসা ফাইল নেই', 'No active visa cases')}
+          title={t('কোনো চলমান ভিসা বা বহির্গমন ফাইল নেই', 'No active visa or departure cases')}
           description={t(
-            'বিদেশি নিয়োগকারী প্রতিষ্ঠানের সাথে চুক্তি চূড়ান্ত হলে এবং কাজের অনুমোদন ইস্যু হলে আপনার ভিসা ফাইল স্বয়ংক্রিয়ভাবে এখানে যুক্ত হবে।',
-            'Once an overseas employer extends a formal offer and bilateral contracts are executed, your visa case will appear here.'
+            'বিদেশি নিয়োগকারী প্রতিষ্ঠানের সাথে চুক্তি চূড়ান্ত হলে এবং কাজের অনুমোদন ইস্যু হলে আপনার ভিসা, মেডিকেল ও ফ্লাইট ফাইল স্বয়ংক্রিয়ভাবে এখানে যুক্ত হবে।',
+            'Once an overseas employer extends a formal offer and bilateral contracts are executed, your visa, medical, clearance, and flight files will appear here.'
           )}
           action={{
             label: t('আবেদনের অগ্রগতি দেখুন', 'Check Application Milestones'),
@@ -75,6 +85,168 @@ export default function PortalVisaTrackingPage() {
         />
       ) : (
         <div className="space-y-6">
+          {/* Departure & Flight Operations Section */}
+          {departureRecords.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <Plane className="w-4 h-4 text-sky-600" />
+                <span>{t('ফ্লাইট টিকেট ও বহির্গমন নির্দেশনা', 'Flight Ticket & Airport Dispatch')}</span>
+              </h3>
+              <div className="grid grid-cols-1 gap-4">
+                {departureRecords.map((dep) => (
+                  <div
+                    key={dep.id}
+                    className="bg-gradient-to-br from-navy-900 to-slate-900 text-white rounded-2xl p-5 shadow-lg border border-navy-800"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
+                      <div>
+                        <div className="text-[11px] text-emerald-400 font-mono font-bold tracking-wider uppercase">
+                          {dep.status} • {dep.airline} ({dep.flightNumber})
+                        </div>
+                        <div className="text-base sm:text-lg font-bold text-white mt-0.5">
+                          {dep.application?.job?.title || 'Overseas Employment Flight'}
+                        </div>
+                      </div>
+                      {dep.pnrNumber && (
+                        <div className="bg-white/10 px-3.5 py-1.5 rounded-lg text-right">
+                          <span className="text-[10px] text-slate-300 block">PNR / Booking Ref</span>
+                          <span className="font-mono text-sm font-bold text-amber-300">{dep.pnrNumber}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 text-xs">
+                      <div>
+                        <span className="text-slate-400 block text-[11px]">{t('ফ্লাইটের তারিখ ও সময়', 'Departure Time')}</span>
+                        <span className="font-semibold text-white">
+                          {new Date(dep.departureDate).toLocaleString()}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[11px]">{t('প্রস্থান বিমানবন্দর', 'Origin Airport')}</span>
+                        <span className="font-medium text-slate-200">{dep.departureAirport}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[11px]">{t('গন্তব্য বিমানবন্দর', 'Destination Airport')}</span>
+                        <span className="font-semibold text-emerald-300">{dep.destinationAirport}</span>
+                      </div>
+                    </div>
+
+                    {dep.reportingInstructions && (
+                      <div className="mt-4 p-3 bg-white/5 rounded-xl border border-white/10 text-xs text-slate-300">
+                        <span className="font-bold text-amber-300 block mb-1">
+                          {t('বিমানবন্দর রিপোর্টিং ও ব্রিফিং:', 'Airport Reporting Instructions:')}
+                        </span>
+                        {dep.reportingInstructions}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* BMET Clearance & Smart Card Section */}
+          {clearanceRecords.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-emerald-600" />
+                <span>{t('বিএমইটি ইমিগ্রেশন ক্লিয়ারেন্স ও স্মার্ট কার্ড', 'BMET Emigration Clearance & Smart Card')}</span>
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {clearanceRecords.map((clr) => (
+                  <div key={clr.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-800">{clr.clearanceType}</span>
+                      <span
+                        className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                          clr.status === 'APPROVED'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : 'bg-amber-100 text-amber-800'
+                        }`}
+                      >
+                        {clr.status}
+                      </span>
+                    </div>
+                    <div className="mt-3 space-y-1.5 text-xs text-slate-600">
+                      {clr.smartCardNumber && (
+                        <div>
+                          <span className="text-slate-400">{t('স্মার্ট কার্ড নং:', 'Smart Card No:')}</span>{' '}
+                          <span className="font-mono font-bold text-slate-900">{clr.smartCardNumber}</span>
+                        </div>
+                      )}
+                      {clr.certificateNumber && (
+                        <div>
+                          <span className="text-slate-400">{t('সনদপত্র নং:', 'Certificate No:')}</span>{' '}
+                          <span className="font-mono font-semibold text-slate-800">{clr.certificateNumber}</span>
+                        </div>
+                      )}
+                      {clr.approvalDate && (
+                        <div className="text-[11px] text-slate-500">
+                          {t('অনুমোদনের তারিখ:', 'Approved On:')} {new Date(clr.approvalDate).toLocaleDateString()}
+                        </div>
+                      )}
+                      {clr.remarks && <p className="text-[11px] text-slate-500 italic mt-1">{clr.remarks}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* GAMCA Medical Examination Section */}
+          {medicalRecords.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <HeartPulse className="w-4 h-4 text-rose-500" />
+                <span>{t('গামকা ও প্রি-ডিপার্চার মেডিকেল রিপোর্ট', 'GAMCA Medical & Fitness Status')}</span>
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {medicalRecords.map((med) => (
+                  <div key={med.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-800">{med.medicalCenterName}</span>
+                      <span
+                        className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                          med.result === 'PASSED'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : med.result === 'FAILED'
+                            ? 'bg-rose-100 text-rose-800'
+                            : 'bg-amber-100 text-amber-800'
+                        }`}
+                      >
+                        {med.result}
+                      </span>
+                    </div>
+                    <div className="mt-3 space-y-1.5 text-xs text-slate-600">
+                      {med.gamcaNumber && (
+                        <div>
+                          <span className="text-slate-400">GAMCA Slip No:</span>{' '}
+                          <span className="font-mono font-bold text-slate-900">{med.gamcaNumber}</span>
+                        </div>
+                      )}
+                      {med.fitnessExpiryDate && (
+                        <div className="text-[11px] text-slate-500">
+                          {t('মেয়াদ শেষ:', 'Fitness Expiry:')}{' '}
+                          <span className="font-semibold text-slate-700">
+                            {new Date(med.fitnessExpiryDate).toLocaleDateString()}
+                          </span>
+                        </div>
+                      )}
+                      {med.examinationDate && (
+                        <div className="text-[11px] text-slate-500">
+                          {t('পরীক্ষার তারিখ:', 'Exam Date:')} {new Date(med.examinationDate).toLocaleDateString()}
+                        </div>
+                      )}
+                      {med.remarks && <p className="text-[11px] text-slate-500 italic mt-1">{med.remarks}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Visa Cases List */}
           {visaCases.map((vc) => {
             const readiness = vc.readiness;
             return (

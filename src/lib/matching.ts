@@ -294,7 +294,7 @@ export function calculateMatch(
 }
 
 /**
- * Finds top matching active jobs for a given applicant.
+ * Finds top matching active jobs for a given applicant with SQL pre-filtering.
  */
 export async function getMatchingJobsForApplicant(
   prisma: PrismaClient,
@@ -306,21 +306,84 @@ export async function getMatchingJobsForApplicant(
   });
   if (!applicant) return [];
 
-  const activeJobs = await prisma.job.findMany({
-    where: {
-      status: 'PUBLISHED',
+  const jobWhere: any = {
+    status: 'PUBLISHED',
+    employer: {
+      is: {
+        verificationStatus: 'VERIFIED',
+        status: 'ACTIVE',
+      },
     },
+  };
+
+  if (applicant.preferredCountryId || applicant.preferredJobCategoryId) {
+    jobWhere.OR = [
+      ...(applicant.preferredCountryId ? [{ countryId: applicant.preferredCountryId }] : []),
+      ...(applicant.preferredJobCategoryId ? [{ jobCategoryId: applicant.preferredJobCategoryId }] : []),
+    ];
+  }
+
+  let activeJobs = await prisma.job.findMany({
+    where: jobWhere,
+    take: Math.max(50, limit * 10),
+    orderBy: { createdAt: 'desc' },
     include: {
       country: true,
       jobCategory: true,
-      employer: true,
+      employer: {
+        select: {
+          id: true,
+          employerCode: true,
+          companyName: true,
+          companyNameLocal: true,
+          city: true,
+          verificationStatus: true,
+          status: true,
+        },
+      },
     },
   });
 
+  if (activeJobs.length < limit) {
+    const fallbackJobs = await prisma.job.findMany({
+      where: {
+        status: 'PUBLISHED',
+        id: { notIn: activeJobs.map((j) => j.id) },
+        employer: {
+          is: {
+            verificationStatus: 'VERIFIED',
+            status: 'ACTIVE',
+          },
+        },
+      },
+      take: Math.max(50, limit * 5),
+      include: {
+        country: true,
+        jobCategory: true,
+        employer: {
+          select: {
+            id: true,
+            employerCode: true,
+            companyName: true,
+            companyNameLocal: true,
+            city: true,
+            verificationStatus: true,
+            status: true,
+          },
+        },
+      },
+    });
+    activeJobs = [...activeJobs, ...fallbackJobs];
+  }
+
   const scored = activeJobs.map((job) => {
     const match = calculateMatch(applicant, job);
+    const remainingVacancies = Math.max(0, (job.vacancyCount || 0) - (job.filledCount || 0));
     return {
-      job,
+      job: {
+        ...job,
+        remainingVacancies,
+      },
       match,
     };
   });
@@ -331,7 +394,7 @@ export async function getMatchingJobsForApplicant(
 }
 
 /**
- * Finds top matching active applicants for a given job.
+ * Finds top matching active applicants for a given job with SQL pre-filtering and bounded heap memory.
  */
 export async function getMatchingApplicantsForJob(
   prisma: PrismaClient,
@@ -343,15 +406,43 @@ export async function getMatchingApplicantsForJob(
   });
   if (!job) return [];
 
-  const applicants = await prisma.applicant.findMany({
-    where: {
-      status: { notIn: ['BLACKLISTED', 'DEPARTED', 'INACTIVE'] },
-    },
+  const candidateWhere: any = {
+    status: { notIn: ['BLACKLISTED', 'DEPARTED', 'INACTIVE'] },
+  };
+
+  if (job.countryId || job.jobCategoryId) {
+    candidateWhere.OR = [
+      ...(job.countryId ? [{ preferredCountryId: job.countryId }] : []),
+      ...(job.jobCategoryId ? [{ preferredJobCategoryId: job.jobCategoryId }] : []),
+      { preferredCountryId: null },
+      { preferredJobCategoryId: null },
+    ];
+  }
+
+  let applicants = await prisma.applicant.findMany({
+    where: candidateWhere,
+    take: Math.max(50, limit * 10),
+    orderBy: { createdAt: 'desc' },
     include: {
       preferredCountry: true,
       preferredJobCategory: true,
     },
   });
+
+  if (applicants.length < limit) {
+    const fallbackApplicants = await prisma.applicant.findMany({
+      where: {
+        status: { notIn: ['BLACKLISTED', 'DEPARTED', 'INACTIVE'] },
+        id: { notIn: applicants.map((a) => a.id) },
+      },
+      take: Math.max(50, limit * 5),
+      include: {
+        preferredCountry: true,
+        preferredJobCategory: true,
+      },
+    });
+    applicants = [...applicants, ...fallbackApplicants];
+  }
 
   const scored = applicants.map((applicant) => {
     const match = calculateMatch(applicant, job);

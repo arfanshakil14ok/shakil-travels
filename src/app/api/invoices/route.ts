@@ -221,15 +221,32 @@ export async function POST(request: NextRequest) {
 
     await createAuditLog({
       userId: currentUser.id,
+      applicantId: invoice.applicantId || undefined,
+      actorType: 'STAFF',
       action: 'INVOICE_CREATE',
       entity: 'INVOICE',
       entityId: invoice.id,
+      description: `Invoice ${invoice.invoiceNumber} created for ${invoice.currency} ${invoice.totalAmount} by ${currentUser.name}`,
       newValue: {
         invoiceNumber: invoice.invoiceNumber,
         totalAmount: invoice.totalAmount.toString(),
         currency: invoice.currency,
+        applicantId: invoice.applicantId,
+        customerId: invoice.customerId,
       },
     });
+
+    if (invoice.applicantId) {
+      await prisma.notification.create({
+        data: {
+          applicantId: invoice.applicantId,
+          type: 'INVOICE_ISSUED',
+          title: 'নতুন ইনভয়েস ইস্যু করা হয়েছে',
+          message: `আপনার অ্যাকাউন্টে নতুন ইনভয়েস (${invoice.invoiceNumber}) ইস্যু করা হয়েছে। মোট প্রদেয় অর্থ: ৳${Number(invoice.totalAmount).toLocaleString()}।`,
+          link: '/portal/invoices',
+        },
+      });
+    }
 
     return NextResponse.json(
       {

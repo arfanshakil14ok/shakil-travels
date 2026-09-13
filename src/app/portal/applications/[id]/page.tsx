@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
@@ -21,6 +21,8 @@ import { useLanguage } from '@/context/language-context';
 import { LoadingState } from '@/components/ui/loading-state';
 import { EmptyState } from '@/components/ui/empty-state';
 import { RecruitmentProgressTracker } from '@/components/portal/recruitment-progress-tracker';
+import { Button } from '@/components/ui/button';
+import { Modal } from '@/components/ui/modal';
 
 export default function PortalApplicationDetailPage() {
   const params = useParams();
@@ -31,24 +33,51 @@ export default function PortalApplicationDetailPage() {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
 
-  useEffect(() => {
-    async function loadApp() {
-      try {
-        const res = await fetch(`/api/portal/applications/${id}`);
-        const data = await res.json();
-        if (data.success) {
-          setApplication(data.data);
-        } else {
-          setErrorMsg(data.error || 'Failed to load application');
-        }
-      } catch {
-        setErrorMsg('Network error while loading application details');
-      } finally {
-        setLoading(false);
+  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
+  const [withdrawReason, setWithdrawReason] = useState('');
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+
+  const loadApp = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/portal/applications/${id}`);
+      const data = await res.json();
+      if (data.success) {
+        setApplication(data.data);
+      } else {
+        setErrorMsg(data.error || 'Failed to load application');
       }
+    } catch {
+      setErrorMsg('Network error while loading application details');
+    } finally {
+      setLoading(false);
     }
-    if (id) loadApp();
   }, [id]);
+
+  useEffect(() => {
+    if (id) loadApp();
+  }, [id, loadApp]);
+
+  const handleWithdraw = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!withdrawReason.trim()) return;
+    try {
+      setIsWithdrawing(true);
+      const res = await fetch(`/api/applications/${id}/withdraw`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ withdrawalReason: withdrawReason }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || 'Failed to withdraw');
+      setIsWithdrawOpen(false);
+      setWithdrawReason('');
+      loadApp();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setIsWithdrawing(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -291,7 +320,67 @@ export default function PortalApplicationDetailPage() {
             </div>
           )}
         </div>
+
+        {/* Withdrawal Section if eligible */}
+        {!['SELECTED', 'WITHDRAWN', 'REJECTED', 'DEPLOYED'].includes(application.status) && (
+          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div>
+              <div className="font-bold text-slate-800">আবেদন প্রত্যাহার করতে চান? (Withdraw Application)</div>
+              <div className="text-slate-500">ব্যক্তিগত বা অন্য কোনো কারণে এই আবেদনটি বাতিল করতে পারেন।</div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsWithdrawOpen(true)}
+              className="text-xs text-rose-600 border-rose-200 hover:bg-rose-50 font-medium"
+            >
+              Withdraw Application
+            </Button>
+          </div>
+        )}
       </div>
+
+      {/* Candidate Withdrawal Modal */}
+      <Modal
+        isOpen={isWithdrawOpen}
+        onClose={() => setIsWithdrawOpen(false)}
+        title="আবেদন প্রত্যাহার নিশ্চিতকরণ (Withdraw Application)"
+        maxWidth="md"
+      >
+        <form onSubmit={handleWithdraw} className="space-y-4">
+          <p className="text-xs text-slate-600">
+            আপনি কি নিশ্চিত যে আপনি &quot;{application.job?.title}&quot; পদের আবেদনটি প্রত্যাহার করতে চান?
+          </p>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              প্রত্যাহারের কারণ উল্লেখ করুন (Reason for withdrawal) *
+            </label>
+            <textarea
+              required
+              rows={3}
+              value={withdrawReason}
+              onChange={(e) => setWithdrawReason(e.target.value)}
+              placeholder="ব্যক্তিগত কারণ / অন্য চাকরি পাওয়া গিয়েছে..."
+              className="w-full text-xs p-2.5 rounded-lg border border-slate-200"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+            <Button type="button" variant="outline" size="sm" onClick={() => setIsWithdrawOpen(false)}>
+              ফিরে যান (Cancel)
+            </Button>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={isWithdrawing}
+              className="bg-rose-600 hover:bg-rose-700 text-white font-medium text-xs"
+            >
+              {isWithdrawing ? 'প্রত্যাহার হচ্ছে...' : 'প্রত্যাহার নিশ্চিত করুন (Confirm)'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
