@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { BRAND } from '@/config/brand';
 
@@ -16,8 +17,8 @@ export interface BrandLogoProps {
 }
 
 /**
- * Clean SVG Emblem Mark for SHAKIL GLOBAL MANPOWER
- * Features global meridians, upward career talent nexus, and gold apex crest.
+ * Official Brand Emblem Mark for SHAKIL TRAVELS
+ * Incorporates the official upward arrow geometric S-emblem mark.
  */
 export const BrandMark: React.FC<{
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
@@ -34,52 +35,19 @@ export const BrandMark: React.FC<{
   return (
     <div
       className={cn(
-        'relative inline-flex items-center justify-center shrink-0 rounded-xl bg-gradient-to-br from-navy-950 via-navy-900 to-slate-900 border border-slate-800 shadow-xs select-none transition-transform group-hover:scale-105',
+        'relative inline-flex items-center justify-center shrink-0 rounded-xl bg-white border border-slate-200/90 shadow-xs select-none transition-transform group-hover:scale-105 overflow-hidden p-1',
         sizeClasses[size],
         className
       )}
       aria-hidden="true"
     >
-      <svg
-        viewBox="0 0 48 48"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className="w-[85%] h-[85%]"
-      >
-        <defs>
-          <linearGradient id="mark-emerald" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#34d399" />
-            <stop offset="100%" stopColor="#059669" />
-          </linearGradient>
-          <linearGradient id="mark-gold" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#fbbf24" />
-            <stop offset="100%" stopColor="#d97706" />
-          </linearGradient>
-        </defs>
-
-        {/* Global Connectivity Meridians */}
-        <circle cx="24" cy="24" r="14" stroke="#475569" strokeWidth="1.2" strokeDasharray="2 3" opacity="0.6" />
-        <ellipse cx="24" cy="24" rx="7" ry="14" stroke="#64748b" strokeWidth="1.2" opacity="0.5" />
-        <line x1="10" y1="24" x2="38" y2="24" stroke="#475569" strokeWidth="1" opacity="0.4" />
-
-        {/* Talent & Career Upward Shape */}
-        <path
-          d="M15 31C15 22 20 18 24 16C28 18 33 22 33 31"
-          stroke="url(#mark-emerald)"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-        />
-        <path
-          d="M24 33V18M24 18L20 22M24 18L28 22"
-          stroke="url(#mark-emerald)"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-
-        {/* Leadership Gold Star / Apex */}
-        <circle cx="24" cy="12" r="3.2" fill="url(#mark-gold)" />
-      </svg>
+      <Image
+        src="/brand/logo-mark.png"
+        alt="SHAKIL TRAVELS"
+        fill
+        sizes="56px"
+        className="object-contain p-0.5"
+      />
     </div>
   );
 };
@@ -88,7 +56,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   variant = 'horizontal',
   theme = 'dark',
   size = 'md',
-  showTagline = true,
+  showTagline = false,
   href,
   className,
   iconOnlyOnMobile = false,
@@ -112,7 +80,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   const content = (
     <div
       className={cn(
-        'group inline-flex items-center gap-2.5 sm:gap-3 transition-opacity select-none',
+        'group inline-flex items-center gap-2.5 sm:gap-3 transition-opacity select-none shrink-0',
         className
       )}
     >
@@ -134,19 +102,6 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
           >
             {BRAND.name}
           </span>
-
-          {showTagline && (
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <span
-                className={cn(
-                  'text-[9px] sm:text-[10px] font-bold uppercase tracking-wider truncate',
-                  isLight ? 'text-emerald-400' : 'text-emerald-700'
-                )}
-              >
-                {BRAND.taglineEn}
-              </span>
-            </div>
-          )}
         </div>
       )}
     </div>
@@ -154,7 +109,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
 
   if (href) {
     return (
-      <Link href={href} className="inline-flex items-center no-underline">
+      <Link href={href} className="inline-flex items-center no-underline shrink-0">
         {content}
       </Link>
     );

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ShieldCheck, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { BrandLogo } from '@/components/brand/brand-logo';
+import { BRAND } from '@/config/brand';
 import { sanitizeRedirectUrl } from '@/lib/security';
 
 function LoginForm() {
@@ -309,7 +310,7 @@ function LoginForm() {
 
       {/* Trust & License Subtitle */}
       <p className="text-center text-[11px] text-slate-400 mt-6 max-w-sm leading-relaxed">
-        Government Approved Recruiting Agency • License No: RL-1892
+        {BRAND.name} • Government Approved Recruiting Agency • License No: {BRAND.licenseNumber}
       </p>
     </div>
   );

@@ -1235,7 +1235,7 @@ export default function StaffProcessingDetailPage() {
               <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
                 <div className="text-[11px] text-slate-500 font-medium">Departure Financial Clearance</div>
                 <div className="text-sm font-bold text-emerald-700 mt-1">Verified / Monitored</div>
-                <div className="text-[10px] text-slate-500">License RL-1892 Compliant</div>
+                <div className="text-[10px] text-slate-500">License RL-2579 Compliant</div>
               </div>
             </div>
           </div>

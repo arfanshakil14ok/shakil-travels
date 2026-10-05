@@ -86,7 +86,7 @@ export const MigrantInfoSection: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
-              className="border-navy-700 text-slate-200 hover:bg-navy-900 font-bengali text-xs"
+              className="border border-navy-700 bg-navy-900/80 text-slate-200 hover:bg-navy-800 hover:text-white font-bengali text-xs"
               rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
             >
               সম্পূর্ণ গাইড পড়ুন

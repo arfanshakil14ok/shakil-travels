@@ -119,7 +119,7 @@ export const VisaPreviewSection: React.FC<VisaPreviewSectionProps> = ({
                 variant="outline"
                 size="sm"
                 rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
-                className="font-bengali text-xs border-slate-300 text-slate-800 hover:bg-white"
+                className="font-bengali text-xs border border-slate-300 text-slate-800 hover:bg-slate-100 hover:border-slate-400 font-bold px-4 py-2"
               >
                 ভিসা তথ্য দেখুন
               </Button>
@@ -134,7 +134,7 @@ export const VisaPreviewSection: React.FC<VisaPreviewSectionProps> = ({
             <strong className="font-extrabold block text-amber-900 mb-0.5">
               গুরুত্বপূর্ণ সরকারি অভিবাসন নীতিমালা সতর্কতা:
             </strong>
-            ভিসা ও ওয়ার্ক পারমিট অনুমোদনের চূড়ান্ত এখতিয়ার শুধুমাত্র সংশ্লিষ্ট দেশের দূতাবাস এবং অভিবাসন কর্তৃপক্ষের। SHAKIL GLOBAL MANPOWER কোনো প্রকার '১০০% ভিসা গ্যারান্টি' বা অননুমোদিত প্রতিশ্রুতি দেয় না; আমরা শুধুমাত্র সরকারি ও আইনসম্মত প্রক্রিয়ায় প্রার্থীর আবেদন ও ফাইল প্রসেসিং সহায়তা প্রদান করি।
+            ভিসা ও ওয়ার্ক পারমিট অনুমোদনের চূড়ান্ত এখতিয়ার শুধুমাত্র সংশ্লিষ্ট দেশের দূতাবাস এবং অভিবাসন কর্তৃপক্ষের। SHAKIL TRAVELS কোনো প্রকার '১০০% ভিসা গ্যারান্টি' বা অননুমোদিত প্রতিশ্রুতি দেয় না; আমরা শুধুমাত্র সরকারি ও আইনসম্মত প্রক্রিয়ায় প্রার্থীর আবেদন ও ফাইল প্রসেসিং সহায়তা প্রদান করি।
           </div>
         </div>
 

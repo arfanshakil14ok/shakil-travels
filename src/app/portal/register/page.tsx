@@ -629,7 +629,7 @@ function RegisterForm() {
 
       {/* Trust & License Subtitle */}
       <p className="text-center text-[11px] text-slate-400 mt-6 max-w-sm leading-relaxed">
-        Government Approved Recruiting Agency • License No: RL-1892
+        Government Approved Recruiting Agency • License No: RL-2579
       </p>
     </div>
   );

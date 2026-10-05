@@ -15,9 +15,11 @@ const DEFAULT_STAGES: StageInfo[] = [
   { key: 'SUBMITTED', label: 'Application Submitted', labelBn: 'আবেদন দাখিল' },
   { key: 'DOCUMENT_VERIFICATION', label: 'Document Check', labelBn: 'ডকুমেন্ট যাচাই' },
   { key: 'INTERVIEW', label: 'Interview', labelBn: 'ইন্টারভিউ' },
-  { key: 'SELECTED', label: 'Selected', labelBn: 'নির্বাচিত' },
-  { key: 'VISA_PROCESSING', label: 'Visa Processing', labelBn: 'ভিসা প্রসেসিং' },
-  { key: 'DEPARTURE', label: 'Departure', labelBn: 'বিদেশ গমন' },
+  { key: 'SELECTED', label: 'Selected', labelBn: 'মনোনয়ন' },
+  { key: 'MEDICAL', label: 'Medical Clearance', labelBn: 'মেডিকেল টেস্ট' },
+  { key: 'TRAINING', label: 'Skills Training', labelBn: 'প্রশিক্ষণ' },
+  { key: 'VISA_PROCESSING', label: 'Visa Stamped', labelBn: 'ভিসা প্রসেসিং' },
+  { key: 'DEPARTURE', label: 'Deployment', labelBn: 'বিদেশ গমন' },
 ];
 
 export function RecruitmentProgressTracker({
@@ -39,25 +41,35 @@ export function RecruitmentProgressTracker({
     if (s === 'NEW' || s === 'PROFILE_INCOMPLETE' || s === 'PROFILE') return 0;
     if (s === 'SUBMITTED' || s === 'APPLIED' || s === 'APPLICATION_SUBMITTED') return 1;
     if (s === 'UNDER_REVIEW' || s === 'DOCUMENT_CHECK' || s === 'DOCUMENT_VERIFICATION') return 2;
-    if (s === 'INTERVIEW_SCHEDULED' || s === 'INTERVIEW') return 3;
-    if (s === 'SELECTED' || s === 'OFFER_ACCEPTED' || s === 'MEDICAL_PASSED') return 4;
-    if (s === 'VISA_PROCESSING' || s === 'VISA_APPLIED' || s === 'VISA_APPROVED' || s === 'VISA_STAMPED') return 5;
-    if (s === 'DEPLOYED' || s === 'DEPARTED' || s === 'COMPLETED' || s === 'TICKET_CONFIRMED' || s === 'DEPARTURE') return 6;
+    if (s === 'INTERVIEW_SCHEDULED' || s === 'INTERVIEW' || s === 'SCREENING') return 3;
+    if (s === 'SELECTED' || s === 'OFFER_ACCEPTED') return 4;
+    if (s === 'MEDICAL' || s === 'MEDICAL_PASSED' || s === 'MEDICAL_SCHEDULED') return 5;
+    if (s === 'TRAINING' || s === 'TRAINING_ENROLLED' || s === 'TRAINING_COMPLETED') return 6;
+    if (s === 'VISA_PROCESSING' || s === 'VISA_APPLIED' || s === 'VISA_APPROVED' || s === 'VISA_STAMPED') return 7;
+    if (s === 'DEPLOYED' || s === 'DEPARTED' || s === 'COMPLETED' || s === 'TICKET_CONFIRMED' || s === 'DEPARTURE') return 8;
     return 1;
   };
 
   const currentIndex = getStageIndex(activeStatus);
+  const progressPercent = isRejected
+    ? 0
+    : Math.round(((currentIndex + 1) / stages.length) * 100);
 
   return (
     <div className="w-full bg-white p-4 sm:p-5 rounded-xl border border-slate-200/90 shadow-xs">
       <div className="flex items-center justify-between mb-4">
-        <span
-          className={`text-xs font-semibold text-slate-800 ${
-            language === 'bn' ? 'font-bengali' : ''
-          }`}
-        >
-          {language === 'bn' ? 'রিক্রুটমেন্ট অগ্রগতি ট্র্যাক' : 'Recruitment Progress Tracker'}
-        </span>
+        <div className="flex items-center gap-2">
+          <span
+            className={`text-xs font-semibold text-slate-800 ${
+              language === 'bn' ? 'font-bengali' : ''
+            }`}
+          >
+            {language === 'bn' ? 'রিক্রুটমেন্ট অগ্রগতি ট্র্যাকার' : 'Recruitment Milestone Progress'}
+          </span>
+          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
+            {progressPercent}%
+          </span>
+        </div>
         <span
           className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${
             isRejected
@@ -73,7 +85,7 @@ export function RecruitmentProgressTracker({
         {/* Progress Line */}
         <div className="hidden sm:block absolute top-3.5 left-6 right-6 h-0.5 bg-slate-200 -z-0" />
 
-        <div className="grid grid-cols-2 sm:grid-cols-7 gap-3 sm:gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-9 gap-3 sm:gap-1.5">
           {stages.map((stage, idx) => {
             const isCompleted = !isRejected && idx < currentIndex;
             const isCurrent = !isRejected && idx === currentIndex;

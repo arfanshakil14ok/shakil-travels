@@ -35,6 +35,9 @@ export default function StaffInvoicesPage() {
   // Create Invoice Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [candidatesList, setCandidatesList] = useState<any[]>([]);
+  const [employersList, setEmployersList] = useState<any[]>([]);
+  const [loadingRecipients, setLoadingRecipients] = useState(false);
   const [formData, setFormData] = useState({
     recipientType: 'CANDIDATE',
     applicantId: '',
@@ -81,6 +84,31 @@ export default function StaffInvoicesPage() {
   useEffect(() => {
     fetchInvoices();
   }, [status, page]);
+
+  useEffect(() => {
+    if (showCreateModal) {
+      setLoadingRecipients(true);
+      Promise.all([
+        fetch('/api/applicants?limit=50').then((r) => r.json()).catch(() => ({})),
+        fetch('/api/employers?limit=50').then((r) => r.json()).catch(() => ({})),
+      ])
+        .then(([cData, eData]) => {
+          if (cData.success && cData.data?.items) {
+            setCandidatesList(cData.data.items);
+            if (!formData.applicantId && cData.data.items.length > 0) {
+              setFormData((prev) => ({ ...prev, applicantId: cData.data.items[0].id }));
+            }
+          }
+          if (eData.success && eData.data?.items) {
+            setEmployersList(eData.data.items);
+            if (!formData.employerId && eData.data.items.length > 0) {
+              setFormData((prev) => ({ ...prev, employerId: eData.data.items[0].id }));
+            }
+          }
+        })
+        .finally(() => setLoadingRecipients(false));
+    }
+  }, [showCreateModal]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -371,20 +399,73 @@ export default function StaffInvoicesPage() {
 
               {formData.recipientType === 'CANDIDATE' && (
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1">Candidate ID or Tracking No</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Candidate UUID or Tracking No"
-                    value={formData.applicantId}
-                    onChange={(e) => setFormData({ ...formData, applicantId: e.target.value })}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-indigo-500"
-                  />
+                  <label className="block text-slate-300 font-medium mb-1">
+                    Select Candidate / Applicant <span className="text-rose-400">*</span>
+                  </label>
+                  {candidatesList.length > 0 ? (
+                    <select
+                      value={formData.applicantId}
+                      onChange={(e) => setFormData({ ...formData, applicantId: e.target.value })}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-indigo-500 font-medium"
+                      required
+                    >
+                      <option value="">-- Choose Candidate --</option>
+                      {candidatesList.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.fullName} ({c.applicantNumber || 'No ID'}) {c.phone ? `• ${c.phone}` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      required
+                      placeholder="Enter Candidate Tracking Number or Phone..."
+                      value={formData.applicantId}
+                      onChange={(e) => setFormData({ ...formData, applicantId: e.target.value })}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-indigo-500"
+                    />
+                  )}
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Invoice will be linked to the candidate&apos;s ledger and applicant portal.
+                  </p>
+                </div>
+              )}
+
+              {formData.recipientType === 'EMPLOYER' && (
+                <div>
+                  <label className="block text-slate-300 font-medium mb-1">
+                    Select Overseas Employer <span className="text-rose-400">*</span>
+                  </label>
+                  {employersList.length > 0 ? (
+                    <select
+                      value={formData.employerId}
+                      onChange={(e) => setFormData({ ...formData, employerId: e.target.value })}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-indigo-500 font-medium"
+                      required
+                    >
+                      <option value="">-- Choose Employer --</option>
+                      {employersList.map((emp) => (
+                        <option key={emp.id} value={emp.id}>
+                          {emp.companyName} {emp.country ? `(${emp.country.name})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      required
+                      placeholder="Enter Employer Name or Company..."
+                      value={formData.employerId}
+                      onChange={(e) => setFormData({ ...formData, employerId: e.target.value })}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-indigo-500"
+                    />
+                  )}
                 </div>
               )}
 
               <div>
-                <label className="block text-slate-300 font-medium mb-1">Invoice Title / Description</label>
+                <label className="block text-slate-300 font-medium mb-1">Invoice Subject / Description</label>
                 <input
                   type="text"
                   required
@@ -420,73 +501,143 @@ export default function StaffInvoicesPage() {
                 </div>
               </div>
 
-              {/* Line Item */}
-              <div className="bg-slate-800/40 p-3 rounded-lg border border-slate-700/60 space-y-2">
-                <div className="font-semibold text-white text-[11px]">Line Item #1</div>
-                <div>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Item Description"
-                    value={formData.items[0].description}
-                    onChange={(e) => {
-                      const items = [...formData.items];
-                      items[0].description = e.target.value;
-                      setFormData({ ...formData, items });
+              {/* Line Items Builder */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-slate-300 uppercase tracking-wider text-[11px]">
+                    Itemized Fees & Services ({formData.items.length})
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData({
+                        ...formData,
+                        items: [
+                          ...formData.items,
+                          {
+                            feeType: 'VISA_FEE',
+                            description: 'Visa & Stamping Fee',
+                            quantity: 1,
+                            unitPrice: 20000,
+                          },
+                        ],
+                      });
                     }}
-                    className="w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-white"
-                  />
+                    className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1 font-semibold"
+                  >
+                    + Add Item Row
+                  </button>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-slate-400 text-[10px]">Fee Type</label>
-                    <select
-                      value={formData.items[0].feeType}
-                      onChange={(e) => {
-                        const items = [...formData.items];
-                        items[0].feeType = e.target.value;
-                        setFormData({ ...formData, items });
-                      }}
-                      className="w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-white text-[11px]"
-                    >
-                      <option value="PROCESSING_FEE">Processing Fee</option>
-                      <option value="MEDICAL_FEE">GAMCA Medical Fee</option>
-                      <option value="VISA_FEE">Visa & Stamping Fee</option>
-                      <option value="BMET_CLEARANCE_FEE">BMET Clearance Fee</option>
-                      <option value="AIR_TICKET_FEE">Air Ticket Fee</option>
-                      <option value="SERVICE_CHARGE">Agency Service Charge</option>
-                    </select>
+
+                {formData.items.map((item, idx) => (
+                  <div key={idx} className="bg-slate-800/60 p-3 rounded-lg border border-slate-700/80 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-slate-200 text-[11px]">Row #{idx + 1}</span>
+                      {formData.items.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const next = formData.items.filter((_, i) => i !== idx);
+                            setFormData({ ...formData, items: next });
+                          }}
+                          className="text-rose-400 hover:text-rose-300 text-[11px]"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Service details..."
+                        value={item.description}
+                        onChange={(e) => {
+                          const items = [...formData.items];
+                          items[idx].description = e.target.value;
+                          setFormData({ ...formData, items });
+                        }}
+                        className="w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-white"
+                      />
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <label className="block text-slate-400 text-[10px]">Fee Category</label>
+                        <select
+                          value={item.feeType}
+                          onChange={(e) => {
+                            const items = [...formData.items];
+                            items[idx].feeType = e.target.value;
+                            setFormData({ ...formData, items });
+                          }}
+                          className="w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-white text-[11px]"
+                        >
+                          <option value="PROCESSING_FEE">Processing Fee</option>
+                          <option value="MEDICAL_FEE">Medical Fee</option>
+                          <option value="VISA_FEE">Visa & Stamping</option>
+                          <option value="BMET_CLEARANCE_FEE">BMET Clearance</option>
+                          <option value="AIR_TICKET_FEE">Air Ticket Fee</option>
+                          <option value="SERVICE_CHARGE">Service Charge</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-slate-400 text-[10px]">Qty</label>
+                        <input
+                          type="number"
+                          required
+                          min="1"
+                          value={item.quantity}
+                          onChange={(e) => {
+                            const items = [...formData.items];
+                            items[idx].quantity = Math.max(1, Number(e.target.value));
+                            setFormData({ ...formData, items });
+                          }}
+                          className="w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-white text-center"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-slate-400 text-[10px]">Unit Price ({formData.currency})</label>
+                        <input
+                          type="number"
+                          required
+                          min="0"
+                          value={item.unitPrice}
+                          onChange={(e) => {
+                            const items = [...formData.items];
+                            items[idx].unitPrice = Number(e.target.value);
+                            setFormData({ ...formData, items });
+                          }}
+                          className="w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-white text-right font-medium"
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-slate-400 text-[10px]">Unit Price ({formData.currency})</label>
-                    <input
-                      type="number"
-                      required
-                      min="1"
-                      value={formData.items[0].unitPrice}
-                      onChange={(e) => {
-                        const items = [...formData.items];
-                        items[0].unitPrice = Number(e.target.value);
-                        setFormData({ ...formData, items });
-                      }}
-                      className="w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-white"
-                    />
-                  </div>
-                </div>
+                ))}
+              </div>
+
+              {/* Total Summary */}
+              <div className="p-3 bg-slate-800 rounded-lg flex items-center justify-between text-xs font-semibold">
+                <span className="text-slate-300">Total Invoice Amount:</span>
+                <span className="text-base font-bold text-emerald-400 font-mono">
+                  {formData.currency}{' '}
+                  {formData.items
+                    .reduce((sum, it) => sum + (Number(it.quantity) || 1) * (Number(it.unitPrice) || 0), 0)
+                    .toLocaleString()}
+                </span>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg"
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={creating}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-medium rounded-lg"
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold rounded-lg shadow-sm"
                 >
                   {creating ? 'Creating...' : 'Create Official Invoice'}
                 </button>

@@ -150,7 +150,40 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const currentUser = await requireAuth();
-    const body = await request.json();
+    const rawBody = await request.json();
+
+    // Normalize items: feeType -> category
+    const normalizedItems = Array.isArray(rawBody.items)
+      ? rawBody.items.map((it: any) => ({
+          ...it,
+          category: it.category || it.feeType || 'PROCESSING_FEE',
+        }))
+      : rawBody.items;
+
+    // Resolve applicantId / candidateId
+    let applicantId = rawBody.applicantId || rawBody.candidateId || null;
+    if (applicantId) {
+      const found = await prisma.applicant.findFirst({
+        where: {
+          OR: [
+            { id: applicantId },
+            { applicantNumber: applicantId },
+            { passportNumber: applicantId },
+            { phone: applicantId },
+          ],
+        },
+      });
+      if (found) {
+        applicantId = found.id;
+      }
+    }
+
+    const body = {
+      ...rawBody,
+      applicantId,
+      candidateId: applicantId,
+      items: normalizedItems,
+    };
 
     const validation = createInvoiceSchema.safeParse(body);
     if (!validation.success) {
@@ -167,6 +200,7 @@ export async function POST(request: NextRequest) {
       createdById: currentUser.id,
       candidateId: data.candidateId || data.applicantId || null,
       applicantId: data.applicantId || data.candidateId || null,
+      employerId: data.employerId || null,
     });
 
     return NextResponse.json({

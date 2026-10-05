@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   GraduationCap,
   Award,
@@ -17,6 +18,7 @@ import {
   TrendingUp,
   AlertCircle,
 } from 'lucide-react';
+import { getTrainingCourseImage } from '@/lib/image-constants';
 
 export default function PortalTrainingPage() {
   const [data, setData] = useState<{
@@ -358,26 +360,45 @@ export default function PortalTrainingPage() {
           {courses.map((course) => {
             const hasApplied = data?.applications?.some((a) => a.courseId === course.id);
             const activeBatch = course.batches?.[0];
+            const courseImg = getTrainingCourseImage(course.title, course.category?.name);
 
             return (
               <div
                 key={course.id}
-                className="bg-white rounded-2xl border border-slate-200 p-5 space-y-4 shadow-xs flex flex-col justify-between"
+                className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-lg transition-all flex flex-col justify-between group"
               >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                {/* Course Visual Banner */}
+                <div className="relative h-40 w-full bg-slate-900 overflow-hidden">
+                  <Image
+                    src={courseImg.src}
+                    alt={courseImg.alt || course.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
+
+                  {/* Badges */}
+                  <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2 z-10">
+                    <span className="text-[10px] font-bold text-white bg-indigo-600/90 backdrop-blur-md px-2 py-0.5 rounded shadow-xs">
                       {course.category?.banglaName}
                     </span>
-                    <span className="text-[10px] font-mono text-slate-400">{course.courseCode}</span>
+                    <span className="text-[10px] font-mono text-slate-200 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded">
+                      {course.courseCode}
+                    </span>
                   </div>
 
-                  <div>
-                    <h3 className="text-base font-bold text-slate-900">{course.banglaTitle}</h3>
-                    <p className="text-xs text-slate-500">{course.title}</p>
+                  {/* Title */}
+                  <div className="absolute bottom-2.5 left-2.5 right-2.5 text-white z-10">
+                    <h3 className="text-sm font-bold line-clamp-1 group-hover:text-indigo-200 transition-colors">
+                      {course.banglaTitle}
+                    </h3>
+                    <p className="text-[10px] text-slate-300 font-sans truncate">{course.title}</p>
                   </div>
+                </div>
 
-                  <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
+                <div className="p-4 space-y-3">
+                  <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
                     {course.description}
                   </p>
 

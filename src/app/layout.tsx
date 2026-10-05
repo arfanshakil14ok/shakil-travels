@@ -29,11 +29,11 @@ export const metadata: Metadata = {
   authors: [{ name: BRAND.name }],
   icons: {
     icon: [
-      { url: '/brand/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.png', type: 'image/png' },
       { url: '/favicon.ico', sizes: '32x32' },
     ],
     shortcut: '/favicon.ico',
-    apple: '/brand/logo-mark.svg',
+    apple: '/favicon.png',
   },
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   openGraph: {

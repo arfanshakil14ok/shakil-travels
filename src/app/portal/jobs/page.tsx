@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Briefcase,
   Search,
@@ -13,11 +14,15 @@ import {
   RefreshCw,
   AlertCircle,
   X,
+  Banknote,
+  Clock,
+  Sparkles,
 } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { EmptyState } from '@/components/ui/empty-state';
 import { LoadingState } from '@/components/ui/loading-state';
 import { useToast } from '@/components/ui/toast';
+import { getCountryImage, getCountryFlagUrl } from '@/lib/image-constants';
 
 export default function PortalJobsPage() {
   const { success, error } = useToast();
@@ -208,77 +213,125 @@ export default function PortalJobsPage() {
           )}
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {jobs.map((job) => (
-            <div
-              key={job.id}
-              className="bg-white border border-slate-200/90 rounded-xl p-5 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-all space-y-4"
-            >
-              <div>
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <span className="font-mono text-xs text-slate-700 font-bold">
-                    {job.jobCode}
-                  </span>
-                  <span className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-semibold border border-slate-200">
-                    {job.category?.name || 'General'}
-                  </span>
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {jobs.map((job) => {
+            const countryImg = getCountryImage(job.country?.code, job.country?.slug || job.country?.name);
+            const flagUrl = getCountryFlagUrl(job.country?.code);
 
-                <h3 className="font-bold text-sm sm:text-base text-slate-900 line-clamp-1">
-                  {job.title}
-                </h3>
+            return (
+              <div
+                key={job.id}
+                className="bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-xs flex flex-col justify-between hover:border-emerald-500 hover:shadow-xl hover:-translate-y-1 transition-all group"
+              >
+                {/* Visual Header with Destination Country Landmark Photo */}
+                <div className="relative h-44 w-full bg-slate-900 overflow-hidden">
+                  <Image
+                    src={countryImg.src}
+                    alt={`${job.country?.name || 'Destination'} - ${job.title}`}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/20" />
 
-                <div className="space-y-1.5 mt-3 text-xs text-slate-500">
-                  <div className="flex items-center gap-1.5 text-slate-800 font-medium">
-                    <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                    <span>{job.country?.name}</span>
+                  {/* Top-Left: Country Vector Flag & Name Badge */}
+                  <div className="absolute top-2.5 left-2.5 bg-white/95 backdrop-blur-md px-2 py-1 rounded-lg border border-slate-200 shadow-sm flex items-center gap-1.5 z-10">
+                    <div className="relative w-4 h-3 rounded-xs overflow-hidden shadow-2xs border border-slate-200 flex-shrink-0">
+                      <Image
+                        src={flagUrl}
+                        alt={job.country?.name || 'Flag'}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <span className="text-[11px] font-bold text-slate-900 font-sans">
+                      {job.country?.name || 'International'}
+                    </span>
                   </div>
 
-                  {job.employer && (
-                    <div className="flex items-center gap-1.5">
-                      <Building2 className="w-3.5 h-3.5 text-slate-400" />
-                      <span className="truncate">{job.employer.companyName}</span>
-                    </div>
-                  )}
+                  {/* Top-Right: Trade Category Pill */}
+                  <div className="absolute top-2.5 right-2.5 z-10">
+                    <span className="bg-navy-950/85 backdrop-blur-md text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded-md font-sans">
+                      {job.category?.name || 'General'}
+                    </span>
+                  </div>
 
-                  {job.salaryMin && (
-                    <div className="flex items-center gap-1.5 text-emerald-700 font-semibold">
-                      <DollarSign className="w-3.5 h-3.5" />
-                      <span>
-                        {job.salaryMin} - {job.salaryMax || ''} {job.salaryCurrency}
-                      </span>
+                  {/* Bottom: Job Code & Title on Gradient Overlay */}
+                  <div className="absolute bottom-2.5 left-3 right-3 text-white z-10">
+                    <div className="text-[10px] text-emerald-300 font-mono font-bold mb-0.5">
+                      কাজের কোড: {job.jobCode || 'SK-JOB'}
                     </div>
-                  )}
+                    <h3 className="text-sm sm:text-base font-bold line-clamp-1 text-white group-hover:text-emerald-300 transition-colors">
+                      {job.title}
+                    </h3>
+                  </div>
                 </div>
 
-                {job.description && (
-                  <p className="text-xs text-slate-500 line-clamp-2 mt-3 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                    {job.description}
-                  </p>
-                )}
-              </div>
+                {/* Card Body & Details */}
+                <div className="p-4 flex-1 flex flex-col justify-between space-y-3 font-sans">
+                  <div className="space-y-2.5">
+                    {/* Employer */}
+                    <div className="flex items-center justify-between gap-1 text-xs">
+                      <div className="flex items-center gap-1.5 text-slate-700 font-medium truncate">
+                        <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span className="truncate">{job.employer?.companyName || 'অনুমোদিত বিদেশি কোম্পানি'}</span>
+                      </div>
+                      <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded shrink-0">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Verified
+                      </span>
+                    </div>
 
-              <div className="pt-3 border-t border-slate-100">
-                {job.hasApplied ? (
-                  <Link
-                    href={`/portal/applications/${job.applicationId}`}
-                    className="w-full flex items-center justify-center gap-1.5 text-xs font-semibold py-2 px-3 rounded-lg bg-slate-100 text-slate-800 border border-slate-200 hover:bg-slate-200/70 transition-colors"
-                  >
-                    <CheckCircle2 className="w-3.5 h-3.5 text-slate-700" />
-                    <span>{t('আবেদন জমা হয়েছে', 'Application Submitted')} ({job.applicationCode})</span>
-                  </Link>
-                ) : (
-                  <button
-                    onClick={() => handleOpenApply(job)}
-                    className="w-full h-9 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <span>{t('আবেদন করুন', 'Apply for Position')}</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                )}
+                    {/* Salary Box */}
+                    {job.salaryMin ? (
+                      <div className="p-2.5 bg-emerald-50/80 border border-emerald-100 rounded-xl flex items-center justify-between text-xs">
+                        <span className="text-slate-600 font-medium flex items-center gap-1 text-[11px]">
+                          <Banknote className="w-3.5 h-3.5 text-emerald-700" />
+                          মাসিক বেতন:
+                        </span>
+                        <span className="font-bold text-emerald-800 text-xs sm:text-sm font-sans">
+                          {job.salaryCurrency || 'BDT'} {Number(job.salaryMin).toLocaleString()}
+                          {job.salaryMax ? ` - ${Number(job.salaryMax).toLocaleString()}` : '+'}/মাস
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between text-xs">
+                        <span className="text-slate-500 text-[11px]">মাসিক বেতন:</span>
+                        <span className="font-semibold text-slate-700">আলোচনা সাপেক্ষে</span>
+                      </div>
+                    )}
+
+                    {job.description && (
+                      <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
+                        {job.description}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="pt-2 border-t border-slate-100">
+                    {job.hasApplied ? (
+                      <Link
+                        href={`/portal/applications/${job.applicationId}`}
+                        className="w-full flex items-center justify-center gap-1.5 text-xs font-semibold py-2 px-3 rounded-xl bg-slate-100 text-slate-800 border border-slate-200 hover:bg-slate-200/70 transition-colors"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>{t('আবেদন জমা হয়েছে', 'Application Submitted')} ({job.applicationCode})</span>
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleOpenApply(job)}
+                        className="w-full h-9 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <span>{t('আবেদন করুন', 'Apply for Position')}</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

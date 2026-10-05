@@ -71,10 +71,10 @@ export async function GET(
       applicant: payment.invoice.applicant,
       receivedBy: payment.receivedBy,
       organization: {
-        name: config.company_name || 'SHAKIL GLOBAL MANPOWER',
-        license: config.license_number || 'RL-1892',
+        name: config.company_name || 'SHAKIL TRAVELS',
+        license: config.license_number || 'RL-2579',
         phone: config.company_phone || '01913681771',
-        email: config.company_email || 'info@shakilglobal.com',
+        email: config.company_email || 'info@shakiltravels.com',
         address: config.company_address || 'ইসলামপুর মোড় , ডায়াবেটিক হাসপাতালের সামনে , পাসপোর্ট অফিস রোড , নেত্রকোনা -২৪০০',
       },
     };

@@ -193,7 +193,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, className }) => {
             <Button
               variant="outline"
               size="sm"
-              className="w-full text-xs border-slate-200 text-slate-800 hover:bg-slate-50 font-bold"
+              className="w-full text-xs border border-slate-300 text-slate-800 hover:bg-slate-100 hover:border-slate-400 font-bold"
             >
               বিস্তারিত দেখুন
             </Button>

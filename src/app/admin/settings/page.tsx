@@ -139,7 +139,7 @@ export default function AdminSettingsPage() {
                 required
                 value={settings['company.name'] || ''}
                 onChange={(e) => handleChange('company.name', e.target.value)}
-                placeholder="SHAKIL GLOBAL MANPOWER"
+                placeholder="SHAKIL TRAVELS"
               />
 
               <Input
@@ -164,7 +164,7 @@ export default function AdminSettingsPage() {
                   required
                   value={settings['company.email'] || ''}
                   onChange={(e) => handleChange('company.email', e.target.value)}
-                  placeholder="info@shakilglobal.com"
+                  placeholder="info@shakiltravels.com"
                 />
               </div>
 
@@ -173,7 +173,7 @@ export default function AdminSettingsPage() {
                   label="Official Website URL"
                   value={settings['company.website'] || ''}
                   onChange={(e) => handleChange('company.website', e.target.value)}
-                  placeholder="https://shakilglobal.com"
+                  placeholder="https://shakiltravels.com"
                 />
                 <Input
                   label="Brand Logo Asset Path"

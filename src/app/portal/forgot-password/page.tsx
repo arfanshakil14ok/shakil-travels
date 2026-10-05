@@ -69,7 +69,7 @@ export default function ForgotPasswordPage() {
             <p className="font-semibold text-slate-800">
               {t('জরুরি প্রয়োজনে হেল্পডেস্কে যোগাযোগ করুন:', 'Urgent Assistance:')}
             </p>
-            <p>হটলাইন: +880 1700 000000 • ইমেইল: support@shakilglobal.com</p>
+            <p>হটলাইন: 01913681771 • ইমেইল: support@shakiltravels.com</p>
           </div>
 
           <Link

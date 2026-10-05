@@ -320,7 +320,7 @@ export default function PortalSupportPage() {
                               ? t('আপনি (আবেদনকারী)', 'You (Applicant)')
                               : msg.staffSender?.name
                               ? `${msg.staffSender.name} (Support Officer)`
-                              : 'SHAKIL GLOBAL Helpdesk'}
+                              : 'SHAKIL TRAVELS Helpdesk'}
                           </span>
                           <span>•</span>
                           <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>

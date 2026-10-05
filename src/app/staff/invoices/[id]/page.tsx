@@ -252,11 +252,11 @@ export default function StaffInvoiceDetailPage() {
             <div className="text-xs uppercase font-bold tracking-wider text-indigo-400">
               Agency & License Info
             </div>
-            <div className="text-lg font-bold text-white mt-1">SHAKIL GLOBAL RECRUITMENT</div>
+            <div className="text-lg font-bold text-white mt-1">SHAKIL TRAVELS</div>
             <div className="text-xs text-slate-400 mt-0.5 font-medium">
-              Recruitment License: <span className="text-slate-200">RL-1892</span>
+              Recruitment License: <span className="text-slate-200">RL-2579</span>
             </div>
-            <div className="text-xs text-slate-400">Dhaka, Bangladesh • info@shakilglobal.com</div>
+            <div className="text-xs text-slate-400">Dhaka & Netrokona, Bangladesh • info@shakiltravels.com</div>
           </div>
 
           <div className="md:text-right">

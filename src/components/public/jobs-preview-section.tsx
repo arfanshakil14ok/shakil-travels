@@ -104,7 +104,7 @@ export const JobsPreviewSection: React.FC<JobsPreviewSectionProps> = ({
                 variant="outline"
                 size="sm"
                 rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
-                className="font-bengali text-xs border-slate-300 text-slate-800 hover:bg-white font-bold px-4 py-2"
+                className="font-bengali text-xs border border-slate-300 text-slate-800 hover:bg-slate-100 hover:border-slate-400 font-bold px-4 py-2"
               >
                 সকল চাকরি দেখুন ({jobs.length})
               </Button>

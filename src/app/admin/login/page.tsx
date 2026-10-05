@@ -101,7 +101,7 @@ function AdminLoginForm() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="staff@shakilglobal.com"
+              placeholder="admin@shakiltravels.com"
               autoComplete="email"
               autoFocus
               className="w-full h-11 sm:h-12 px-3.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/15 focus:border-slate-800 transition-colors"
@@ -179,42 +179,11 @@ function AdminLoginForm() {
             </button>
           </div>
         </form>
-
-        {/* Quick Testing Credentials helper */}
-        <div className="pt-4 border-t border-slate-100 text-xs text-slate-500">
-          <span className="font-semibold text-slate-700 block mb-1.5 text-[11px] uppercase tracking-wider">
-            Demo Staff Accounts:
-          </span>
-          <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
-            <button
-              type="button"
-              className="p-2 bg-slate-50 rounded border border-slate-200 text-left hover:bg-slate-100 transition-colors"
-              onClick={() => {
-                setEmail('admin@shakilglobal.com');
-                setPassword('Admin@SGR2026!');
-              }}
-            >
-              <span className="font-bold block text-slate-800">Super Admin</span>
-              <span className="text-[10px] text-slate-500">admin@shakilglobal...</span>
-            </button>
-            <button
-              type="button"
-              className="p-2 bg-slate-50 rounded border border-slate-200 text-left hover:bg-slate-100 transition-colors"
-              onClick={() => {
-                setEmail('recruiter@shakilglobal.com');
-                setPassword('Staff@SGR2026!');
-              }}
-            >
-              <span className="font-bold block text-slate-800">Recruiter</span>
-              <span className="text-[10px] text-slate-500">recruiter@shakil...</span>
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* Trust & License Subtitle */}
       <p className="text-center text-[11px] text-slate-400 mt-6 max-w-sm leading-relaxed">
-        Government Approved Recruiting Agency • License No: RL-1892
+        {BRAND.name} • Government Approved Recruiting Agency • License No: {BRAND.licenseNumber}
       </p>
     </div>
   );

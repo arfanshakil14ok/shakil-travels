@@ -74,7 +74,7 @@ export default async function StaffDashboardPage() {
               Welcome back, {user.name}
             </h1>
             <p className="text-sm text-slate-300">
-              Active Role: <span className="text-indigo-200 font-semibold">{user.role?.description || roleName}</span> • License RL-1892
+              Active Role: <span className="text-indigo-200 font-semibold">{user.role?.description || roleName}</span> • License RL-2579
             </p>
           </div>
 
@@ -335,8 +335,8 @@ export default async function StaffDashboardPage() {
             </div>
           </div>
           <div className="p-3 bg-slate-50 rounded-lg text-xs text-slate-600 space-y-1">
-            <div className="font-semibold text-slate-900">SHAKIL GLOBAL MANPOWER</div>
-            <div>License: <span className="font-mono font-bold text-indigo-600">RL-1892</span></div>
+            <div className="font-semibold text-slate-900">SHAKIL TRAVELS</div>
+            <div>License: <span className="font-mono font-bold text-indigo-600">RL-2579</span></div>
             <div>Netrokona Office: 01913681771</div>
           </div>
         </div>

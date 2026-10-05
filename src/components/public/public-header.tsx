@@ -197,8 +197,10 @@ export const PublicHeader: React.FC = () => {
 
       {/* Main Navigation Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        {/* Brand Logo (Always links directly to / without resetting session) */}
-        <BrandLogo href="/" size="md" variant="horizontal" />
+        {/* Brand Logo with generous spacing from navbar links */}
+        <div className="shrink-0 mr-6 lg:mr-8 xl:mr-10">
+          <BrandLogo href="/" size="md" variant="horizontal" />
+        </div>
 
         {/* Desktop Nav Links */}
         <nav className="hidden lg:flex items-center space-x-1 xl:space-x-1.5" aria-label="Main Navigation">
@@ -520,7 +522,7 @@ export const PublicHeader: React.FC = () => {
                     )}
                   />
                 }
-                className="text-xs font-semibold border-slate-300 text-slate-800 hover:bg-slate-50 font-bengali"
+                className="text-xs font-semibold border border-slate-300 text-slate-800 hover:bg-slate-100 hover:border-slate-400 font-bengali"
               >
                 {language === 'bn' ? 'লগইন' : 'Sign In'}
               </Button>
@@ -890,7 +892,7 @@ export const PublicHeader: React.FC = () => {
                   >
                     <Button
                       variant="outline"
-                      className="w-full border-slate-300 text-slate-800 justify-center text-xs font-bold py-2.5 flex items-center gap-2 hover:bg-white"
+                      className="w-full border border-slate-300 text-slate-800 justify-center text-xs font-bold py-2.5 flex items-center gap-2 hover:bg-slate-100 hover:border-slate-400"
                     >
                       <UserRound className="w-4 h-4 text-emerald-600" />
                       {language === 'bn' ? 'প্রার্থী লগইন (Applicant Portal)' : 'Applicant Portal Login'}

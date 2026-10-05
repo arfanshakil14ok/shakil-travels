@@ -73,13 +73,13 @@ function VerifyCertificateForm() {
         <div className="text-center space-y-3">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-800">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            Official BMET RL-1892 Registry
+            Official BMET RL-2579 Registry
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
             Verify Skill Training Certificate
           </h1>
           <p className="text-sm text-slate-600 max-w-xl mx-auto leading-relaxed">
-            Verify the authenticity of vocational training certificates issued by <span className="font-semibold text-slate-800">SHAKIL GLOBAL MANPOWER</span> and affiliated technical training centers.
+            Verify the authenticity of vocational training certificates issued by <span className="font-semibold text-slate-800">SHAKIL TRAVELS</span> and affiliated technical training centers.
           </p>
         </div>
 
@@ -167,7 +167,7 @@ function VerifyCertificateForm() {
                       {BRAND.name}
                     </h2>
                     <p className="text-xs text-slate-500">
-                      Govt Approved Recruiting Agency • License RL-1892
+                      Govt Approved Recruiting Agency • License RL-2579
                     </p>
                   </div>
                 </div>
@@ -215,7 +215,7 @@ function VerifyCertificateForm() {
                 </div>
                 <div className="text-xs font-semibold text-emerald-800 flex items-center gap-1.5 shrink-0">
                   <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  Government RL-1892 Verified
+                  Government RL-2579 Verified
                 </div>
               </div>
             </div>
@@ -231,7 +231,7 @@ function VerifyCertificateForm() {
             <div className="space-y-1 max-w-md mx-auto">
               <h2 className="text-base font-bold text-slate-900">Certificate Not Found</h2>
               <p className="text-xs text-slate-500 leading-relaxed">
-                The reference code entered does not match any authenticated record in the SHAKIL GLOBAL MANPOWER registry. Please verify the digits or contact our Netrokona office hotline.
+                The reference code entered does not match any authenticated record in the SHAKIL TRAVELS registry. Please verify the digits or contact our Netrokona office hotline.
               </p>
             </div>
             <div className="pt-2 flex items-center justify-center gap-4 text-xs font-medium">

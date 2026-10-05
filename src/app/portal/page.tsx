@@ -5,6 +5,7 @@ import Link from 'next/link';
 import {
   Briefcase,
   FileCheck2,
+  FileText,
   Calendar,
   Stamp,
   CreditCard,
@@ -22,13 +23,12 @@ import {
 import { useLanguage } from '@/context/language-context';
 import { EmptyState } from '@/components/ui/empty-state';
 import { LoadingState } from '@/components/ui/loading-state';
-import { RecruitmentProgressTracker } from '@/components/portal/recruitment-progress-tracker';
 
 export default function PortalDashboardPage() {
   const { language, t } = useLanguage();
   const [profile, setProfile] = useState<any | null>(null);
   const [applications, setApplications] = useState<any[]>([]);
-  const [interviews, setInterviews] = useState<any[]>([]);
+  const [documentsCount, setDocumentsCount] = useState(0);
   const [visaCases, setVisaCases] = useState<any[]>([]);
   const [financialSummary, setFinancialSummary] = useState<any | null>(null);
   const [recommendedJobs, setRecommendedJobs] = useState<any[]>([]);
@@ -37,19 +37,19 @@ export default function PortalDashboardPage() {
   useEffect(() => {
     async function loadDashboard() {
       try {
-        const [pRes, aRes, iRes, vRes, invRes, recRes] = await Promise.all([
+        const [pRes, aRes, dRes, vRes, invRes, recRes] = await Promise.all([
           fetch('/api/portal/profile'),
           fetch('/api/portal/applications'),
-          fetch('/api/portal/interviews'),
+          fetch('/api/portal/documents'),
           fetch('/api/portal/visa'),
           fetch('/api/portal/invoices'),
           fetch('/api/portal/jobs/recommended'),
         ]);
 
-        const [pData, aData, iData, vData, invData, recData] = await Promise.all([
+        const [pData, aData, dData, vData, invData, recData] = await Promise.all([
           pRes.json(),
           aRes.json(),
-          iRes.json(),
+          dRes.json(),
           vRes.json(),
           invRes.json(),
           recRes.json(),
@@ -57,7 +57,7 @@ export default function PortalDashboardPage() {
 
         if (pData.success) setProfile(pData.data);
         if (aData.success) setApplications(aData.data);
-        if (iData.success) setInterviews(iData.data);
+        if (dData.success) setDocumentsCount(dData.data?.documents?.length || 0);
         if (vData.success) setVisaCases(vData.data);
         if (invData.success) setFinancialSummary(invData.data.summary);
         if (recData?.success) setRecommendedJobs(recData.data || []);
@@ -80,7 +80,6 @@ export default function PortalDashboardPage() {
 
   const completion = profile?.completion?.percentage || 0;
   const missing = profile?.completion?.missingFields || [];
-  const upcomingInterview = interviews.find((i) => ['SCHEDULED', 'CONFIRMED'].includes(i.status));
   const activeVisa = visaCases.find((v) => !['REJECTED', 'CANCELLED'].includes(v.status));
   const primaryApplication = applications[0] || null;
 
@@ -154,64 +153,6 @@ export default function PortalDashboardPage() {
         </div>
       </div>
 
-      {/* 10-Stage Milestone Visual Progress Tracker (if candidate has applied) */}
-      {primaryApplication && (
-        <div className="bg-white border border-slate-200/90 rounded-xl p-5 sm:p-6 shadow-xs space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-mono font-bold text-slate-700">
-                  {primaryApplication.applicationCode}
-                </span>
-                <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-800 font-semibold border border-slate-200">
-                  {primaryApplication.status}
-                </span>
-              </div>
-              <h3 className="text-sm sm:text-base font-bold text-slate-900 mt-1">
-                {primaryApplication.job?.title} • {primaryApplication.job?.country?.name}
-              </h3>
-            </div>
-            <Link
-              href={`/portal/applications/${primaryApplication.id}`}
-              className="text-xs font-semibold text-slate-900 hover:text-slate-700 flex items-center gap-1 shrink-0"
-            >
-              <span>{t('সম্পূর্ণ টাইমলাইন দেখুন', 'View Full Timeline')}</span>
-              <ChevronRight className="w-4 h-4" />
-            </Link>
-          </div>
-
-          <RecruitmentProgressTracker
-            currentStage={primaryApplication.timeline?.find((t: any) => t.state === 'CURRENT')?.key || 'APPLICATION_SUBMITTED'}
-          />
-        </div>
-      )}
-
-      {/* Upcoming Interview Alert */}
-      {upcomingInterview && (
-        <div className="p-4 bg-purple-50 border border-purple-200/80 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-purple-700 text-white flex items-center justify-center shrink-0">
-              <Calendar className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="font-bold text-purple-950">
-                {t('আসন্ন সাক্ষাৎকার নির্ধারিত হয়েছে', 'Upcoming Interview Scheduled')}
-              </div>
-              <div className="text-purple-800 mt-0.5">
-                {new Date(upcomingInterview.scheduledAt).toLocaleString()} • {upcomingInterview.job?.title} (
-                {upcomingInterview.interviewType})
-              </div>
-            </div>
-          </div>
-          <Link
-            href="/portal/interviews"
-            className="px-3 py-1.5 rounded-lg bg-purple-900 hover:bg-purple-800 text-white font-semibold text-xs transition-colors shrink-0 text-center"
-          >
-            {t('বিস্তারিত দেখুন', 'View Details')}
-          </Link>
-        </div>
-      )}
-
       {/* 4 KPI Cards Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Applications */}
@@ -234,22 +175,22 @@ export default function PortalDashboardPage() {
           </div>
         </Link>
 
-        {/* Interviews */}
+        {/* Documents */}
         <Link
-          href="/portal/interviews"
+          href="/portal/documents"
           className="bg-white border border-slate-200/90 rounded-xl p-4 sm:p-5 shadow-xs hover:border-slate-300 transition-all block group"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-medium text-slate-500">
-              {t('সাক্ষাৎকার', 'Interviews')}
+              {t('নথিপত্র ও সনদ', 'Documents')}
             </span>
             <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
-              <Calendar className="w-3.5 h-3.5" />
+              <FileText className="w-3.5 h-3.5" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-slate-900">{interviews.length}</div>
+          <div className="text-2xl font-bold text-slate-900">{documentsCount}</div>
           <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-1 group-hover:text-slate-700">
-            <span>{t('সময়সূচি দেখুন', 'Schedule & status')}</span>
+            <span>{t('ফাইল ও ভেরিফিকেশন', 'Uploaded files')}</span>
             <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
           </div>
         </Link>
@@ -499,8 +440,8 @@ export default function PortalDashboardPage() {
             </div>
             <p className="leading-relaxed text-[11px] text-slate-500">
               {t(
-                'অনুমোদিত রসিদ ছাড়া কোনো ধরনের আর্থিক লেনদেন করবেন না। ভিসা প্রাপ্তির সিদ্ধান্ত শুধুমাত্র সংশ্লিষ্ট দেশের দূতাবাস দ্বারা নির্ধারিত হয়। শাকিল গ্লোবাল ম্যানপাওয়ার শতভাগ আইনি প্রক্রিয়া মেনে সেবা প্রদানে প্রতিশ্রুতিবদ্ধ।',
-                'Never pay recruitment fees without an official system-generated receipt. Visa issuance is exclusively determined by foreign embassies. SHAKIL GLOBAL MANPOWER ensures transparent and legal placement.'
+                'অনুমোদিত রসিদ ছাড়া কোনো ধরনের আর্থিক লেনদেন করবেন না। ভিসা প্রাপ্তির সিদ্ধান্ত শুধুমাত্র সংশ্লিষ্ট দেশের দূতাবাস দ্বারা নির্ধারিত হয়। শাকিল ট্রাভেলস শতভাগ আইনি প্রক্রিয়া মেনে সেবা প্রদানে প্রতিশ্রুতিবদ্ধ।',
+                'Never pay recruitment fees without an official system-generated receipt. Visa issuance is exclusively determined by foreign embassies. SHAKIL TRAVELS ensures transparent and legal placement.'
               )}
             </p>
           </div>

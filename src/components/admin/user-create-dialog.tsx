@@ -115,7 +115,7 @@ export const UserCreateDialog: React.FC<UserCreateDialogProps> = ({
             label="Email Address"
             type="email"
             required
-            placeholder="mahbub@shakilglobal.com"
+            placeholder="officer@shakiltravels.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />

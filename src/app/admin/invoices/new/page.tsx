@@ -36,10 +36,20 @@ function InvoiceNewContent() {
   const defaultApplicantId = searchParams.get('applicantId') || '';
   const defaultApplicationId = searchParams.get('applicationId') || '';
 
-  // Applicant selection
+  // Recipient selection
+  const [recipientType, setRecipientType] = useState<'CANDIDATE' | 'EMPLOYER' | 'OTHER'>('CANDIDATE');
   const [applicantSearch, setApplicantSearch] = useState('');
   const [applicantResults, setApplicantResults] = useState<any[]>([]);
   const [selectedApplicant, setSelectedApplicant] = useState<any | null>(null);
+  const [recentCandidates, setRecentCandidates] = useState<any[]>([]);
+
+  // Employer selection
+  const [employersCatalog, setEmployersCatalog] = useState<any[]>([]);
+  const [selectedEmployer, setSelectedEmployer] = useState<any | null>(null);
+
+  // Custom customer
+  const [customCustomerName, setCustomCustomerName] = useState('');
+  const [customCustomerPhone, setCustomCustomerPhone] = useState('');
 
   // Application selection
   const [applications, setApplications] = useState<any[]>([]);
@@ -80,18 +90,21 @@ function InvoiceNewContent() {
 
   // Initial load
   useEffect(() => {
-    async function loadCatalog() {
+    async function loadData() {
       try {
-        const res = await fetch('/api/services?isActive=true');
-        const data = await res.json();
-        if (data.success) {
-          setServicesCatalog(data.data || []);
-        }
+        const [servicesRes, employersRes, candidatesRes] = await Promise.all([
+          fetch('/api/services?isActive=true').then((r) => r.json()).catch(() => ({})),
+          fetch('/api/employers?limit=100').then((r) => r.json()).catch(() => ({})),
+          fetch('/api/applicants?limit=25').then((r) => r.json()).catch(() => ({})),
+        ]);
+        if (servicesRes.success) setServicesCatalog(servicesRes.data || []);
+        if (employersRes.success && employersRes.data?.items) setEmployersCatalog(employersRes.data.items);
+        if (candidatesRes.success && candidatesRes.data?.items) setRecentCandidates(candidatesRes.data.items);
       } catch (err) {
         console.error(err);
       }
     }
-    loadCatalog();
+    loadData();
   }, []);
 
   // Preload applicant if query param provided
@@ -196,8 +209,16 @@ function InvoiceNewContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedApplicant) {
-      setError('Please select a customer or candidate to bill.');
+    if (recipientType === 'CANDIDATE' && !selectedApplicant) {
+      setError('Please select a candidate/applicant to bill.');
+      return;
+    }
+    if (recipientType === 'EMPLOYER' && !selectedEmployer) {
+      setError('Please select an overseas employer to bill.');
+      return;
+    }
+    if (recipientType === 'OTHER' && !customCustomerName.trim()) {
+      setError('Please enter a customer or organization name.');
       return;
     }
     if (lineItems.length === 0) {
@@ -210,8 +231,9 @@ function InvoiceNewContent() {
 
     try {
       const payload = {
-        applicantId: selectedApplicant.id,
-        applicationId: selectedApplicationId || undefined,
+        applicantId: recipientType === 'CANDIDATE' ? selectedApplicant?.id : undefined,
+        employerId: recipientType === 'EMPLOYER' ? selectedEmployer?.id : undefined,
+        applicationId: recipientType === 'CANDIDATE' ? (selectedApplicationId || undefined) : undefined,
         issueDate,
         dueDate,
         currency,
@@ -228,7 +250,7 @@ function InvoiceNewContent() {
         tax: Number(globalTax) || 0,
         adjustment: Number(adjustment) || 0,
         status: invoiceStatus,
-        notes: notes || undefined,
+        notes: recipientType === 'OTHER' ? `Customer: ${customCustomerName} (${customCustomerPhone}). ${notes}` : notes,
         terms: terms || undefined,
       };
 
@@ -298,72 +320,190 @@ function InvoiceNewContent() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Customer / Candidate Selection */}
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
-          <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-            1. Bill To (Candidate / Customer) <span className="text-rose-500">*</span>
-          </h2>
-
-          {selectedApplicant ? (
-            <div className="p-3 bg-primary-50 border border-primary-200 rounded-lg flex items-center justify-between text-xs">
-              <div>
-                <span className="font-bold text-primary-900 text-sm block">{selectedApplicant.fullName}</span>
-                <span className="text-primary-700">
-                  Candidate ID: {selectedApplicant.applicantNumber} • Phone: {selectedApplicant.phone}
-                </span>
-                {selectedApplicant.passportNumber && (
-                  <span className="block text-slate-500 mt-0.5">Passport: {selectedApplicant.passportNumber}</span>
-                )}
-              </div>
-              <Button type="button" variant="ghost" size="sm" onClick={() => setSelectedApplicant(null)} className="text-xs text-rose-600">
-                Change
-              </Button>
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+              1. Bill To (Recipient) <span className="text-rose-500">*</span>
+            </h2>
+            <div className="flex rounded-lg border border-slate-200 p-0.5 bg-slate-50 text-[11px]">
+              <button
+                type="button"
+                onClick={() => setRecipientType('CANDIDATE')}
+                className={`px-2.5 py-1 rounded-md font-medium transition ${
+                  recipientType === 'CANDIDATE' ? 'bg-white text-primary-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Candidate
+              </button>
+              <button
+                type="button"
+                onClick={() => setRecipientType('EMPLOYER')}
+                className={`px-2.5 py-1 rounded-md font-medium transition ${
+                  recipientType === 'EMPLOYER' ? 'bg-white text-primary-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Employer
+              </button>
+              <button
+                type="button"
+                onClick={() => setRecipientType('OTHER')}
+                className={`px-2.5 py-1 rounded-md font-medium transition ${
+                  recipientType === 'OTHER' ? 'bg-white text-primary-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Direct Client
+              </button>
             </div>
-          ) : (
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-              <Input
-                placeholder="Search candidate name, phone or passport..."
-                value={applicantSearch}
-                onChange={(e) => handleApplicantSearch(e.target.value)}
-                className="pl-9 text-xs"
-              />
-              {applicantResults.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto divide-y divide-slate-100">
-                  {applicantResults.map((c) => (
-                    <div
-                      key={c.id}
-                      onClick={() => {
-                        setSelectedApplicant(c);
-                        setApplicantResults([]);
-                      }}
-                      className="p-2.5 text-xs hover:bg-slate-50 cursor-pointer"
-                    >
-                      <div className="font-semibold text-slate-800">{c.fullName}</div>
-                      <div className="text-slate-500">{c.applicantNumber} • {c.phone}</div>
-                    </div>
-                  ))}
+          </div>
+
+          {/* Recipient Mode: Candidate */}
+          {recipientType === 'CANDIDATE' && (
+            <div className="space-y-3">
+              {selectedApplicant ? (
+                <div className="p-3 bg-primary-50 border border-primary-200 rounded-lg flex items-center justify-between text-xs">
+                  <div>
+                    <span className="font-bold text-primary-900 text-sm block">{selectedApplicant.fullName}</span>
+                    <span className="text-primary-700">
+                      Candidate ID: {selectedApplicant.applicantNumber} • Phone: {selectedApplicant.phone}
+                    </span>
+                    {selectedApplicant.passportNumber && (
+                      <span className="block text-slate-500 mt-0.5">Passport: {selectedApplicant.passportNumber}</span>
+                    )}
+                  </div>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setSelectedApplicant(null)} className="text-xs text-rose-600 font-semibold">
+                    Change
+                  </Button>
                 </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                    <Input
+                      placeholder="Search candidate name, phone or passport..."
+                      value={applicantSearch}
+                      onChange={(e) => handleApplicantSearch(e.target.value)}
+                      className="pl-9 text-xs"
+                    />
+                    {applicantResults.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto divide-y divide-slate-100">
+                        {applicantResults.map((c) => (
+                          <div
+                            key={c.id}
+                            onClick={() => {
+                              setSelectedApplicant(c);
+                              setApplicantResults([]);
+                            }}
+                            className="p-2.5 text-xs hover:bg-slate-50 cursor-pointer"
+                          >
+                            <div className="font-semibold text-slate-800">{c.fullName}</div>
+                            <div className="text-slate-500">{c.applicantNumber} • {c.phone}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {recentCandidates.length > 0 && (
+                    <div>
+                      <span className="text-[10px] text-slate-400 font-medium block mb-1">Or pick from recent candidates:</span>
+                      <select
+                        onChange={(e) => {
+                          const found = recentCandidates.find((c) => c.id === e.target.value);
+                          if (found) setSelectedApplicant(found);
+                        }}
+                        className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2"
+                        defaultValue=""
+                      >
+                        <option value="" disabled>-- Select Recent Candidate --</option>
+                        {recentCandidates.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.fullName} ({c.applicantNumber})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Linked Application */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">
+                  Link to Recruitment Application (Optional)
+                </label>
+                <select
+                  value={selectedApplicationId}
+                  onChange={(e) => setSelectedApplicationId(e.target.value)}
+                  className="w-full text-xs bg-white border border-slate-300 rounded-lg p-2.5"
+                >
+                  <option value="">No linked application (General billing)</option>
+                  {applications.map((app) => (
+                    <option key={app.id} value={app.id}>
+                      {app.applicationNumber} — {app.job?.title} ({app.currentStatus})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* Recipient Mode: Employer */}
+          {recipientType === 'EMPLOYER' && (
+            <div className="space-y-3">
+              <label className="block text-xs font-semibold text-slate-600 mb-1">
+                Select Overseas Employer / Company <span className="text-rose-500">*</span>
+              </label>
+              {employersCatalog.length > 0 ? (
+                <select
+                  value={selectedEmployer?.id || ''}
+                  onChange={(e) => {
+                    const found = employersCatalog.find((emp) => emp.id === e.target.value);
+                    setSelectedEmployer(found || null);
+                  }}
+                  className="w-full text-xs bg-white border border-slate-300 rounded-lg p-2.5 font-medium"
+                >
+                  <option value="">-- Choose Employer --</option>
+                  {employersCatalog.map((emp) => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.companyName} {emp.country ? `(${emp.country.name})` : ''}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <Input
+                  placeholder="Enter Employer Name or Company..."
+                  value={customCustomerName}
+                  onChange={(e) => setCustomCustomerName(e.target.value)}
+                  className="text-xs"
+                />
               )}
             </div>
           )}
 
-          {/* Linked Application */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">
-              Link to Recruitment Application (Optional)
-            </label>
-            <select
-              value={selectedApplicationId}
-              onChange={(e) => setSelectedApplicationId(e.target.value)}
-              className="w-full text-xs bg-white border border-slate-300 rounded-lg p-2.5"
-            >
-              <option value="">No linked application (General billing)</option>
-              {applications.map((app) => (
-                <option key={app.id} value={app.id}>
-                  {app.applicationNumber} — {app.job?.title} ({app.currentStatus})
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Recipient Mode: Other / Direct */}
+          {recipientType === 'OTHER' && (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">
+                  Client / Customer Name <span className="text-rose-500">*</span>
+                </label>
+                <Input
+                  placeholder="Client or Organization Name..."
+                  value={customCustomerName}
+                  onChange={(e) => setCustomCustomerName(e.target.value)}
+                  className="text-xs"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Contact Phone</label>
+                <Input
+                  placeholder="Phone number..."
+                  value={customCustomerPhone}
+                  onChange={(e) => setCustomCustomerPhone(e.target.value)}
+                  className="text-xs"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Invoice Dates & Terms */}

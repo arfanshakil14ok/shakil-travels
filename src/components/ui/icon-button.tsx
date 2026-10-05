@@ -5,7 +5,7 @@ import { Loader2 } from 'lucide-react';
 export interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   'aria-label': string; // Enforce accessible label
   tooltip?: string;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive' | 'blue';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
 }
@@ -29,11 +29,12 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
       'inline-flex items-center justify-center rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.96]';
 
     const variants = {
-      primary: 'bg-navy-900 text-white hover:bg-navy-800 focus:ring-navy-900',
-      secondary: 'bg-slate-100 text-slate-700 hover:bg-slate-200 focus:ring-slate-300',
-      outline: 'border border-slate-300 bg-transparent text-slate-700 hover:bg-slate-100 focus:ring-slate-300',
-      ghost: 'bg-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-100 focus:ring-slate-200',
-      destructive: 'bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 focus:ring-rose-400',
+      primary: 'bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 shadow-sm',
+      secondary: 'bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-300 focus:ring-slate-300',
+      outline: 'border border-slate-300 bg-white text-slate-800 hover:bg-slate-100 hover:text-slate-950 focus:ring-slate-300 shadow-2xs',
+      ghost: 'bg-transparent text-slate-700 hover:text-slate-950 hover:bg-slate-100 focus:ring-slate-200',
+      destructive: 'bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 focus:ring-rose-400 border border-rose-200',
+      blue: 'bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 shadow-sm',
     };
 
     const sizes = {

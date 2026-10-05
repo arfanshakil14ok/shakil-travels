@@ -34,6 +34,7 @@ import {
   X,
   ExternalLink,
   Trash2,
+  GraduationCap,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { IconButton } from '@/components/ui/icon-button';
@@ -79,6 +80,12 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { title: 'Documents', href: '/admin/documents', icon: Files },
       { title: 'Document Types', href: '/admin/document-types', icon: ShieldCheck },
+    ],
+  },
+  {
+    title: 'TRAINING & SKILLS',
+    items: [
+      { title: 'Training Management / প্রশিক্ষণ', href: '/admin/training', icon: GraduationCap },
     ],
   },
   {
@@ -174,7 +181,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose, isC
       >
         {/* Brand Header */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-navy-800/80 bg-navy-900/50 flex-shrink-0">
-          <Link href="/admin/dashboard" className="flex items-center gap-2.5 overflow-hidden">
+          <Link href="/" className="flex items-center gap-2.5 overflow-hidden" title="Go to Main Homepage">
             <BrandMark size="sm" />
             {(!isCollapsed || isOpen) && (
               <div className="flex flex-col min-w-0">

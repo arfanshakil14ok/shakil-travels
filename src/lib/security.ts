@@ -1,6 +1,6 @@
 /**
  * Enterprise Security Hardening & Input Sanitization
- * Shakil Global Recruitment V2.0 (RL-1892)
+ * Shakil Travels (RL-2579)
  */
 
 export function sanitizeHtml(input: string): string {

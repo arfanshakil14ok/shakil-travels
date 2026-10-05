@@ -1108,7 +1108,7 @@ export default function StaffApplicationDetailPage() {
               <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
                 <div className="text-[11px] text-slate-500 font-medium">Processing Status</div>
                 <div className="text-sm font-bold text-emerald-700 mt-1">{application.status}</div>
-                <div className="text-[10px] text-slate-500">RL-1892 Standard Billing</div>
+                <div className="text-[10px] text-slate-500">RL-2579 Standard Billing</div>
               </div>
             </div>
           </div>

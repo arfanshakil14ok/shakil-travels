@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   GraduationCap,
   Clock,
@@ -14,8 +15,10 @@ import {
   ShieldCheck,
   BookOpen,
   Award,
+  Sparkles,
 } from 'lucide-react';
 import { BRAND } from '@/config/brand';
+import { getTrainingCourseImage } from '@/lib/image-constants';
 
 interface CourseItem {
   id: string;
@@ -101,7 +104,7 @@ function SkillTrainingCatalog() {
         <div className="text-center space-y-4 max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-xs font-semibold text-indigo-700">
             <GraduationCap className="w-3.5 h-3.5 text-indigo-600" />
-            BMET Affiliated Vocational Training • RL-1892
+            BMET Affiliated Vocational Training • RL-2579
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900">
             স্কিল ট্রেনিং ও কারিগরি প্রশিক্ষণ একাডেমি
@@ -187,30 +190,44 @@ function SkillTrainingCatalog() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCourses.map((course) => {
               const activeBatch = course.batches[0];
+              const courseImg = getTrainingCourseImage(course.title, course.category?.name);
 
               return (
                 <div
                   key={course.id}
-                  className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col group"
+                  className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-xl hover:border-indigo-400 transition-all flex flex-col group"
                 >
-                  <div className="p-6 flex-1 space-y-4">
-                    {/* Header Badges */}
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2.5 py-0.5 rounded-md">
+                  {/* Course Visual Banner */}
+                  <div className="relative h-44 w-full bg-slate-900 overflow-hidden">
+                    <Image
+                      src={courseImg.src}
+                      alt={courseImg.alt || course.title}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      className="object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
+
+                    {/* Category & Course Code Badges */}
+                    <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 z-10">
+                      <span className="text-[11px] font-bold text-white bg-indigo-600/90 backdrop-blur-md px-2.5 py-0.5 rounded-lg shadow-xs">
                         {course.category.banglaName}
                       </span>
-                      <span className="text-[10px] font-mono text-slate-400">
+                      <span className="text-[10px] font-mono text-slate-200 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-lg">
                         {course.courseCode}
                       </span>
                     </div>
 
-                    {/* Course Title */}
-                    <div>
-                      <h3 className="text-base font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                    {/* Course Title Overlay */}
+                    <div className="absolute bottom-3 left-3 right-3 text-white z-10">
+                      <h3 className="text-base font-bold line-clamp-1 group-hover:text-indigo-200 transition-colors">
                         {course.banglaTitle}
                       </h3>
-                      <p className="text-xs text-slate-500 mt-0.5">{course.title}</p>
+                      <p className="text-[11px] text-slate-300 font-sans truncate">{course.title}</p>
                     </div>
+                  </div>
+
+                  <div className="p-5 flex-1 space-y-4">
 
                     {/* Description */}
                     <p className="text-xs text-slate-600 leading-relaxed line-clamp-3">

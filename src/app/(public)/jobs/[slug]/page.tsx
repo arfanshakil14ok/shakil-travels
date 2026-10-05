@@ -59,13 +59,13 @@ export async function generateMetadata({ params }: JobDetailPageProps) {
 
   if (!job) {
     return {
-      title: 'Job Circular Not Found | SHAKIL GLOBAL RECRUITMENT',
+      title: 'Job Circular Not Found | SHAKIL TRAVELS',
     };
   }
 
   return {
-    title: `${job.title} in ${job.country.name} | SHAKIL GLOBAL RECRUITMENT (RL-1892)`,
-    description: `Official job vacancy for ${job.title} in ${job.country.name}. Vacancies: ${job.vacancyCount}. Verified overseas employment through licensed recruitment agency RL-1892.`,
+    title: `${job.title} in ${job.country.name} | SHAKIL TRAVELS (RL-2579)`,
+    description: `Official job vacancy for ${job.title} in ${job.country.name}. Vacancies: ${job.vacancyCount}. Verified overseas employment through licensed recruitment agency RL-2579.`,
   };
 }
 
@@ -348,7 +348,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
               <div className="space-y-1">
                 <span className="font-extrabold block text-amber-900">সরকারি নীতিমালা ও প্রতারণা সতর্কতা:</span>
                 <p>
-                  SHAKIL GLOBAL RECRUITMENT (RL-1892) বাংলাদেশ সরকারের প্রবাসী কল্যাণ ও বৈদেশিক কর্মসংস্থান মন্ত্রণালয় এবং BMET এর পূর্ণাঙ্গ নীতি অনুসরণ করে। কোনো মধ্যস্বত্বভোগী বা দালালের সাথে আর্থিক লেনদেন করবেন না। সমস্ত ফি অফিসের অফিসিয়াল রসিদের মাধ্যমে প্রদেয়।
+                  SHAKIL TRAVELS (RL-2579) বাংলাদেশ সরকারের প্রবাসী কল্যাণ ও বৈদেশিক কর্মসংস্থান মন্ত্রণালয় এবং BMET এর পূর্ণাঙ্গ নীতি অনুসরণ করে। কোনো মধ্যস্বত্বভোগী বা দালালের সাথে আর্থিক লেনদেন করবেন না। সমস্ত ফি অফিসের অফিসিয়াল রসিদের মাধ্যমে প্রদেয়।
                 </p>
               </div>
             </div>

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ShieldCheck, Eye, EyeOff, AlertCircle, Briefcase } from 'lucide-react';
 import { BrandLogo } from '@/components/brand/brand-logo';
+import { BRAND } from '@/config/brand';
 import { sanitizeRedirectUrl } from '@/lib/security';
 
 function StaffLoginForm() {
@@ -104,7 +105,7 @@ function StaffLoginForm() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="officer@shakilglobal.com"
+              placeholder="officer@shakiltravels.com"
               autoComplete="username"
               className="w-full h-11 sm:h-12 px-3.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-colors"
             />
@@ -184,7 +185,7 @@ function StaffLoginForm() {
       </div>
 
       <p className="text-center text-[11px] text-slate-400 mt-6 max-w-sm leading-relaxed">
-        SHAKIL GLOBAL MANPOWER • Internal ERP Security Layer • RL-1892
+        {BRAND.name} • Internal ERP Security Layer • License No: {BRAND.licenseNumber}
       </p>
     </div>
   );

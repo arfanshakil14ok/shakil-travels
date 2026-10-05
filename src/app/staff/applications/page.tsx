@@ -249,7 +249,7 @@ export default function StaffApplicationsPage() {
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold border border-indigo-200">
-              RL-1892 Recruitment ERP
+              RL-2579 Recruitment ERP
             </span>
           </div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">

@@ -102,13 +102,13 @@ export default function StaffReceiptDetailPage() {
         <div className="border-b-2 border-slate-900 pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <div className="text-2xl font-extrabold tracking-tight text-slate-900">
-              SHAKIL GLOBAL RECRUITMENT
+              SHAKIL TRAVELS
             </div>
             <div className="text-xs text-slate-600 font-semibold mt-0.5">
-              Approved Overseas Manpower Recruiting Agency • Govt. License: <span className="text-indigo-700 font-bold">RL-1892</span>
+              Approved Overseas Manpower Recruiting Agency • Govt. License: <span className="text-indigo-700 font-bold">RL-2579</span>
             </div>
             <div className="text-[11px] text-slate-500 mt-0.5">
-              Head Office: Dhaka, Bangladesh • Phone: +880-1700-000000 • Email: accounts@shakilglobal.com
+              Head Office: Netrokona & Dhaka, Bangladesh • Phone: 01913681771 • Email: info@shakiltravels.com
             </div>
           </div>
 
@@ -216,7 +216,7 @@ export default function StaffReceiptDetailPage() {
             <div className="border-t border-slate-400 w-48 mx-auto pt-1 text-xs font-semibold text-slate-700">
               Authorized Accounts Officer
               <div className="text-[10px] text-slate-500 font-normal">
-                Shakil Global Recruitment (RL-1892)
+                Shakil Travels (RL-2579)
               </div>
             </div>
           </div>
@@ -224,7 +224,7 @@ export default function StaffReceiptDetailPage() {
 
         {/* Security Stamp Notice */}
         <div className="text-[10px] text-slate-400 text-center border-t border-slate-200 pt-4">
-          This is a computer generated official money receipt issued by Shakil Global Recruitment ERP System. Valid without manual signature when verified with verification QR code.
+          This is a computer generated official money receipt issued by Shakil Travels ERP System. Valid without manual signature when verified with verification QR code.
         </div>
       </div>
     </div>

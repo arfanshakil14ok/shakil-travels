@@ -130,7 +130,7 @@ export const CountriesSection: React.FC<CountriesSectionProps> = ({
                 variant="outline"
                 size="sm"
                 rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
-                className="font-bengali text-xs border-slate-300 text-slate-800 hover:bg-slate-50 font-bold px-4 py-2"
+                className="font-bengali text-xs border border-slate-300 text-slate-800 hover:bg-slate-100 hover:border-slate-400 font-bold px-4 py-2"
               >
                 সকল দেশ দেখুন ({countries.length})
               </Button>
@@ -267,7 +267,7 @@ export const CountriesSection: React.FC<CountriesSectionProps> = ({
                       <Button
                         variant="outline"
                         size="sm"
-                        className="w-full text-xs font-semibold border-slate-200 text-slate-800 hover:bg-slate-50 flex items-center justify-center gap-1"
+                        className="w-full text-xs font-semibold border border-slate-300 text-slate-800 hover:bg-slate-100 hover:border-slate-400 flex items-center justify-center gap-1"
                       >
                         দেশ নির্দেশিকা
                       </Button>

@@ -1,5 +1,6 @@
 import React from 'react';
 import prisma from '@/lib/prisma';
+import { BRAND } from '@/config/brand';
 import { HeroSection } from '@/components/public/hero-section';
 import { CountriesSection } from '@/components/public/countries-section';
 import { JobsPreviewSection } from '@/components/public/jobs-preview-section';
@@ -16,7 +17,7 @@ export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
 export const metadata = {
-  title: 'SHAKIL GLOBAL MANPOWER | সরকারি অনুমোদিত আন্তর্জাতিক নিয়োগ ও অভিবাসন (RL-1892)',
+  title: `${BRAND.name} | সরকারি অনুমোদিত আন্তর্জাতিক নিয়োগ ও অভিবাসন (${BRAND.licenseNumber})`,
   description: 'সৌদি আরব, আমিরাত, কাতার, কুয়েত, ওমান, সিঙ্গাপুর, মালয়েশিয়া, জাপান ও ইউরোপে বৈধ কর্মসংস্থান, ভিসা তথ্য ও নিরাপদ অভিবাসন সেবা।',
 };
 

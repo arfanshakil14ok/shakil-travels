@@ -165,7 +165,7 @@ export default function PortalHelpPage() {
               {t('প্রধান কার্যালয়', 'Head Office')}
             </h4>
             <div className="text-xs font-semibold text-slate-800">
-              SHAKIL GLOBAL MANPOWER
+              SHAKIL TRAVELS
             </div>
             <p className="text-[11px] text-slate-500 leading-relaxed font-bengali">
               {t(
@@ -302,8 +302,8 @@ export default function PortalHelpPage() {
             <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>
               {t(
-                'গণপ্রজাতন্ত্রী বাংলাদেশ সরকার অনুমোদিত রিক্রুটিং এজেন্সি লাইসেন্স নং RL-1892।',
-                'Government of Bangladesh Approved Recruiting Agency License No. RL-1892.'
+                'গণপ্রজাতন্ত্রী বাংলাদেশ সরকার অনুমোদিত রিক্রুটিং এজেন্সি লাইসেন্স নং RL-2579।',
+                'Government of Bangladesh Approved Recruiting Agency License No. RL-2579.'
               )}
             </span>
           </div>

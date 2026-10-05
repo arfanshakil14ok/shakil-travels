@@ -128,14 +128,24 @@ export async function POST(request: NextRequest) {
     // Resolve or find customer
     let customerId = data.customerId || null;
     let applicantId = data.applicantId || null;
+    let employerId = data.employerId || null;
 
-    if (applicantId && !customerId) {
-      const applicant = await prisma.applicant.findUnique({
-        where: { id: applicantId },
+    if (applicantId) {
+      const applicant = await prisma.applicant.findFirst({
+        where: {
+          OR: [
+            { id: applicantId },
+            { applicantNumber: applicantId },
+            { phone: applicantId },
+          ],
+        },
         include: { customer: true },
       });
-      if (applicant?.customer) {
-        customerId = applicant.customer.id;
+      if (applicant) {
+        applicantId = applicant.id;
+        if (applicant.customer && !customerId) {
+          customerId = applicant.customer.id;
+        }
       }
     } else if (customerId && !applicantId) {
       const customer = await prisma.customer.findUnique({
@@ -147,7 +157,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Generate unique invoice number: SGR-INV-2026-XXXXXX
+    // Generate unique invoice number
     const invoiceNumber = await generateFormattedId(prisma, 'invoice');
 
     const invoice = await prisma.$transaction(async (tx) => {
@@ -157,6 +167,7 @@ export async function POST(request: NextRequest) {
           invoiceNumber,
           customerId,
           applicantId,
+          employerId: employerId || null,
           applicationId: data.applicationId || null,
           invoiceDate: new Date(data.invoiceDate || data.issueDate),
           dueDate: new Date(data.dueDate),
@@ -192,11 +203,12 @@ export async function POST(request: NextRequest) {
 
       // 3. Post debit transaction to financial ledger if officially ISSUED
       if (created.status === 'ISSUED') {
-        // Calculate previous customer balance
-        const lastTx = await tx.financialTransaction.findFirst({
-          where: customerId ? { customerId } : { applicantId: applicantId! },
-          orderBy: { createdAt: 'desc' },
-        });
+        const lastTx = (customerId || applicantId)
+          ? await tx.financialTransaction.findFirst({
+              where: customerId ? { customerId } : { applicantId: applicantId || undefined },
+              orderBy: { createdAt: 'desc' },
+            })
+          : null;
 
         const prevBalance = lastTx ? lastTx.balance : toDecimal('0.00');
         const newBalance = prevBalance.plus(created.totalAmount);
@@ -205,8 +217,8 @@ export async function POST(request: NextRequest) {
           data: {
             transactionType: 'INVOICE',
             referenceNumber: created.invoiceNumber,
-            customerId,
-            applicantId,
+            customerId: customerId || null,
+            applicantId: applicantId || null,
             invoiceId: created.id,
             debit: created.totalAmount,
             credit: toDecimal('0.00'),

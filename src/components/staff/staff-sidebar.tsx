@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BrandMark } from '@/components/brand/brand-logo';
+import { BRAND } from '@/config/brand';
 import type { AuthUser } from '@/types';
 
 interface StaffNavItem {
@@ -188,12 +189,12 @@ export const StaffSidebar: React.FC<StaffSidebarProps> = ({
       >
         {/* Header / Brand */}
         <div className="flex items-center justify-between h-16 px-4 border-b border-slate-800 shrink-0">
-          <Link href="/staff/dashboard" className="flex items-center gap-3 group">
+          <Link href="/" className="flex items-center gap-3 group" title="Go to Main Homepage">
             <BrandMark size="sm" />
             {!isCollapsed && (
               <div className="flex flex-col">
                 <span className="font-bold text-sm text-white tracking-tight leading-tight">
-                  SHAKIL GLOBAL
+                  {BRAND.name}
                 </span>
                 <span className="text-[10px] text-indigo-400 font-semibold tracking-wider uppercase">
                   Staff ERP • কর্মকর্তা
@@ -267,9 +268,9 @@ export const StaffSidebar: React.FC<StaffSidebarProps> = ({
         {/* Footer */}
         <div className="p-3 border-t border-slate-800 text-[11px] text-slate-400 text-center">
           {!isCollapsed ? (
-            <div>RL-1892 • Staff Workspace</div>
+            <div>RL-2579 • Staff Workspace</div>
           ) : (
-            <div className="text-[10px]">RL-1892</div>
+            <div className="text-[10px]">RL-2579</div>
           )}
         </div>
       </aside>

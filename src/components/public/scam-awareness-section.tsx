@@ -36,7 +36,7 @@ export const ScamAwarenessSection: React.FC = () => {
   ];
 
   const safetyChecklist = [
-    'এজেন্সির সরকারি রিক্রুটিং লাইসেন্স (RL-1892) BMET ওয়েবসাইটে যাচাই করুন',
+    'এজেন্সির সরকারি রিক্রুটিং লাইসেন্স (RL-2579) BMET ওয়েবসাইটে যাচাই করুন',
     'চাকরির চাহিদা ও কাজের শর্তাবলী আমি প্রবাসী / BMET পোর্টালে মিলিয়ে নিন',
     'দূতাবাস থেকে ইস্যুকৃত মূল ভিসা কপি অফিশিয়াল পোর্টাল (যেমন KSA Qiwa/Enjaz) থেকে যাচাই করুন',
     'প্রতিটি কিস্তির বিপরীতে সিল ও তারিখযুক্ত অফিশিয়াল মানি রিসিট সংগ্রহ করুন',
@@ -113,7 +113,7 @@ export const ScamAwarenessSection: React.FC = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="w-full text-xs font-semibold border-slate-200 text-slate-800 hover:bg-emerald-50 hover:text-emerald-900 hover:border-emerald-300 flex items-center justify-center gap-1.5"
+                    className="w-full text-xs font-bold border border-slate-300 text-slate-800 hover:bg-emerald-50 hover:text-emerald-900 hover:border-emerald-400 flex items-center justify-center gap-1.5"
                   >
                     সম্পূর্ণ প্রতারণা প্রতিরোধ গাইড দেখুন
                     <ArrowRight className="w-3.5 h-3.5" />

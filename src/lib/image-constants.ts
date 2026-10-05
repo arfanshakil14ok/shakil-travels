@@ -1,6 +1,6 @@
 /**
  * Image System Constants and Fallbacks
- * SHAKIL GLOBAL MANPOWER Public Portal
+ * SHAKIL TRAVELS Public Portal
  *
  * Professional, high-resolution imagery for countries, job categories,
  * hero banners, and visa documentation.
@@ -272,4 +272,87 @@ export function getJobCategoryImage(categoryName?: string | null, jobTitle?: str
   }
 
   return DEFAULT_CATEGORY_IMAGE;
+}
+
+/**
+ * Dedicated Training & Technical Vocational Course Imagery
+ */
+export const TRAINING_IMAGES: Record<string, ImageAsset> = {
+  welding: {
+    src: 'https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?auto=format&fit=crop&w=800&q=80',
+    alt: 'Certified 6G Pipe Welding and Structural Metal Fabrication Training',
+  },
+  electrical: {
+    src: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=800&q=80',
+    alt: 'Industrial and Building Electrical Wiring Vocational Lab Training',
+  },
+  caregiving: {
+    src: 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=800&q=80',
+    alt: 'Specialized SSW Caregiver & Nursing Healthcare Practical Training',
+  },
+  driving: {
+    src: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=800&q=80',
+    alt: 'Heavy Logistics Commercial Vehicle and Heavy Equipment Driving Course',
+  },
+  construction: {
+    src: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80',
+    alt: 'Civil Construction Scaffolding, Formwork and Finishing Training',
+  },
+  plumbing: {
+    src: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80',
+    alt: 'Industrial Pipe Fitting and Commercial Plumbing Practical Workshop',
+  },
+  hospitality: {
+    src: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
+    alt: 'Culinary Chef, Food & Beverage and Professional Hotel Staff Training',
+  },
+  language: {
+    src: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=800&q=80',
+    alt: 'Overseas Language Course (Japanese, Korean, Arabic & English)',
+  },
+  it: {
+    src: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=800&q=80',
+    alt: 'Information Technology, Computer Hardware and Data Entry Vocational Lab',
+  },
+  default: {
+    src: 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&w=800&q=80',
+    alt: 'Technical Vocational Training Academy Laboratory & Workshop',
+  },
+};
+
+/**
+ * Helper to resolve high-resolution training course image
+ */
+export function getTrainingCourseImage(courseTitle?: string | null, categoryName?: string | null): ImageAsset {
+  const query = `${courseTitle || ''} ${categoryName || ''}`.toLowerCase();
+
+  if (query.includes('weld') || query.includes('পাইপ') || query.includes('ওয়েল্ডিং') || query.includes('fabricat')) {
+    return TRAINING_IMAGES.welding;
+  }
+  if (query.includes('electr') || query.includes('ইলেকট্রিক') || query.includes('ওয়্যারিং')) {
+    return TRAINING_IMAGES.electrical;
+  }
+  if (query.includes('care') || query.includes('কেয়ার') || query.includes('nurse') || query.includes('নার্সিং') || query.includes('health')) {
+    return TRAINING_IMAGES.caregiving;
+  }
+  if (query.includes('driv') || query.includes('ড্রাইভিং') || query.includes('operator') || query.includes('অপারেটর')) {
+    return TRAINING_IMAGES.driving;
+  }
+  if (query.includes('construct') || query.includes('নির্মাণ') || query.includes('scaffold') || query.includes('ম্যাসন')) {
+    return TRAINING_IMAGES.construction;
+  }
+  if (query.includes('plumb') || query.includes('প্লাম্বিং') || query.includes('fitter')) {
+    return TRAINING_IMAGES.plumbing;
+  }
+  if (query.includes('cook') || query.includes('chef') || query.includes('hotel') || query.includes('হসপিটালিটি') || query.includes('রান্না')) {
+    return TRAINING_IMAGES.hospitality;
+  }
+  if (query.includes('lang') || query.includes('ভাষা') || query.includes('japanese') || query.includes('korean') || query.includes('english') || query.includes('arabic')) {
+    return TRAINING_IMAGES.language;
+  }
+  if (query.includes('computer') || query.includes('কম্পিউটার') || query.includes('it') || query.includes('software')) {
+    return TRAINING_IMAGES.it;
+  }
+
+  return TRAINING_IMAGES.default;
 }

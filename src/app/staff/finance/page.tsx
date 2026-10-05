@@ -86,7 +86,7 @@ export default function StaffFinanceDashboardPage() {
               Finance & Accounting ERP
             </h1>
             <span className="text-xs bg-indigo-950 text-indigo-300 font-semibold px-2.5 py-1 rounded-full border border-indigo-700">
-              RL-1892 Intelligence
+              RL-2579 Intelligence
             </span>
           </div>
           <p className="text-sm text-slate-400 mt-1">

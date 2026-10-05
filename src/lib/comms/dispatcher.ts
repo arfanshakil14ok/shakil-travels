@@ -24,7 +24,7 @@ export async function dispatchCommunication(
   options: DispatchNotificationOptions
 ): Promise<{ success: boolean; logId: string; error?: string }> {
   let finalMessage = options.message;
-  let finalSubject = options.subject || 'SHAKIL GLOBAL MANPOWER Notification';
+  let finalSubject = options.subject || 'SHAKIL TRAVELS Notification';
 
   // 1. If templateCode provided, resolve and interpolate
   if (options.templateCode) {
@@ -71,7 +71,7 @@ export async function dispatchCommunication(
 
   const recipient =
     options.channel === 'EMAIL'
-      ? options.recipientEmail || 'no-email@shakilglobal.com'
+      ? options.recipientEmail || 'no-email@shakiltravels.com'
       : options.recipientPhone || 'no-phone';
 
   // 3. Dispatch through appropriate transport
@@ -102,7 +102,7 @@ export async function dispatchCommunication(
           <h2>${finalSubject}</h2>
           <p>${finalMessage.replace(/\n/g, '<br/>')}</p>
           <hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0;"/>
-          <small style="color:#64748b;">SHAKIL GLOBAL MANPOWER — Licensed Overseas Employment Platform (RL-1892)</small>
+          <small style="color:#64748b;">SHAKIL TRAVELS — Licensed Overseas Employment Platform (RL-2579)</small>
         </div>`,
         text: finalMessage,
       });

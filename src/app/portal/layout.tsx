@@ -136,22 +136,10 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       icon: FileCheck2,
     },
     {
-      label: 'Deployment & Processing',
-      labelBn: 'নিয়োগ ও বিদেশযাত্রা প্রসেসিং',
-      href: '/portal/processing',
-      icon: Plane,
-    },
-    {
       label: 'Documents',
       labelBn: 'নথিপত্র',
       href: '/portal/documents',
       icon: FileText,
-    },
-    {
-      label: 'Interviews',
-      labelBn: 'সাক্ষাৎকার',
-      href: '/portal/interviews',
-      icon: Calendar,
     },
     {
       label: 'Visa Tracking',
@@ -219,8 +207,8 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
 
-            <Link href="/portal" className="flex items-center gap-2.5">
-              <BrandLogo href="/portal" size="sm" variant="horizontal" showTagline={false} />
+            <Link href="/" className="flex items-center gap-2.5">
+              <BrandLogo href="/" size="sm" variant="horizontal" showTagline={false} />
               <span className="hidden lg:inline-block text-[10px] text-slate-500 uppercase tracking-wider font-semibold border-l border-slate-200 pl-2.5">
                 {BRAND.licenseNumber} • {t('প্রার্থী পোর্টাল', 'Candidate Portal')}
               </span>
