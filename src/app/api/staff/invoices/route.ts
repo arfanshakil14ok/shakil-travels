@@ -178,10 +178,43 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Resolve customerId for direct clients or existing customer
+    let customerId = rawBody.customerId || null;
+    if (!applicantId && !rawBody.employerId && (rawBody.customerName || rawBody.recipientType === 'OTHER')) {
+      const clientName = (rawBody.customerName || 'Direct Client').trim();
+      const clientPhone = rawBody.customerPhone?.trim() || null;
+      const clientEmail = rawBody.customerEmail?.trim() || null;
+
+      let directCustomer = clientPhone
+        ? await prisma.customer.findFirst({
+            where: { phone: clientPhone, customerType: 'DIRECT_CLIENT' },
+          })
+        : null;
+
+      if (!directCustomer && clientName !== 'Direct Client') {
+        directCustomer = await prisma.customer.findFirst({
+          where: { name: clientName, customerType: 'DIRECT_CLIENT' },
+        });
+      }
+
+      if (!directCustomer) {
+        directCustomer = await prisma.customer.create({
+          data: {
+            customerType: 'DIRECT_CLIENT',
+            name: clientName,
+            phone: clientPhone,
+            email: clientEmail,
+          },
+        });
+      }
+      customerId = directCustomer.id;
+    }
+
     const body = {
       ...rawBody,
       applicantId,
       candidateId: applicantId,
+      customerId,
       items: normalizedItems,
     };
 
@@ -200,6 +233,7 @@ export async function POST(request: NextRequest) {
       createdById: currentUser.id,
       candidateId: data.candidateId || data.applicantId || null,
       applicantId: data.applicantId || data.candidateId || null,
+      customerId: data.customerId || customerId || null,
       employerId: data.employerId || null,
     });
 

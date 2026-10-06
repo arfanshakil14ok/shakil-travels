@@ -143,9 +143,39 @@ export async function POST(request: NextRequest) {
       });
       if (applicant) {
         applicantId = applicant.id;
-        if (applicant.customer && !customerId) {
+        if (applicant.customer) {
           customerId = applicant.customer.id;
+        } else {
+          const appCustomer = await prisma.customer.create({
+            data: {
+              customerType: 'APPLICANT',
+              name: applicant.fullName,
+              phone: applicant.phone,
+              email: applicant.email,
+              applicantId: applicant.id,
+            },
+          });
+          customerId = appCustomer.id;
         }
+      }
+    } else if (employerId && !customerId) {
+      const employer = await prisma.employer.findUnique({
+        where: { id: employerId },
+        include: { customer: true },
+      });
+      if (employer?.customer) {
+        customerId = employer.customer.id;
+      } else if (employer) {
+        const empCustomer = await prisma.customer.create({
+          data: {
+            customerType: 'EMPLOYER',
+            name: employer.companyName,
+            phone: employer.phone,
+            email: employer.email,
+            employerId: employer.id,
+          },
+        });
+        customerId = empCustomer.id;
       }
     } else if (customerId && !applicantId) {
       const customer = await prisma.customer.findUnique({
@@ -155,6 +185,37 @@ export async function POST(request: NextRequest) {
       if (customer?.applicant) {
         applicantId = customer.applicant.id;
       }
+    }
+
+    // Direct Client / Custom invoice without registration
+    if (!applicantId && !employerId && (data.customerName || data.recipientType === 'OTHER' || !customerId)) {
+      const clientName = (data.customerName || 'Direct Client').trim();
+      const clientPhone = data.customerPhone?.trim() || null;
+      const clientEmail = data.customerEmail?.trim() || null;
+
+      let directCustomer = clientPhone
+        ? await prisma.customer.findFirst({
+            where: { phone: clientPhone, customerType: 'DIRECT_CLIENT' },
+          })
+        : null;
+
+      if (!directCustomer && clientName !== 'Direct Client') {
+        directCustomer = await prisma.customer.findFirst({
+          where: { name: clientName, customerType: 'DIRECT_CLIENT' },
+        });
+      }
+
+      if (!directCustomer) {
+        directCustomer = await prisma.customer.create({
+          data: {
+            customerType: 'DIRECT_CLIENT',
+            name: clientName,
+            phone: clientPhone,
+            email: clientEmail,
+          },
+        });
+      }
+      customerId = directCustomer.id;
     }
 
     // Generate unique invoice number
@@ -203,9 +264,14 @@ export async function POST(request: NextRequest) {
 
       // 3. Post debit transaction to financial ledger if officially ISSUED
       if (created.status === 'ISSUED') {
-        const lastTx = (customerId || applicantId)
+        const lastTx = customerId
           ? await tx.financialTransaction.findFirst({
-              where: customerId ? { customerId } : { applicantId: applicantId || undefined },
+              where: { customerId },
+              orderBy: { createdAt: 'desc' },
+            })
+          : applicantId
+          ? await tx.financialTransaction.findFirst({
+              where: { applicantId },
               orderBy: { createdAt: 'desc' },
             })
           : null;

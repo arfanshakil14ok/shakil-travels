@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { requirePermission } from '@/lib/rbac';
 import { createAuditLog } from '@/lib/audit';
-import { storage, validateDocumentFile } from '@/lib/storage';
+import { storage, validateDocumentFile, isS3Configured } from '@/lib/storage';
 import { sanitizeFileName } from '@/lib/security';
 
 export async function GET(request: NextRequest) {
@@ -91,20 +91,30 @@ export async function POST(request: NextRequest) {
     const expiryDate = expiryDateStr ? new Date(expiryDateStr) : null;
     const fileName = file.name;
 
-    // Save file via secure storage abstraction (supports S3 and private local disk)
+    // Save file via secure storage abstraction (supports S3 and PostgreSQL Base64)
     const buffer = Buffer.from(await file.arrayBuffer());
     const uniquePrefix = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
     const safeName = sanitizeFileName(file.name);
     const storageKey = `documents/${applicantId}/${uniquePrefix}-${safeName}`;
+    const hasS3 = isS3Configured();
+    let filePath = '';
 
-    await storage.saveFile(storageKey, buffer, {
-      originalName: file.name,
-      mimeType,
-      size: fileSize,
-      uploadedAt: new Date(),
-      applicantId,
-      documentType: documentTypeId,
-    });
+    if (hasS3) {
+      await storage.saveFile(storageKey, buffer, {
+        originalName: file.name,
+        mimeType,
+        size: fileSize,
+        uploadedAt: new Date(),
+        applicantId,
+        documentType: documentTypeId,
+      });
+      filePath = storageKey;
+    } else {
+      filePath = `data:${mimeType};base64,${buffer.toString('base64')}`;
+      try {
+        await storage.saveFile(storageKey, buffer);
+      } catch {}
+    }
 
     // Versioning: Check existing versions for this applicant & document type
     const previousVersions = await prisma.document.findMany({

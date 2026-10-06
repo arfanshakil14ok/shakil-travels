@@ -60,6 +60,14 @@ export function validateDocumentFile(
   return { valid: true };
 }
 
+export function isS3Configured(): boolean {
+  return !!(
+    process.env.STORAGE_BUCKET &&
+    process.env.STORAGE_ACCESS_KEY &&
+    process.env.STORAGE_SECRET_KEY
+  );
+}
+
 /**
  * Local Private Storage Provider (for development and persistent VM storage)
  * Files are isolated in private disk directory outside of public web roots.
@@ -93,18 +101,32 @@ export class LocalPrivateStorageProvider implements StorageProvider {
   }
 
   async saveFile(subPath: string, buffer: Buffer): Promise<string> {
-    const fullPath = this.resolvePath(subPath);
-    const dir = path.dirname(fullPath);
-    if (!fs.existsSync(dir)) {
-      await fs.promises.mkdir(dir, { recursive: true });
+    try {
+      const fullPath = this.resolvePath(subPath);
+      const dir = path.dirname(fullPath);
+      if (!fs.existsSync(dir)) {
+        await fs.promises.mkdir(dir, { recursive: true });
+      }
+      await fs.promises.writeFile(fullPath, buffer);
+    } catch (err) {
+      console.warn('Local disk write skipped in serverless environment:', err);
     }
-    await fs.promises.writeFile(fullPath, buffer);
     return subPath;
   }
 
   async getFile(subPath: string): Promise<Buffer> {
+    if (subPath.startsWith('data:')) {
+      const commaIdx = subPath.indexOf(',');
+      if (commaIdx !== -1) {
+        return Buffer.from(subPath.slice(commaIdx + 1), 'base64');
+      }
+    }
     const fullPath = this.resolvePath(subPath);
     if (!fs.existsSync(fullPath)) {
+      const tmpPath = path.join('/tmp', subPath);
+      if (fs.existsSync(tmpPath)) {
+        return await fs.promises.readFile(tmpPath);
+      }
       throw new Error(`Document file not found: ${subPath}`);
     }
     return await fs.promises.readFile(fullPath);
@@ -149,12 +171,13 @@ export class S3StorageProvider implements StorageProvider {
 
   private getUrl(subPath: string): string {
     const cleanPath = subPath.startsWith('/') ? subPath.slice(1) : subPath;
-    if (this.endpoint.includes('amazonaws.com')) {
+    const cleanEndpoint = this.endpoint.replace(/\/+$/, '');
+    if (cleanEndpoint.includes('amazonaws.com')) {
       // Virtual hosted style for AWS
       return `https://${this.config.bucket}.s3.${this.config.region}.amazonaws.com/${cleanPath}`;
     }
-    // Path style for MinIO / custom endpoints
-    return `${this.endpoint}/${this.config.bucket}/${cleanPath}`;
+    // Path style for MinIO / Cloudflare R2 / custom endpoints
+    return `${cleanEndpoint}/${this.config.bucket}/${cleanPath}`;
   }
 
   private getHost(): string {

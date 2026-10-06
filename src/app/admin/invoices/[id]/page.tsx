@@ -505,8 +505,15 @@ export default function InvoiceDetailPage({ params }: { params?: { id?: string }
                   )}
                   {invoice.applicant.address && <div>Address: {invoice.applicant.address}</div>}
                 </>
+              ) : invoice.customer ? (
+                <>
+                  <div>Client Type: <span className="font-medium text-slate-700">{invoice.customer.customerType ? invoice.customer.customerType.replace(/_/g, ' ') : 'Direct Client'}</span></div>
+                  {invoice.customer.phone && <div>Phone: <span className="font-medium text-slate-900">{invoice.customer.phone}</span></div>}
+                  {invoice.customer.email && <div>Email: <span>{invoice.customer.email}</span></div>}
+                  {invoice.customer.address && <div>Address: {invoice.customer.address}</div>}
+                </>
               ) : (
-                <div>Customer: {invoice.customer?.name}</div>
+                <div>Direct Client</div>
               )}
             </div>
           </div>

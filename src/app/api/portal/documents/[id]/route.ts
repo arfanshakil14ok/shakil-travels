@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { requireApplicantAuth } from '@/lib/portal-auth';
-import { validateDocumentFile, storage } from '@/lib/storage';
+import { validateDocumentFile, storage, isS3Configured } from '@/lib/storage';
 import { createAuditLog } from '@/lib/audit';
 import crypto from 'crypto';
 import path from 'path';
@@ -116,22 +116,31 @@ export async function PUT(
 
       const storageKey = `documents/${applicant.id}/${Date.now()}-${crypto.randomBytes(8).toString('hex')}${safeExt}`;
       const buffer = Buffer.from(await file.arrayBuffer());
-      await storage.saveFile(storageKey, buffer, {
-        originalName: file.name,
-        mimeType: file.type,
-        size: file.size,
-        uploadedAt: new Date(),
-        applicantId: applicant.id,
-      });
+      const hasS3 = isS3Configured();
 
-      // Attempt to clean up old file
-      try {
-        await storage.deleteFile(existing.filePath);
-      } catch {
-        // Ignore deletion failure if old file is missing
+      if (hasS3) {
+        await storage.saveFile(storageKey, buffer, {
+          originalName: file.name,
+          mimeType: file.type,
+          size: file.size,
+          uploadedAt: new Date(),
+          applicantId: applicant.id,
+        });
+        newFilePath = storageKey;
+      } else {
+        const mime = file.type || 'application/pdf';
+        newFilePath = `data:${mime};base64,${buffer.toString('base64')}`;
+        try {
+          await storage.saveFile(storageKey, buffer);
+        } catch {}
       }
 
-      newFilePath = storageKey;
+      // Attempt to clean up old physical file if it was a file path
+      if (existing.filePath && !existing.filePath.startsWith('data:')) {
+        try {
+          await storage.deleteFile(existing.filePath);
+        } catch {}
+      }
     } else {
       const body = await request.json();
       if (body.filePath) newFilePath = body.filePath;

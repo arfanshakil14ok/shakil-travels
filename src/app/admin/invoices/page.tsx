@@ -246,9 +246,9 @@ export default function InvoicesPage() {
                     </Link>
                   </td>
                   <td className="py-3.5 px-4">
-                    <div className="font-semibold text-slate-900">{inv.applicant?.fullName || 'Direct Customer'}</div>
+                    <div className="font-semibold text-slate-900">{inv.applicant?.fullName || inv.customer?.name || 'Direct Client'}</div>
                     <div className="text-[10px] text-slate-400 font-mono">
-                      {inv.applicant ? `ID: ${inv.applicant.applicantNumber}` : inv.customer?.name}
+                      {inv.applicant ? `ID: ${inv.applicant.applicantNumber}` : (inv.customer?.phone ? `Tel: ${inv.customer.phone}` : (inv.customer?.customerType ? inv.customer.customerType.replace(/_/g, ' ') : 'Direct Client'))}
                     </div>
                   </td>
                   <td className="py-3.5 px-4 text-slate-600">

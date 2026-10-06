@@ -50,6 +50,8 @@ function InvoiceNewContent() {
   // Custom customer
   const [customCustomerName, setCustomCustomerName] = useState('');
   const [customCustomerPhone, setCustomCustomerPhone] = useState('');
+  const [customCustomerEmail, setCustomCustomerEmail] = useState('');
+  const [customCustomerAddress, setCustomCustomerAddress] = useState('');
 
   // Application selection
   const [applications, setApplications] = useState<any[]>([]);
@@ -231,6 +233,11 @@ function InvoiceNewContent() {
 
     try {
       const payload = {
+        recipientType,
+        customerName: recipientType === 'OTHER' ? customCustomerName.trim() : undefined,
+        customerPhone: recipientType === 'OTHER' ? (customCustomerPhone.trim() || undefined) : undefined,
+        customerEmail: recipientType === 'OTHER' ? (customCustomerEmail.trim() || undefined) : undefined,
+        customerAddress: recipientType === 'OTHER' ? (customCustomerAddress.trim() || undefined) : undefined,
         applicantId: recipientType === 'CANDIDATE' ? selectedApplicant?.id : undefined,
         employerId: recipientType === 'EMPLOYER' ? selectedEmployer?.id : undefined,
         applicationId: recipientType === 'CANDIDATE' ? (selectedApplicationId || undefined) : undefined,
@@ -250,7 +257,7 @@ function InvoiceNewContent() {
         tax: Number(globalTax) || 0,
         adjustment: Number(adjustment) || 0,
         status: invoiceStatus,
-        notes: recipientType === 'OTHER' ? `Customer: ${customCustomerName} (${customCustomerPhone}). ${notes}` : notes,
+        notes: notes || undefined,
         terms: terms || undefined,
       };
 
@@ -493,12 +500,33 @@ function InvoiceNewContent() {
                   className="text-xs"
                 />
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Contact Phone</label>
+                  <Input
+                    placeholder="e.g. +880 1712-345678"
+                    value={customCustomerPhone}
+                    onChange={(e) => setCustomCustomerPhone(e.target.value)}
+                    className="text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Contact Email</label>
+                  <Input
+                    type="email"
+                    placeholder="client@example.com"
+                    value={customCustomerEmail}
+                    onChange={(e) => setCustomCustomerEmail(e.target.value)}
+                    className="text-xs"
+                  />
+                </div>
+              </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Contact Phone</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Billing Address (Optional)</label>
                 <Input
-                  placeholder="Phone number..."
-                  value={customCustomerPhone}
-                  onChange={(e) => setCustomCustomerPhone(e.target.value)}
+                  placeholder="Office / Street / City address..."
+                  value={customCustomerAddress}
+                  onChange={(e) => setCustomCustomerAddress(e.target.value)}
                   className="text-xs"
                 />
               </div>

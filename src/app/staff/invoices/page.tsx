@@ -42,6 +42,8 @@ export default function StaffInvoicesPage() {
     recipientType: 'CANDIDATE',
     applicantId: '',
     employerId: '',
+    customerName: '',
+    customerPhone: '',
     title: 'Recruitment & Visa Processing Charges',
     currency: 'BDT',
     dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -461,6 +463,34 @@ export default function StaffInvoicesPage() {
                       className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-indigo-500"
                     />
                   )}
+                </div>
+              )}
+
+              {formData.recipientType === 'OTHER' && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-slate-300 font-medium mb-1">
+                      Direct Client / Organization Name <span className="text-rose-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Enter Client or Company Name..."
+                      value={formData.customerName}
+                      onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-300 font-medium mb-1">Contact Phone</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. +880 1712-345678"
+                      value={formData.customerPhone}
+                      onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
                 </div>
               )}
 
