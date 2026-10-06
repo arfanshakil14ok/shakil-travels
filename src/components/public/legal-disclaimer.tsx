@@ -3,7 +3,7 @@ import { TriangleAlert } from 'lucide-react';
 
 export const LegalDisclaimer: React.FC = () => {
   return (
-    <div className="bg-amber-50/90 border-y border-amber-200 py-4 px-4 sm:px-6">
+    <div className="relative z-0 bg-amber-50/90 border-y border-amber-200 py-3.5 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto flex items-start gap-3 text-xs leading-relaxed text-amber-950 font-bengali">
         <TriangleAlert className="w-5 h-5 text-amber-700 flex-shrink-0 mt-0.5" aria-hidden="true" />
         <div>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
@@ -60,10 +61,27 @@ export const PublicHeader: React.FC = () => {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isCountriesDropdownOpen, setIsCountriesDropdownOpen] = useState(false);
   const [language, setLanguage] = useState<'bn' | 'en'>('bn');
+  const [mounted, setMounted] = useState(false);
 
   const [session, setSession] = useState<SessionState>({
     authenticated: false,
   });
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileMenuOpen]);
 
   const signInRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -632,17 +650,17 @@ export const PublicHeader: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile App-Like Drawer */}
-      {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+      {/* Mobile App-Like Drawer rendered via Portal to escape header containing block */}
+      {mounted && isMobileMenuOpen && createPortal(
+        <div className="fixed inset-0 z-[99999] lg:hidden">
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity"
+            className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity"
             onClick={() => setIsMobileMenuOpen(false)}
             aria-hidden="true"
           />
 
-          <div className="fixed inset-y-0 right-0 max-w-sm w-full bg-white shadow-2xl flex flex-col justify-between overflow-y-auto">
+          <div className="fixed inset-y-0 right-0 max-w-sm w-full bg-white shadow-2xl flex flex-col justify-between overflow-y-auto z-[100000]">
             <div className="p-6 space-y-6">
               {/* Header */}
               <div className="flex items-center justify-between pb-4 border-b border-slate-100">
@@ -914,7 +932,8 @@ export const PublicHeader: React.FC = () => {
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </header>
   );

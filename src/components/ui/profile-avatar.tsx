@@ -59,6 +59,7 @@ export const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
               src={effectiveSrc!}
               alt={name || 'Profile avatar'}
               fill
+              unoptimized={typeof effectiveSrc === 'string' && effectiveSrc.startsWith('data:')}
               sizes="(max-width: 768px) 64px, 128px"
               className="object-cover"
               onError={() => setImageError(true)}

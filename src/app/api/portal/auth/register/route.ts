@@ -110,14 +110,25 @@ export async function POST(request: NextRequest) {
     // Save photo file to disk / storage
     const ext = photoValidation.extension || '.jpg';
     const tempFileName = `reg_${Date.now()}_${Math.random().toString(36).substring(7)}${ext}`;
-    
-    // Save to public uploads
-    const publicUploadsDir = path.resolve(process.cwd(), 'public/uploads/photos');
-    if (!fs.existsSync(publicUploadsDir)) {
-      fs.mkdirSync(publicUploadsDir, { recursive: true });
+    const mime = parsedPhoto.mimeType || 'image/jpeg';
+
+    // Default to resilient Base64 data URI so photo ALWAYS works on Vercel/serverless
+    let photoUrl = `data:${mime};base64,${parsedPhoto.buffer.toString('base64')}`;
+
+    // Optionally try local disk write in development/writable environments
+    try {
+      const publicUploadsDir = path.resolve(process.cwd(), 'public/uploads/photos');
+      if (!fs.existsSync(publicUploadsDir)) {
+        fs.mkdirSync(publicUploadsDir, { recursive: true });
+      }
+      await fs.promises.writeFile(path.join(publicUploadsDir, tempFileName), parsedPhoto.buffer);
+      if (!process.env.VERCEL && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
+        photoUrl = `/uploads/photos/${tempFileName}`;
+      }
+    } catch (fsErr) {
+      // In serverless / read-only environment like Vercel, disk write is safely ignored
+      console.warn('Local disk write skipped in serverless environment:', fsErr);
     }
-    await fs.promises.writeFile(path.join(publicUploadsDir, tempFileName), parsedPhoto.buffer);
-    const photoUrl = `/uploads/photos/${tempFileName}`;
 
     // Transactional creation of Applicant, Profile, and Customer
     const applicant = await prisma.$transaction(async (tx) => {
@@ -205,15 +216,19 @@ export async function POST(request: NextRequest) {
       return candidate;
     });
 
-    // Also persist in storage
-    await storage.saveFile(`photos/applicant_${applicant.id}${ext}`, parsedPhoto.buffer, {
-      originalName: 'profile_photo.jpg',
-      mimeType: photoValidation.mimeType || 'image/jpeg',
-      size: parsedPhoto.buffer.length,
-      uploadedAt: new Date(),
-      applicantId: applicant.id,
-      documentType: 'PROFILE_PHOTO',
-    }).catch(() => {});
+    // Also persist in storage if configured
+    try {
+      await storage.saveFile(`photos/applicant_${applicant.id}${ext}`, parsedPhoto.buffer, {
+        originalName: 'profile_photo.jpg',
+        mimeType: photoValidation.mimeType || 'image/jpeg',
+        size: parsedPhoto.buffer.length,
+        uploadedAt: new Date(),
+        applicantId: applicant.id,
+        documentType: 'PROFILE_PHOTO',
+      });
+    } catch (storageErr) {
+      console.warn('Optional storage save skipped:', storageErr);
+    }
 
     // Record registration in unified AuditLog
     await createAuditLog({

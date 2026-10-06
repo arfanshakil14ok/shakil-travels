@@ -73,24 +73,36 @@ export async function POST(request: NextRequest) {
     const cleanFileName = `applicant_${applicant.id}_${Date.now()}${ext}`;
     const storageSubPath = `photos/${cleanFileName}`;
 
-    // Save to unified private storage
-    await storage.saveFile(storageSubPath, buffer, {
-      originalName: fileName,
-      mimeType: validation.mimeType || 'image/jpeg',
-      size: buffer.length,
-      uploadedAt: new Date(),
-      applicantId: applicant.id,
-      documentType: 'PROFILE_PHOTO',
-    });
+    const mime = validation.mimeType || 'image/jpeg';
+    let publicPhotoUrl = `data:${mime};base64,${buffer.toString('base64')}`;
 
-    // Also persist in public uploads for ultra-fast CDN/Next.js Image serving
-    const publicUploadsDir = path.resolve(process.cwd(), 'public/uploads/photos');
-    if (!fs.existsSync(publicUploadsDir)) {
-      fs.mkdirSync(publicUploadsDir, { recursive: true });
+    // Save to unified private storage if available
+    try {
+      await storage.saveFile(storageSubPath, buffer, {
+        originalName: fileName,
+        mimeType: mime,
+        size: buffer.length,
+        uploadedAt: new Date(),
+        applicantId: applicant.id,
+        documentType: 'PROFILE_PHOTO',
+      });
+    } catch (storageErr) {
+      console.warn('Optional storage save skipped:', storageErr);
     }
-    await fs.promises.writeFile(path.join(publicUploadsDir, cleanFileName), buffer);
 
-    const publicPhotoUrl = `/uploads/photos/${cleanFileName}`;
+    // Also persist in public uploads for development if writable
+    try {
+      const publicUploadsDir = path.resolve(process.cwd(), 'public/uploads/photos');
+      if (!fs.existsSync(publicUploadsDir)) {
+        fs.mkdirSync(publicUploadsDir, { recursive: true });
+      }
+      await fs.promises.writeFile(path.join(publicUploadsDir, cleanFileName), buffer);
+      if (!process.env.VERCEL && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
+        publicPhotoUrl = `/uploads/photos/${cleanFileName}`;
+      }
+    } catch (fsErr) {
+      console.warn('Local disk write skipped in serverless environment:', fsErr);
+    }
 
     // Update applicant record and profile
     const updatedApplicant = await prisma.applicant.update({

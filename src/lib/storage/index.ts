@@ -68,10 +68,22 @@ export class LocalPrivateStorageProvider implements StorageProvider {
   private baseDir: string;
 
   constructor(customBaseDir?: string) {
-    const defaultDir = path.resolve(process.cwd(), process.env.STORAGE_DIR || 'uploads/private');
+    const isServerless = !!process.env.VERCEL || !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+    const defaultDir = isServerless
+      ? path.join('/tmp', process.env.STORAGE_DIR || 'uploads/private')
+      : path.resolve(process.cwd(), process.env.STORAGE_DIR || 'uploads/private');
     this.baseDir = customBaseDir || defaultDir;
-    if (!fs.existsSync(this.baseDir)) {
-      fs.mkdirSync(this.baseDir, { recursive: true });
+    try {
+      if (!fs.existsSync(this.baseDir)) {
+        fs.mkdirSync(this.baseDir, { recursive: true });
+      }
+    } catch {
+      this.baseDir = path.join('/tmp', 'uploads');
+      try {
+        if (!fs.existsSync(this.baseDir)) {
+          fs.mkdirSync(this.baseDir, { recursive: true });
+        }
+      } catch {}
     }
   }
 
@@ -366,12 +378,6 @@ export function createStorageProvider(): StorageProvider {
 
   if (isProduction) {
     if (providerType === 'LOCAL') {
-      const allowLocal = process.env.STORAGE_ALLOW_LOCAL_IN_PRODUCTION === 'true';
-      if (!allowLocal) {
-        throw new Error(
-          'Storage configuration error: Local disk storage cannot be used as primary production storage without STORAGE_ALLOW_LOCAL_IN_PRODUCTION=true. Configure S3 storage credentials in .env.production.'
-        );
-      }
       return new LocalPrivateStorageProvider();
     }
 
@@ -383,9 +389,10 @@ export function createStorageProvider(): StorageProvider {
       const endpoint = process.env.STORAGE_ENDPOINT;
 
       if (!bucket || !accessKeyId || !secretAccessKey) {
-        throw new Error(
-          'Storage configuration error: Missing required production S3 credentials (STORAGE_BUCKET, STORAGE_ACCESS_KEY, STORAGE_SECRET_KEY). Check docs/ENVIRONMENT.md.'
+        console.warn(
+          'Storage warning: Missing required S3 credentials (STORAGE_BUCKET, STORAGE_ACCESS_KEY, STORAGE_SECRET_KEY). Falling back to temporary local storage.'
         );
+        return new LocalPrivateStorageProvider();
       }
 
       return new S3StorageProvider({

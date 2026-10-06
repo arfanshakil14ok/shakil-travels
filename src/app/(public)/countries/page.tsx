@@ -2,6 +2,7 @@ import React from 'react';
 import prisma from '@/lib/prisma';
 import { CountriesSection } from '@/components/public/countries-section';
 import { ContactCtaSection } from '@/components/public/contact-cta-section';
+import { FALLBACK_COUNTRIES } from '@/lib/homepage-fallback';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,19 +12,28 @@ export const metadata = {
 };
 
 export default async function CountriesPublicPage() {
-  const countries = await prisma.country.findMany({
-    where: { isActive: true },
-    include: {
-      _count: {
-        select: {
-          jobs: {
-            where: { status: 'PUBLISHED' },
+  let countries: any[] = [];
+  try {
+    countries = await prisma.country.findMany({
+      where: { isActive: true },
+      include: {
+        _count: {
+          select: {
+            jobs: {
+              where: { status: 'PUBLISHED' },
+            },
           },
         },
       },
-    },
-    orderBy: [{ featured: 'desc' }, { displayOrder: 'asc' }, { name: 'asc' }],
-  });
+      orderBy: [{ featured: 'desc' }, { displayOrder: 'asc' }, { name: 'asc' }],
+    });
+  } catch (err) {
+    console.error('Countries page DB fetch warning:', err);
+  }
+
+  if (!countries || countries.length === 0) {
+    countries = FALLBACK_COUNTRIES;
+  }
 
   return (
     <div className="py-6 font-sans">

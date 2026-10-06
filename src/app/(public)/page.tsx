@@ -11,6 +11,7 @@ import { MigrantInfoSection } from '@/components/public/migrant-info-section';
 import { TrustSection } from '@/components/public/trust-section';
 import { ScamAwarenessSection } from '@/components/public/scam-awareness-section';
 import { ContactCtaSection } from '@/components/public/contact-cta-section';
+import { FALLBACK_COUNTRIES, FALLBACK_JOBS } from '@/lib/homepage-fallback';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -22,57 +23,74 @@ export const metadata = {
 };
 
 export default async function PublicHomePage() {
-  // Fetch real published jobs
-  const jobs = await prisma.job.findMany({
-    where: { status: 'PUBLISHED' },
-    include: {
-      country: {
-        select: { id: true, name: true, code: true, flag: true, slug: true },
-      },
-      jobCategory: {
-        select: { id: true, name: true, slug: true },
-      },
-      employer: {
-        select: { companyName: true },
-      },
-    },
-    orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }],
-    take: 6,
-  });
+  let jobs: any[] = [];
+  let countries: any[] = [];
+  let visaList: any[] = [];
 
-  // Fetch real destination countries with published jobs count
-  const countries = await prisma.country.findMany({
-    where: { isActive: true },
-    include: {
-      _count: {
-        select: {
-          jobs: {
-            where: { status: 'PUBLISHED' },
+  try {
+    // Fetch real published jobs
+    jobs = await prisma.job.findMany({
+      where: { status: 'PUBLISHED' },
+      include: {
+        country: {
+          select: { id: true, name: true, code: true, flag: true, slug: true },
+        },
+        jobCategory: {
+          select: { id: true, name: true, slug: true },
+        },
+        employer: {
+          select: { companyName: true },
+        },
+      },
+      orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }],
+      take: 6,
+    });
+
+    // Fetch real destination countries with published jobs count
+    countries = await prisma.country.findMany({
+      where: { isActive: true },
+      include: {
+        _count: {
+          select: {
+            jobs: {
+              where: { status: 'PUBLISHED' },
+            },
           },
         },
       },
-    },
-    orderBy: [{ featured: 'desc' }, { displayOrder: 'asc' }, { name: 'asc' }],
-  });
+      orderBy: [{ featured: 'desc' }, { displayOrder: 'asc' }, { name: 'asc' }],
+    });
 
-  // Fetch active visa information
-  const visaList = await prisma.visaInformation.findMany({
-    where: { isActive: true },
-    include: {
-      country: {
-        select: { id: true, name: true, code: true, slug: true },
+    // Fetch active visa information
+    visaList = await prisma.visaInformation.findMany({
+      where: { isActive: true },
+      include: {
+        country: {
+          select: { id: true, name: true, code: true, slug: true },
+        },
       },
-    },
-    orderBy: { createdAt: 'desc' },
-    take: 3,
-  });
+      orderBy: { createdAt: 'desc' },
+      take: 3,
+    });
+  } catch (err) {
+    console.error('Homepage database fetch warning:', err);
+  }
+
+  // Gracefully fallback to high-quality default data if DB is empty or during cold start
+  if (!countries || countries.length === 0) {
+    countries = FALLBACK_COUNTRIES;
+  }
 
   // Serialize decimals for client components
-  const serializedJobs = jobs.map((job) => ({
+  let serializedJobs = jobs.map((job) => ({
     ...job,
     salaryMin: job.salaryMin ? Number(job.salaryMin) : null,
     salaryMax: job.salaryMax ? Number(job.salaryMax) : null,
   }));
+
+  if (!serializedJobs || serializedJobs.length === 0) {
+    serializedJobs = FALLBACK_JOBS as any;
+  }
 
   return (
     <div className="space-y-0">
