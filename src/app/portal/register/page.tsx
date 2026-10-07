@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ShieldCheck, Eye, EyeOff, AlertCircle, Briefcase, GraduationCap, CheckCircle2, Camera, Upload } from 'lucide-react';
 import { BrandLogo } from '@/components/brand/brand-logo';
+import { compressImageToBase64 } from '@/lib/client-compress';
 
 function RegisterForm() {
   const router = useRouter();
@@ -49,16 +50,16 @@ function RegisterForm() {
     }
   };
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setErrorMessage('');
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > 15 * 1024 * 1024) {
       setErrorMessage(
         language === 'bn'
-          ? 'ছবির সাইজ ৫ মেগাবাইট (5MB) এর কম হতে হবে।'
-          : 'Photo size must be less than 5MB.'
+          ? 'ছবির সাইজ ১৫ মেগাবাইট (15MB) এর কম হতে হবে।'
+          : 'Photo size must be less than 15MB.'
       );
       return;
     }
@@ -72,11 +73,20 @@ function RegisterForm() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setProfilePhoto(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+    try {
+      const compressedBase64 = await compressImageToBase64(file, {
+        maxWidth: 450,
+        maxHeight: 450,
+        quality: 0.85,
+      });
+      setProfilePhoto(compressedBase64);
+    } catch {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setProfilePhoto(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const validateForm = () => {

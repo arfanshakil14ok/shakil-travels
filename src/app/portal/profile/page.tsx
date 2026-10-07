@@ -18,6 +18,7 @@ import { useLanguage } from '@/context/language-context';
 import { LoadingState } from '@/components/ui/loading-state';
 import { useToast } from '@/components/ui/toast';
 import { ProfileAvatar } from '@/components/ui/profile-avatar';
+import { compressImageFile } from '@/lib/client-compress';
 
 export default function PortalProfilePage() {
   const { success, error } = useToast();
@@ -137,10 +138,16 @@ export default function PortalProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const form = new FormData();
-    form.append('file', file);
-
     try {
+      const compressed = await compressImageFile(file, {
+        maxWidth: 600,
+        maxHeight: 600,
+        quality: 0.85,
+      });
+
+      const form = new FormData();
+      form.append('file', compressed);
+
       const res = await fetch('/api/portal/profile/upload-photo', {
         method: 'POST',
         body: form,

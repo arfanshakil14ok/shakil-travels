@@ -100,15 +100,20 @@ export async function POST(request: NextRequest) {
     let filePath = '';
 
     if (hasS3) {
-      await storage.saveFile(storageKey, buffer, {
-        originalName: file.name,
-        mimeType,
-        size: fileSize,
-        uploadedAt: new Date(),
-        applicantId,
-        documentType: documentTypeId,
-      });
-      filePath = storageKey;
+      try {
+        await storage.saveFile(storageKey, buffer, {
+          originalName: file.name,
+          mimeType,
+          size: fileSize,
+          uploadedAt: new Date(),
+          applicantId,
+          documentType: documentTypeId,
+        });
+        filePath = storageKey;
+      } catch (s3Err) {
+        console.warn('S3/R2 upload failed, persisting to PostgreSQL Base64 fallback:', s3Err);
+        filePath = `data:${mimeType};base64,${buffer.toString('base64')}`;
+      }
     } else {
       filePath = `data:${mimeType};base64,${buffer.toString('base64')}`;
       try {

@@ -19,6 +19,7 @@ import { useLanguage } from '@/context/language-context';
 import { EmptyState } from '@/components/ui/empty-state';
 import { LoadingState } from '@/components/ui/loading-state';
 import { useToast } from '@/components/ui/toast';
+import { compressImageFile } from '@/lib/client-compress';
 
 const STATUS_BADGES: Record<string, { cls: string; labelBn: string; labelEn: string }> = {
   VERIFIED: {
@@ -125,10 +126,29 @@ export default function PortalDocumentsPage() {
       return;
     }
 
+    if (selectedFile.size > 4.5 * 1024 * 1024 && selectedFile.type === 'application/pdf') {
+      error(
+        t(
+          `PDF ফাইলের সাইজ ৪.৫ MB এর বেশি (${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB)। অনুগ্রহ করে ফাইলটি কম্প্রেস করে আপলোড করুন।`,
+          `PDF size exceeds 4.5MB limit (${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB). Please compress and retry.`
+        )
+      );
+      return;
+    }
+
     setUploading(true);
     try {
+      let fileToUpload = selectedFile;
+      if (selectedFile.type.startsWith('image/')) {
+        fileToUpload = await compressImageFile(selectedFile, {
+          maxWidth: 1800,
+          maxHeight: 1800,
+          quality: 0.85,
+        });
+      }
+
       const data = new FormData();
-      data.append('file', selectedFile);
+      data.append('file', fileToUpload);
       data.append('documentTypeId', formData.documentTypeId);
       if (formData.passportNumber) data.append('passportNumber', formData.passportNumber);
       if (formData.expiryDate) data.append('expiryDate', formData.expiryDate);
@@ -168,10 +188,29 @@ export default function PortalDocumentsPage() {
       return;
     }
 
+    if (replaceFile.size > 4.5 * 1024 * 1024 && replaceFile.type === 'application/pdf') {
+      error(
+        t(
+          `PDF ফাইলের সাইজ ৪.৫ MB এর বেশি (${(replaceFile.size / (1024 * 1024)).toFixed(1)} MB)। অনুগ্রহ করে ফাইলটি কম্প্রেস করে আপলোড করুন।`,
+          `PDF size exceeds 4.5MB limit (${(replaceFile.size / (1024 * 1024)).toFixed(1)} MB). Please compress and retry.`
+        )
+      );
+      return;
+    }
+
     setReplacing(true);
     try {
+      let fileToUpload = replaceFile;
+      if (replaceFile.type.startsWith('image/')) {
+        fileToUpload = await compressImageFile(replaceFile, {
+          maxWidth: 1800,
+          maxHeight: 1800,
+          quality: 0.85,
+        });
+      }
+
       const data = new FormData();
-      data.append('file', replaceFile);
+      data.append('file', fileToUpload);
 
       const res = await fetch(`/api/portal/documents/${replaceDoc.id}`, {
         method: 'PUT',

@@ -119,14 +119,20 @@ export async function POST(request: NextRequest) {
       const hasS3 = isS3Configured();
 
       if (hasS3) {
-        await storage.saveFile(storageKey, buffer, {
-          originalName: file.name,
-          mimeType: file.type,
-          size: file.size,
-          uploadedAt: new Date(),
-          applicantId: applicant.id,
-        });
-        filePath = storageKey;
+        try {
+          await storage.saveFile(storageKey, buffer, {
+            originalName: file.name,
+            mimeType: file.type,
+            size: file.size,
+            uploadedAt: new Date(),
+            applicantId: applicant.id,
+          });
+          filePath = storageKey;
+        } catch (s3Err) {
+          console.warn('S3/R2 upload failed, persisting to PostgreSQL Base64 fallback:', s3Err);
+          const mime = file.type || 'application/pdf';
+          filePath = `data:${mime};base64,${buffer.toString('base64')}`;
+        }
       } else {
         // Serverless-safe fallback: Persist document directly in PostgreSQL as Base64 data URI
         const mime = file.type || 'application/pdf';
