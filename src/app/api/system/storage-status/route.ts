@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { isS3Configured, storage } from '@/lib/storage';
+import { isS3Configured, storage, getActiveStorage } from '@/lib/storage';
 import prisma from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
@@ -7,10 +7,11 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const configured = isS3Configured();
+    const activeInstance = getActiveStorage();
+    const activeProvider = activeInstance.constructor.name === 'S3StorageProvider' ? 'S3 (Cloudflare R2)' : 'LOCAL';
     const bucket = process.env.STORAGE_BUCKET || null;
     const endpoint = process.env.STORAGE_ENDPOINT || null;
     const region = process.env.STORAGE_REGION || 'auto';
-    const provider = process.env.STORAGE_PROVIDER || 'LOCAL';
     const hasKey = !!process.env.STORAGE_ACCESS_KEY;
     const hasSecret = !!process.env.STORAGE_SECRET_KEY;
 
@@ -38,7 +39,7 @@ export async function GET() {
       timestamp: new Date().toISOString(),
       storage: {
         isS3Configured: configured,
-        activeProvider: provider,
+        activeProvider: activeProvider,
         bucketName: bucket,
         endpointHost: endpoint ? new URL(endpoint).host : null,
         region,

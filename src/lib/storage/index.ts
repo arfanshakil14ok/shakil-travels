@@ -388,67 +388,30 @@ export class S3StorageProvider implements StorageProvider {
  * In development: Uses LocalPrivateStorageProvider by default.
  */
 export function createStorageProvider(): StorageProvider {
-  const isProduction = process.env.NODE_ENV === 'production';
-  const isBuildPhase =
-    process.env.NEXT_PHASE === 'phase-production-build' ||
-    process.env.npm_lifecycle_event === 'build';
+  const bucket = process.env.STORAGE_BUCKET;
+  const accessKeyId = process.env.STORAGE_ACCESS_KEY;
+  const secretAccessKey = process.env.STORAGE_SECRET_KEY;
+  const region = process.env.STORAGE_REGION || 'auto';
+  const endpoint = process.env.STORAGE_ENDPOINT;
 
-  if (isBuildPhase) {
-    return new LocalPrivateStorageProvider();
-  }
+  const isExplicitlyLocal = (process.env.STORAGE_PROVIDER || '').toUpperCase() === 'LOCAL';
 
-  const providerType = (process.env.STORAGE_PROVIDER || (isProduction ? 'S3' : 'LOCAL')).toUpperCase();
-
-  if (isProduction) {
-    if (providerType === 'LOCAL') {
-      return new LocalPrivateStorageProvider();
-    }
-
-    if (providerType === 'S3') {
-      const bucket = process.env.STORAGE_BUCKET;
-      const accessKeyId = process.env.STORAGE_ACCESS_KEY;
-      const secretAccessKey = process.env.STORAGE_SECRET_KEY;
-      const region = process.env.STORAGE_REGION || 'us-east-1';
-      const endpoint = process.env.STORAGE_ENDPOINT;
-
-      if (!bucket || !accessKeyId || !secretAccessKey) {
-        console.warn(
-          'Storage warning: Missing required S3 credentials (STORAGE_BUCKET, STORAGE_ACCESS_KEY, STORAGE_SECRET_KEY). Falling back to temporary local storage.'
-        );
-        return new LocalPrivateStorageProvider();
-      }
-
-      return new S3StorageProvider({
-        bucket,
-        accessKeyId,
-        secretAccessKey,
-        region,
-        endpoint,
-      });
-    }
-  }
-
-  // Development/Testing fallback
-  if (providerType === 'S3' && process.env.STORAGE_BUCKET && process.env.STORAGE_ACCESS_KEY && process.env.STORAGE_SECRET_KEY) {
+  // If S3/R2 credentials are configured and not forced to LOCAL, enforce S3StorageProvider
+  if (bucket && accessKeyId && secretAccessKey && !isExplicitlyLocal) {
     return new S3StorageProvider({
-      bucket: process.env.STORAGE_BUCKET,
-      accessKeyId: process.env.STORAGE_ACCESS_KEY,
-      secretAccessKey: process.env.STORAGE_SECRET_KEY,
-      region: process.env.STORAGE_REGION || 'us-east-1',
-      endpoint: process.env.STORAGE_ENDPOINT,
+      bucket,
+      accessKeyId,
+      secretAccessKey,
+      region,
+      endpoint,
     });
   }
 
   return new LocalPrivateStorageProvider();
 }
 
-// Lazy singleton instance to prevent build-time crashes before environment is loaded
-let _activeStorage: StorageProvider | null = null;
-function getActiveStorage(): StorageProvider {
-  if (!_activeStorage) {
-    _activeStorage = createStorageProvider();
-  }
-  return _activeStorage;
+export function getActiveStorage(): StorageProvider {
+  return createStorageProvider();
 }
 
 export const storage: StorageProvider = {
