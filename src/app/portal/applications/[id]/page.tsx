@@ -102,8 +102,7 @@ export default function PortalApplicationDetailPage() {
     );
   }
 
-  const currentTimelineStep = application.timeline?.find((t: any) => t.state === 'CURRENT');
-  const currentKey = currentTimelineStep?.key || 'APPLICATION_SUBMITTED';
+  const activeCurrentStage = application.effectiveStage || application.currentStage || application.status || 'APPLIED';
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -123,8 +122,8 @@ export default function PortalApplicationDetailPage() {
             <span className="font-mono text-xs font-bold text-slate-700">
               {application.applicationCode}
             </span>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200">
-              {application.status}
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+              {activeCurrentStage}
             </span>
           </div>
           <h1 className="text-lg sm:text-xl font-bold text-slate-900">
@@ -167,7 +166,7 @@ export default function PortalApplicationDetailPage() {
           </span>
         </div>
 
-        <RecruitmentProgressTracker currentStage={currentKey} />
+        <RecruitmentProgressTracker currentStage={activeCurrentStage} />
       </div>
 
       {/* Detailed Milestone Step-by-Step List */}
@@ -186,7 +185,7 @@ export default function PortalApplicationDetailPage() {
                 <div
                   className={`absolute -left-[31px] top-0.5 w-5 h-5 rounded-full flex items-center justify-center border text-[10px] font-bold transition-all ${
                     isCompleted
-                      ? 'bg-slate-900 border-slate-900 text-white'
+                      ? 'bg-emerald-600 border-emerald-600 text-white'
                       : isCurrent
                       ? 'bg-slate-900 border-slate-900 text-white ring-4 ring-slate-200'
                       : 'bg-white border-slate-300 text-slate-400'
@@ -205,13 +204,13 @@ export default function PortalApplicationDetailPage() {
                     <span
                       className={`text-xs sm:text-sm font-semibold ${
                         isCurrent
-                          ? 'text-slate-900'
+                          ? 'text-slate-900 font-bold'
                           : isCompleted
-                          ? 'text-slate-800'
+                          ? 'text-emerald-800'
                           : 'text-slate-400'
                       }`}
                     >
-                      {step.label}
+                      {language === 'bn' ? step.labelBn || step.label : step.label}
                     </span>
                     {isCurrent && (
                       <span className="px-2 py-0.2 rounded text-[10px] font-bold bg-slate-900 text-white uppercase">
@@ -220,7 +219,7 @@ export default function PortalApplicationDetailPage() {
                     )}
                   </div>
                   <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                    {step.description}
+                    {language === 'bn' ? step.descriptionBn || step.description : step.description}
                   </p>
                 </div>
               </div>

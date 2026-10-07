@@ -1306,10 +1306,10 @@ export default function ApplicationsPage() {
             </div>
           )}
 
-          <p className="text-xs text-slate-600">
+          <p className="text-xs text-slate-600 leading-relaxed">
             {t(
-              'আপনি কি নিশ্চিত যে এই আবেদনটি ডিলিট করতে চান? লিংক করা ইনভয়েস থাকলে ডিলিট করা সম্ভব হবে না।',
-              'Are you sure you want to delete this application record? Applications with active invoices cannot be deleted.'
+              'আপনি কি নিশ্চিত যে এই আবেদনটি সম্পূর্ণ সিস্টেম থেকে মুছে ফেলতে চান? এর সাথে সম্পর্কিত প্রসেসিং কেস, ভিসা রেকর্ড ও পাইপলাইন ডাটা স্থায়ীভাবে ডিলিট হয়ে যাবে।',
+              'Are you sure you want to delete this application? It and all linked processing cases, visa cases, and pipeline records will be permanently purged from the system.'
             )}
           </p>
 

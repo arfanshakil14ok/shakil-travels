@@ -81,10 +81,6 @@ export default function PortalDocumentsPage() {
   const [replacing, setReplacing] = useState(false);
   const replaceFileInputRef = useRef<HTMLInputElement>(null);
 
-  // Delete Confirmation Modal
-  const [deleteDoc, setDeleteDoc] = useState<any | null>(null);
-  const [deleting, setDeleting] = useState(false);
-
   const fetchDocs = useCallback(async () => {
     setLoading(true);
     try {
@@ -233,29 +229,6 @@ export default function PortalDocumentsPage() {
     }
   };
 
-  const handleDeleteConfirm = async () => {
-    if (!deleteDoc) return;
-    setDeleting(true);
-    try {
-      const res = await fetch(`/api/portal/documents/${deleteDoc.id}`, {
-        method: 'DELETE',
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        success(t('নথি মুছে ফেলা হয়েছে।', 'Document deleted successfully'));
-        setDeleteDoc(null);
-        fetchDocs();
-      } else {
-        error(data.error || 'Failed to delete document');
-      }
-    } catch {
-      error('Error during document deletion');
-    } finally {
-      setDeleting(false);
-    }
-  };
-
   const selectedTypeObj = documentTypes.find((t) => t.id === formData.documentTypeId);
   const isPassportSelected = selectedTypeObj?.code?.toUpperCase() === 'PASSPORT';
 
@@ -392,15 +365,6 @@ export default function PortalDocumentsPage() {
                           >
                             <RefreshCw className="w-3 h-3" />
                             <span>{t('পরিবর্তন', 'Replace')}</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeleteDoc(doc)}
-                            className="inline-flex items-center gap-1 text-xs font-medium text-rose-600 hover:text-rose-800 py-1 px-2 rounded-md hover:bg-rose-50 transition-colors cursor-pointer"
-                            title={t('মুছে ফেলুন', 'Delete')}
-                          >
-                            <Trash2 className="w-3 h-3" />
-                            <span>{t('মুছুন', 'Delete')}</span>
                           </button>
                         </>
                       ) : (
@@ -663,53 +627,6 @@ export default function PortalDocumentsPage() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {deleteDoc && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white border border-slate-200/90 rounded-xl shadow-xl p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
-                <AlertTriangle className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-slate-900">
-                  {t('নথি মুছে ফেলতে চান?', 'Delete this document?')}
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  {t('এই নথিটি স্থায়ীভাবে মুছে যাবে। আপনি কি নিশ্চিত?', 'This document will be permanently deleted.')}
-                </p>
-              </div>
-            </div>
-
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-0.5">
-              <div className="font-semibold text-slate-800">{deleteDoc.documentType?.name}</div>
-              <div className="text-slate-500 font-mono text-[11px] truncate">{deleteDoc.fileName}</div>
-            </div>
-
-            <div className="pt-2 flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setDeleteDoc(null)}
-                className="px-4 py-2 text-slate-700 hover:bg-slate-100 rounded-lg font-medium text-xs cursor-pointer"
-              >
-                {t('বাতিল', 'Cancel')}
-              </button>
-              <button
-                type="button"
-                onClick={handleDeleteConfirm}
-                disabled={deleting}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white rounded-lg font-semibold text-xs flex items-center gap-1.5 cursor-pointer"
-              >
-                {deleting && (
-                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                )}
-                <span>{deleting ? t('মুছে ফেলা হচ্ছে...', 'Deleting...') : t('হ্যাঁ, মুছে ফেলুন', 'Yes, Delete')}</span>
-              </button>
-            </div>
           </div>
         </div>
       )}

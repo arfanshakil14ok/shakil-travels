@@ -1,21 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { requireApplicantAuth } from '@/lib/portal-auth';
-
-// Safe applicant-facing timeline definition
-const STAGES = [
-  { key: 'APPLIED', label: 'Application Submitted', labelBn: 'আবেদন দাখিল', description: 'Application received and registered' },
-  { key: 'SCREENING', label: 'Profile Screening', labelBn: 'বাছাই যাচাই', description: 'Recruitment screening in progress' },
-  { key: 'SHORTLISTED', label: 'Shortlisted', labelBn: 'শর্টলিস্টেড', description: 'Profile selected for employer consideration' },
-  { key: 'INTERVIEW_SCHEDULED', label: 'Interview Scheduled', labelBn: 'সাক্ষাৎকার নির্ধারিত', description: 'Interview date and details arranged' },
-  { key: 'INTERVIEWED', label: 'Interview Evaluated', labelBn: 'সাক্ষাৎকার সম্পন্ন', description: 'Interview completed and evaluated' },
-  { key: 'SELECTED', label: 'Candidate Selected', labelBn: 'নির্বাচিত', description: 'Selected for overseas vacancy' },
-  { key: 'OFFER_ACCEPTED', label: 'Offer / Contract', labelBn: 'চুক্তি স্বাক্ষর', description: 'Employment contract signed' },
-  { key: 'MEDICAL_PASSED', label: 'Medical Clearance', labelBn: 'মেডিকেল ফিটনেস', description: 'Health check certified' },
-  { key: 'VISA_PROCESSING', label: 'Visa Processing', labelBn: 'ভিসা প্রসেসিং', description: 'Visa application submitted' },
-  { key: 'VISA_APPROVED', label: 'Visa Approved', labelBn: 'ভিসা অনুমোদিত', description: 'Visa issued and stamped' },
-  { key: 'COMPLETED', label: 'Departure Complete', labelBn: 'ফ্লাইট ও ডিপার্চার', description: 'Flight booked and deployed' },
-];
+import { getEffectiveStage, generatePortalTimeline } from '@/lib/pipeline-sync';
 
 export async function GET(
   request: NextRequest,
@@ -74,6 +60,14 @@ export async function GET(
             notes: true,
           },
         },
+        processingCase: {
+          select: {
+            id: true,
+            processingCode: true,
+            currentStage: true,
+            overallStatus: true,
+          },
+        },
         visaApplications: {
           include: {
             country: { select: { name: true, code: true } },
@@ -96,29 +90,16 @@ export async function GET(
       return NextResponse.json({ success: false, error: 'Application not found' }, { status: 404 });
     }
 
-    // Determine timeline progress index
-    const currentStatus = application.status;
-    const currentStageIndex = STAGES.findIndex((s) => s.key === currentStatus);
-
-    const timeline = STAGES.map((stage, idx) => {
-      let state = 'UPCOMING';
-      if (currentStatus === 'REJECTED') {
-        state = 'TERMINATED';
-      } else if (idx < currentStageIndex) {
-        state = 'COMPLETED';
-      } else if (idx === currentStageIndex) {
-        state = 'CURRENT';
-      }
-      return {
-        ...stage,
-        state,
-      };
-    });
+    // Determine effective stage taking into account processingCase and visaApplications
+    const effectiveStage = getEffectiveStage(application);
+    const timeline = generatePortalTimeline(effectiveStage);
 
     return NextResponse.json({
       success: true,
       data: {
         ...application,
+        effectiveStage,
+        effectiveStatus: effectiveStage,
         timeline,
       },
     });

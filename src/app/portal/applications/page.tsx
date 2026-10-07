@@ -120,13 +120,43 @@ export default function PortalApplicationsListPage() {
                   {t('ইন্টারভিউ সম্পন্ন (Interviewed)', 'Interviewed')}
                 </span>
               );
-            } else if (statusKey === 'SELECTED' || statusKey === 'OFFER_ACCEPTED') {
+            } else if (statusKey === 'SELECTED' || statusKey === 'OFFER_ACCEPTED' || statusKey === 'OFFER_LETTER_ISSUED' || statusKey === 'CONTRACT_SIGNED') {
               statusBadge = (
                 <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300">
-                  {t('নির্বাচিত (Selected) ✓', 'Selected ✓')}
+                  {t('নির্বাচিত ও চুক্তি (Selected) ✓', 'Selected & Offer ✓')}
                 </span>
               );
-            } else if (statusKey === 'REJECTED') {
+            } else if (statusKey.includes('DOCUMENT')) {
+              statusBadge = (
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-50 text-sky-700 border border-sky-200">
+                  {t('ডকুমেন্ট প্রসেসিং (Docs)', 'Documentation')}
+                </span>
+              );
+            } else if (statusKey.includes('MEDICAL')) {
+              statusBadge = (
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-50 text-teal-800 border border-teal-200">
+                  {t('মেডিকেল ফিটনেস (Medical)', 'Medical Clearance')}
+                </span>
+              );
+            } else if (statusKey.includes('VISA')) {
+              statusBadge = (
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-violet-50 text-violet-800 border border-violet-200">
+                  {t('ভিসা প্রসেসিং (Visa)', 'Visa Processing')}
+                </span>
+              );
+            } else if (statusKey.includes('CLEARANCE') || statusKey.includes('BMET')) {
+              statusBadge = (
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                  {t('বিএমইটি ক্লিয়ারেন্স (Clearance)', 'Govt Clearance')}
+                </span>
+              );
+            } else if (['TICKET_PENDING', 'TICKET_ISSUED', 'TICKET_CONFIRMED', 'DEPARTURE_READY', 'DEPARTED', 'JOINED', 'COMPLETED', 'RECRUITMENT_COMPLETED', 'DEPLOYED'].includes(statusKey)) {
+              statusBadge = (
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
+                  {t('ফ্লাইট ও ডিপার্চার (Deployed)', 'Flight / Deployed')}
+                </span>
+              );
+            } else if (statusKey === 'REJECTED' || statusKey === 'MEDICAL_FAILED' || statusKey === 'VISA_REJECTED') {
               statusBadge = (
                 <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
                   {t('বাতিল (Rejected)', 'Rejected')}

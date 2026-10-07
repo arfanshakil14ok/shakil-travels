@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { requirePermission } from '@/lib/rbac';
+import { requirePermission, requireAuth, hasPermission } from '@/lib/rbac';
 import { createAuditLog } from '@/lib/audit';
 
 export async function GET(
@@ -187,13 +187,33 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const currentUser = await requirePermission('APPLICATION_DELETE');
+    const currentUser = await requireAuth();
+    const canDelete =
+      currentUser.role?.name === 'SUPER_ADMIN' ||
+      currentUser.role?.name === 'ADMIN' ||
+      currentUser.role?.name === 'MANAGER' ||
+      hasPermission(currentUser, 'APPLICATION_DELETE');
+
+    if (!canDelete) {
+      return NextResponse.json(
+        { success: false, error: 'Access denied: You do not have permission to delete applications.' },
+        { status: 403 }
+      );
+    }
+
     const { id } = await params;
 
-    const existing = await prisma.application.findUnique({
-      where: { id },
+    const existing = await prisma.application.findFirst({
+      where: {
+        OR: [{ id }, { applicationCode: id }, { applicationNumber: id }],
+      },
       include: {
-        invoices: { select: { id: true } },
+        processingCase: {
+          select: { id: true },
+        },
+        visaApplications: {
+          select: { id: true },
+        },
       },
     });
 
@@ -201,40 +221,144 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: 'Application not found' }, { status: 404 });
     }
 
-    if (existing.invoices.length > 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Cannot delete application with linked invoices. Please void or manage invoices first.',
-        },
-        { status: 400 }
-      );
-    }
+    const appId = existing.id;
+    const processingCaseId = existing.processingCase?.id;
+    const visaAppIds = existing.visaApplications.map((v) => v.id);
 
-    await prisma.application.delete({
-      where: { id },
+    await prisma.$transaction(async (tx) => {
+      // 1. If Processing Case exists, clean up all its related entities
+      if (processingCaseId) {
+        await tx.medicalCase.deleteMany({ where: { processingCaseId } });
+        await tx.visaCase.deleteMany({ where: { processingCaseId } });
+        await tx.clearanceCase.deleteMany({ where: { processingCaseId } });
+        await tx.travelTicket.deleteMany({ where: { processingCaseId } });
+        await tx.departureCase.deleteMany({ where: { processingCaseId } });
+        await tx.joiningCase.deleteMany({ where: { processingCaseId } });
+
+        await tx.processingStatusHistory.deleteMany({ where: { processingCaseId } });
+        await tx.processingDocumentRequirement.deleteMany({ where: { processingCaseId } });
+
+        await tx.recruitmentCost.updateMany({
+          where: { processingCaseId },
+          data: { processingCaseId: null },
+        });
+        await tx.invoice.updateMany({
+          where: { processingCaseId },
+          data: { processingCaseId: null },
+        });
+        await tx.payment.updateMany({
+          where: { processingCaseId },
+          data: { processingCaseId: null },
+        });
+        await tx.candidateLedgerEntry.updateMany({
+          where: { processingCaseId },
+          data: { processingCaseId: null },
+        });
+        await tx.paymentPlan.updateMany({
+          where: { processingCaseId },
+          data: { processingCaseId: null },
+        });
+
+        await tx.recruitmentProcessingCase.delete({ where: { id: processingCaseId } });
+      }
+
+      // 2. Clean up Visa Applications
+      if (visaAppIds.length > 0) {
+        await tx.visaAppointment.deleteMany({ where: { visaApplicationId: { in: visaAppIds } } });
+        await tx.visaStatusHistory.deleteMany({ where: { visaApplicationId: { in: visaAppIds } } });
+        await tx.visaApplication.deleteMany({ where: { id: { in: visaAppIds } } });
+      }
+
+      // 3. Clean up legacy / post-selection records directly linked to Application
+      await tx.medicalRecord.deleteMany({ where: { applicationId: appId } });
+      await tx.clearanceRecord.deleteMany({ where: { applicationId: appId } });
+      await tx.departureRecord.deleteMany({ where: { applicationId: appId } });
+
+      // 4. Clean up recruitment pipeline records
+      await tx.interview.deleteMany({ where: { applicationId: appId } });
+      await tx.applicationScreening.deleteMany({ where: { applicationId: appId } });
+      await tx.applicationStatusHistory.deleteMany({ where: { applicationId: appId } });
+
+      // 5. Unlink documents & financial records so candidate master records remain intact
+      await tx.document.updateMany({
+        where: { applicationId: appId },
+        data: { applicationId: null },
+      });
+      await tx.invoice.updateMany({
+        where: { applicationId: appId },
+        data: { applicationId: null },
+      });
+      await tx.payment.updateMany({
+        where: { applicationId: appId },
+        data: { applicationId: null },
+      });
+      await tx.receipt.updateMany({
+        where: { applicationId: appId },
+        data: { applicationId: null },
+      });
+      await tx.refund.updateMany({
+        where: { applicationId: appId },
+        data: { applicationId: null },
+      });
+      await tx.financialAdjustment.updateMany({
+        where: { applicationId: appId },
+        data: { applicationId: null },
+      });
+      await tx.candidateLedgerEntry.updateMany({
+        where: { applicationId: appId },
+        data: { applicationId: null },
+      });
+      await tx.paymentPlan.updateMany({
+        where: { applicationId: appId },
+        data: { applicationId: null },
+      });
+      await tx.recruitmentCost.updateMany({
+        where: { applicationId: appId },
+        data: { applicationId: null },
+      });
+
+      // 6. If application was SELECTED, decrement job filledCount
+      if (existing.status === 'SELECTED' || existing.currentStage === 'SELECTED') {
+        const job = await tx.job.findUnique({ where: { id: existing.jobId } });
+        if (job && job.filledCount > 0) {
+          await tx.job.update({
+            where: { id: existing.jobId },
+            data: { filledCount: { decrement: 1 } },
+          });
+        }
+      }
+
+      // 7. Delete the application cleanly
+      await tx.application.delete({
+        where: { id: appId },
+      });
     });
 
     await createAuditLog({
       userId: currentUser.id,
       action: 'APPLICATION_DELETE',
       entity: 'APPLICATION',
-      entityId: id,
+      entityId: appId,
+      description: `Completely purged application ${existing.applicationCode || existing.applicationNumber} and all linked processing records from system`,
       oldValue: {
+        applicationCode: existing.applicationCode,
         applicationNumber: existing.applicationNumber,
-        status: existing.status || existing.currentStage,
+        status: existing.status,
       },
     });
 
     return NextResponse.json({
       success: true,
-      message: `Application ${existing.applicationNumber} deleted successfully`,
+      message: `আবেদন ${existing.applicationCode || existing.applicationNumber} সম্পূর্ণ সিস্টেম থেকে সফলভাবে ডিলিট করা হয়েছে। / Application deleted from entire system successfully`,
     });
   } catch (error: any) {
     if (error.name === 'AuthorizationError' || error.name === 'AuthenticationError') {
       return NextResponse.json({ success: false, error: error.message }, { status: 403 });
     }
     console.error('Error deleting application:', error);
-    return NextResponse.json({ success: false, error: 'Failed to delete application' }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to delete application' },
+      { status: 500 }
+    );
   }
 }

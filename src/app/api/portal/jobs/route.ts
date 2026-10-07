@@ -49,6 +49,8 @@ export async function GET(request: NextRequest) {
     ]);
 
     const appliedJobMap = new Map(applicantApplications.map((a) => [a.jobId, a]));
+    const totalAppliedCount = applicantApplications.length;
+    const isLimitReached = totalAppliedCount >= 3;
 
     const enrichedJobs = jobs.map((job) => {
       const application = appliedJobMap.get(job.id);
@@ -60,6 +62,8 @@ export async function GET(request: NextRequest) {
         applicationId: application?.id || null,
         applicationStatus: application?.status || null,
         applicationCode: application?.applicationCode || null,
+        canApply: !application && !isLimitReached,
+        isLimitReached,
       };
     });
 
@@ -67,6 +71,11 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         items: enrichedJobs,
+        applicationQuota: {
+          currentCount: totalAppliedCount,
+          maxLimit: 3,
+          isLimitReached,
+        },
         pagination: {
           page,
           limit,

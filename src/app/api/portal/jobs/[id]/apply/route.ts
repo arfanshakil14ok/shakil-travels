@@ -32,7 +32,24 @@ export async function POST(
       );
     }
 
-    // 2. CRITICAL: Prevent duplicate active application for the same job
+    // 2. HARD LIMIT: Candidates cannot apply more than 3 times across the entire system
+    const totalApplications = await prisma.application.count({
+      where: { applicantId: applicant.id },
+    });
+
+    if (totalApplications >= 3) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'আপনি সর্বোচ্চ ৩ বার চাকরির জন্য আবেদন করতে পারবেন। আপনার আবেদনের কোটা (৩টি) পূর্ণ হয়েছে। / You cannot apply more than 3 times. Your application limit (3) has been reached.',
+          currentCount: totalApplications,
+          maxLimit: 3,
+        },
+        { status: 400 }
+      );
+    }
+
+    // 3. Prevent duplicate active application for the same job
     const existingApp = await prisma.application.findFirst({
       where: {
         applicantId: applicant.id,

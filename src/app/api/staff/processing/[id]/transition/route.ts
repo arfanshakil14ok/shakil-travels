@@ -73,6 +73,32 @@ export async function POST(
         },
       });
 
+      // Synchronize parent application status so candidate tracking updates immediately
+      if (pc.applicationId) {
+        await tx.application.update({
+          where: { id: pc.applicationId },
+          data: {
+            currentStage: targetStage,
+            status: targetStage,
+            ...(targetStage === 'COMPLETED' ? { completedAt: new Date() } : {}),
+          },
+        });
+
+        await tx.applicationStatusHistory.create({
+          data: {
+            applicationId: pc.applicationId,
+            fromStage: pc.currentStage,
+            toStage: targetStage,
+            fromStatus: pc.currentStage,
+            toStatus: targetStage,
+            changedById: currentUser.id,
+            changedByRole: currentUser.role?.name || 'STAFF',
+            reason: overrideReason || (forceOverride ? 'Privileged Manager Force Override' : 'Processing Stage Transition'),
+            notes: notes || `Processing stage transitioned to ${targetStage}`,
+          },
+        });
+      }
+
       return updated;
     });
 

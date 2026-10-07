@@ -194,69 +194,21 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const applicant = await requireApplicantAuth();
-    const { id } = await params;
+    await requireApplicantAuth();
 
-    const document = await prisma.document.findUnique({
-      where: { id },
-      include: { documentType: true },
-    });
-
-    if (!document) {
-      return NextResponse.json({ success: false, error: 'Document not found' }, { status: 404 });
-    }
-
-    // IDOR protection
-    if (document.applicantId !== applicant.id) {
-      return NextResponse.json(
-        { success: false, error: 'Access denied: You do not own this document' },
-        { status: 403 }
-      );
-    }
-
-    // Restriction: Verified documents cannot be deleted
-    if (document.status === 'VERIFIED') {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'যাচাইকৃত নথি মুছে ফেলা যাবে না / Verified documents cannot be deleted',
-        },
-        { status: 400 }
-      );
-    }
-
-    // Delete physical file from storage
-    try {
-      await storage.deleteFile(document.filePath);
-    } catch {
-      // Continue even if physical file is missing
-    }
-
-    // Delete record from database
-    await prisma.document.delete({
-      where: { id },
-    });
-
-    await createAuditLog({
-      actorUserId: applicant.id,
-      actorType: 'APPLICANT',
-      applicantId: applicant.id,
-      action: 'DOCUMENT_DELETED',
-      entity: 'DOCUMENT',
-      entityId: id,
-      description: `Applicant deleted document: ${document.fileName} (${document.documentType.name})`,
-      oldValue: { fileName: document.fileName, status: document.status },
-    });
-
-    return NextResponse.json({
-      success: true,
-      message: 'Document deleted successfully',
-    });
+    // Restriction: Candidates cannot delete submitted documents (Requirement 3)
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'প্রার্থীরা আপলোডকৃত কোনো ফাইল বা নথি মুছে ফেলতে পারবেন না। প্রয়োজনে সহায়তা দলের সাথে যোগাযোগ করুন। / Candidates cannot delete submitted documents. Please contact administration for any changes.',
+      },
+      { status: 403 }
+    );
   } catch (error: any) {
     if (error.message?.includes('Unauthenticated')) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
     console.error('Delete document error:', error);
-    return NextResponse.json({ success: false, error: 'Failed to delete document' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Operation not permitted' }, { status: 403 });
   }
 }

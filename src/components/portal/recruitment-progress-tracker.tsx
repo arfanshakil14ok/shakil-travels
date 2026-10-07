@@ -3,6 +3,7 @@
 import React from 'react';
 import { Check, Clock, AlertCircle } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
+import { CANONICAL_MILESTONES, getCanonicalMilestoneIndex } from '@/lib/pipeline-sync';
 
 export interface StageInfo {
   key: string;
@@ -10,23 +11,11 @@ export interface StageInfo {
   labelBn: string;
 }
 
-const DEFAULT_STAGES: StageInfo[] = [
-  { key: 'PROFILE', label: 'Profile Ready', labelBn: 'প্রোফাইল তৈরি' },
-  { key: 'SUBMITTED', label: 'Application Submitted', labelBn: 'আবেদন দাখিল' },
-  { key: 'DOCUMENT_VERIFICATION', label: 'Document Check', labelBn: 'ডকুমেন্ট যাচাই' },
-  { key: 'INTERVIEW', label: 'Interview', labelBn: 'ইন্টারভিউ' },
-  { key: 'SELECTED', label: 'Selected', labelBn: 'মনোনয়ন' },
-  { key: 'MEDICAL', label: 'Medical Clearance', labelBn: 'মেডিকেল টেস্ট' },
-  { key: 'TRAINING', label: 'Skills Training', labelBn: 'প্রশিক্ষণ' },
-  { key: 'VISA_PROCESSING', label: 'Visa Stamped', labelBn: 'ভিসা প্রসেসিং' },
-  { key: 'DEPARTURE', label: 'Deployment', labelBn: 'বিদেশ গমন' },
-];
-
 export function RecruitmentProgressTracker({
   currentStatus,
   currentStage,
-  isRejected = false,
-  stages = DEFAULT_STAGES,
+  isRejected: explicitRejected,
+  stages = CANONICAL_MILESTONES,
 }: {
   currentStatus?: string;
   currentStage?: string;
@@ -34,26 +23,16 @@ export function RecruitmentProgressTracker({
   stages?: StageInfo[];
 }) {
   const { language } = useLanguage();
-  const activeStatus = currentStage || currentStatus || 'SUBMITTED';
+  const activeStatus = (currentStage || currentStatus || 'APPLIED').toUpperCase();
 
-  const getStageIndex = (status: string) => {
-    const s = status.toUpperCase();
-    if (s === 'NEW' || s === 'PROFILE_INCOMPLETE' || s === 'PROFILE') return 0;
-    if (s === 'SUBMITTED' || s === 'APPLIED' || s === 'APPLICATION_SUBMITTED') return 1;
-    if (s === 'UNDER_REVIEW' || s === 'DOCUMENT_CHECK' || s === 'DOCUMENT_VERIFICATION') return 2;
-    if (s === 'INTERVIEW_SCHEDULED' || s === 'INTERVIEW' || s === 'SCREENING') return 3;
-    if (s === 'SELECTED' || s === 'OFFER_ACCEPTED') return 4;
-    if (s === 'MEDICAL' || s === 'MEDICAL_PASSED' || s === 'MEDICAL_SCHEDULED') return 5;
-    if (s === 'TRAINING' || s === 'TRAINING_ENROLLED' || s === 'TRAINING_COMPLETED') return 6;
-    if (s === 'VISA_PROCESSING' || s === 'VISA_APPLIED' || s === 'VISA_APPROVED' || s === 'VISA_STAMPED') return 7;
-    if (s === 'DEPLOYED' || s === 'DEPARTED' || s === 'COMPLETED' || s === 'TICKET_CONFIRMED' || s === 'DEPARTURE') return 8;
-    return 1;
-  };
+  const isTerminal =
+    explicitRejected ||
+    ['REJECTED', 'CANCELLED', 'WITHDRAWN', 'MEDICAL_FAILED', 'VISA_REJECTED'].includes(activeStatus);
 
-  const currentIndex = getStageIndex(activeStatus);
-  const progressPercent = isRejected
+  const currentIndex = isTerminal ? -1 : getCanonicalMilestoneIndex(activeStatus);
+  const progressPercent = isTerminal
     ? 0
-    : Math.round(((currentIndex + 1) / stages.length) * 100);
+    : Math.min(100, Math.round(((currentIndex + 1) / stages.length) * 100));
 
   return (
     <div className="w-full bg-white p-4 sm:p-5 rounded-xl border border-slate-200/90 shadow-xs">
@@ -72,7 +51,7 @@ export function RecruitmentProgressTracker({
         </div>
         <span
           className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${
-            isRejected
+            isTerminal
               ? 'bg-rose-50 text-rose-700 border border-rose-200'
               : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
           }`}
@@ -83,18 +62,17 @@ export function RecruitmentProgressTracker({
 
       <div className="relative">
         {/* Progress Line */}
-        <div className="hidden sm:block absolute top-3.5 left-6 right-6 h-0.5 bg-slate-200 -z-0" />
+        <div className="hidden sm:block absolute top-3.5 left-4 right-4 h-0.5 bg-slate-200 -z-0" />
 
-        <div className="grid grid-cols-2 sm:grid-cols-9 gap-3 sm:gap-1.5">
+        <div className="grid grid-cols-2 sm:grid-cols-5 md:grid-cols-10 gap-2 sm:gap-1">
           {stages.map((stage, idx) => {
-            const isCompleted = !isRejected && idx < currentIndex;
-            const isCurrent = !isRejected && idx === currentIndex;
-            const isPending = !isRejected && idx > currentIndex;
+            const isCompleted = !isTerminal && idx < currentIndex;
+            const isCurrent = !isTerminal && idx === currentIndex;
 
             return (
               <div
                 key={stage.key}
-                className="flex flex-col items-center text-center relative z-10 space-y-1.5"
+                className="flex flex-col items-center text-center relative z-10 space-y-1"
               >
                 {/* Node Circle */}
                 <div
@@ -103,7 +81,7 @@ export function RecruitmentProgressTracker({
                       ? 'bg-emerald-600 text-white shadow-xs'
                       : isCurrent
                       ? 'bg-slate-900 text-white ring-4 ring-slate-900/10'
-                      : isRejected && idx === currentIndex
+                      : isTerminal && idx === 0
                       ? 'bg-rose-600 text-white ring-4 ring-rose-600/10'
                       : 'bg-white border-2 border-slate-300 text-slate-400'
                   }`}
@@ -112,7 +90,7 @@ export function RecruitmentProgressTracker({
                     <Check className="w-3.5 h-3.5 stroke-[3]" />
                   ) : isCurrent ? (
                     <Clock className="w-3.5 h-3.5 animate-pulse" />
-                  ) : isRejected && idx === currentIndex ? (
+                  ) : isTerminal && idx === 0 ? (
                     <AlertCircle className="w-3.5 h-3.5" />
                   ) : (
                     <span>{idx + 1}</span>
@@ -121,7 +99,7 @@ export function RecruitmentProgressTracker({
 
                 {/* Stage Label */}
                 <span
-                  className={`text-[11px] font-medium leading-tight ${
+                  className={`text-[10px] font-medium leading-tight line-clamp-2 px-0.5 ${
                     isCurrent
                       ? 'text-slate-900 font-bold'
                       : isCompleted

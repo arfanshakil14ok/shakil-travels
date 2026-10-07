@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { requireApplicantAuth } from '@/lib/portal-auth';
+import { getEffectiveStage } from '@/lib/pipeline-sync';
 
 export async function GET() {
   try {
@@ -20,6 +21,12 @@ export async function GET() {
             currency: true,
             country: { select: { name: true, flag: true } },
             employer: { select: { companyName: true } },
+          },
+        },
+        processingCase: {
+          select: {
+            currentStage: true,
+            overallStatus: true,
           },
         },
         visaApplications: {
@@ -50,22 +57,29 @@ export async function GET() {
       },
     });
 
-    const formattedApplications = applications.map((app: any) => ({
-      ...app,
-      visaApplication: app.visaApplications?.[0] || null,
-      job: app.job
-        ? {
-            ...app.job,
-            salaryCurrency: app.job.currency,
-            country: app.job.country
-              ? {
-                  ...app.job.country,
-                  flagEmoji: app.job.country.flag,
-                }
-              : null,
-          }
-        : null,
-    }));
+    const formattedApplications = applications.map((app: any) => {
+      const effectiveStage = getEffectiveStage(app);
+      return {
+        ...app,
+        status: effectiveStage,
+        currentStage: effectiveStage,
+        effectiveStage,
+        effectiveStatus: effectiveStage,
+        visaApplication: app.visaApplications?.[0] || null,
+        job: app.job
+          ? {
+              ...app.job,
+              salaryCurrency: app.job.currency,
+              country: app.job.country
+                ? {
+                    ...app.job.country,
+                    flagEmoji: app.job.country.flag,
+                  }
+                : null,
+            }
+          : null,
+      };
+    });
 
     return NextResponse.json({
       success: true,

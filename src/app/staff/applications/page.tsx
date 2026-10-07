@@ -26,6 +26,7 @@ import {
   Sparkles,
   Award,
   ArrowUpRight,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -110,6 +111,42 @@ export default function StaffApplicationsPage() {
   const [startNotes, setStartNotes] = useState('');
   const [startError, setStartError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Delete modal state
+  const [appToDelete, setAppToDelete] = useState<ApplicationItem | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const openDeleteModal = (app: ApplicationItem) => {
+    setAppToDelete(app);
+    setDeleteError(null);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteApplication = async () => {
+    if (!appToDelete) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    try {
+      const res = await fetch(`/api/applications/${appToDelete.id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsDeleteModalOpen(false);
+        setAppToDelete(null);
+        fetchApplications();
+      } else {
+        setDeleteError(data.error || 'Failed to delete application');
+      }
+    } catch (err: any) {
+      setDeleteError(err.message || 'Error deleting application');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const fetchApplications = useCallback(async () => {
     try {
@@ -550,16 +587,27 @@ export default function StaffApplicationsPage() {
 
                       {/* Action */}
                       <td className="py-3 px-4 text-right whitespace-nowrap">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          asChild
-                          className="h-7 text-xs text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 font-medium"
-                        >
-                          <Link href={`/staff/applications/${app.id}`}>
-                            Case 360° →
-                          </Link>
-                        </Button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            asChild
+                            className="h-7 text-xs text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 font-medium"
+                          >
+                            <Link href={`/staff/applications/${app.id}`}>
+                              Case 360° →
+                            </Link>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openDeleteModal(app)}
+                            className="h-7 w-7 p-0 text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+                            title="Delete Application (সম্পূর্ণ সিস্টেম থেকে ডিলিট)"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -687,6 +735,66 @@ export default function StaffApplicationsPage() {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Delete Application from Entire System (আবেদন সম্পূর্ণ মুছে ফেলুন)"
+        maxWidth="md"
+      >
+        <div className="space-y-4">
+          {deleteError && (
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{deleteError}</span>
+            </div>
+          )}
+
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-xs leading-relaxed">
+            <p className="font-semibold mb-1">⚠️ সতর্কবার্তা / Warning:</p>
+            <p>
+              এই আবেদনটি সম্পূর্ণ সিস্টেম থেকে মুছে ফেলা হবে। এর সাথে সম্পর্কিত প্রসেসিং কেস, ভিসা রেকর্ড, সাক্ষাৎকার ও ইতিহাস এক ক্লিকে স্থায়ীভাবে মুছে যাবে।
+            </p>
+          </div>
+
+          {appToDelete && (
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs space-y-1">
+              <p>
+                <span className="font-semibold text-slate-700">আবেদন কোড:</span>{' '}
+                <span className="font-mono">{appToDelete.applicationCode || appToDelete.applicationNumber}</span>
+              </p>
+              <p>
+                <span className="font-semibold text-slate-700">প্রার্থী:</span> {appToDelete.applicant?.fullName}
+              </p>
+              <p>
+                <span className="font-semibold text-slate-700">চাকরি:</span> {appToDelete.job?.title}
+              </p>
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsDeleteModalOpen(false)}
+              disabled={isDeleting}
+            >
+              বাতিল (Cancel)
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleDeleteApplication}
+              disabled={isDeleting}
+              className="bg-rose-600 hover:bg-rose-700 text-white font-medium"
+            >
+              {isDeleting ? 'মুছে ফেলা হচ্ছে...' : 'হ্যাঁ, স্থায়ীভাবে ডিলিট করুন'}
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   );
