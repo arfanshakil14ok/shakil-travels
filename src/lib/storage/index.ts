@@ -394,10 +394,23 @@ export function createStorageProvider(): StorageProvider {
   const region = process.env.STORAGE_REGION || 'auto';
   const endpoint = process.env.STORAGE_ENDPOINT;
 
-  const isExplicitlyLocal = (process.env.STORAGE_PROVIDER || '').toUpperCase() === 'LOCAL';
+  const isServerless = !!process.env.VERCEL || !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+  const hasS3Credentials = !!(bucket && accessKeyId && secretAccessKey);
 
-  // If S3/R2 credentials are configured and not forced to LOCAL, enforce S3StorageProvider
-  if (bucket && accessKeyId && secretAccessKey && !isExplicitlyLocal) {
+  // In Serverless (Vercel), if R2/S3 credentials exist, ALWAYS enforce S3StorageProvider.
+  // Ephemeral /tmp on Vercel must NEVER be used when Cloudflare R2 is configured.
+  if (hasS3Credentials && (isServerless || (process.env.STORAGE_PROVIDER || '').toUpperCase() === 'S3')) {
+    return new S3StorageProvider({
+      bucket,
+      accessKeyId,
+      secretAccessKey,
+      region,
+      endpoint,
+    });
+  }
+
+  // Also default to S3 in production if credentials are valid
+  if (hasS3Credentials && process.env.NODE_ENV === 'production' && (process.env.STORAGE_PROVIDER || '').toUpperCase() !== 'LOCAL_DISK') {
     return new S3StorageProvider({
       bucket,
       accessKeyId,
