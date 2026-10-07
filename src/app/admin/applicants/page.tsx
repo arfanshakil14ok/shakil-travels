@@ -16,6 +16,7 @@ import {
   Square,
   UserCheck,
   ArrowUpDown,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,6 +55,12 @@ export default function ApplicantsPage() {
   const [isBulkStaffModalOpen, setIsBulkStaffModalOpen] = useState(false);
   const [bulkTargetStaffId, setBulkTargetStaffId] = useState('');
   const [isBulkSubmitting, setIsBulkSubmitting] = useState(false);
+
+  // Deletion States
+  const [applicantToDelete, setApplicantToDelete] = useState<any | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
   // Fetch Lookups
   useEffect(() => {
@@ -178,6 +185,55 @@ export default function ApplicantsPage() {
       error(err.message);
     } finally {
       setIsBulkSubmitting(false);
+    }
+  };
+
+  // Delete Single Applicant
+  const handleDeleteApplicant = async () => {
+    if (!applicantToDelete) return;
+    try {
+      setIsDeleting(true);
+      const res = await fetch(`/api/applicants/${applicantToDelete.id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to delete applicant');
+      }
+      success(data.message || 'Applicant and all records deleted successfully');
+      setApplicantToDelete(null);
+      fetchApplicants();
+    } catch (err: any) {
+      error(err.message);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Bulk Delete Applicants
+  const handleExecuteBulkDelete = async () => {
+    try {
+      setIsBulkDeleting(true);
+      const res = await fetch('/api/applicants/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'delete',
+          ids: selectedIds,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to perform bulk delete');
+      }
+      success(data.message || 'Selected applicants purged successfully');
+      setIsBulkDeleteModalOpen(false);
+      setSelectedIds([]);
+      fetchApplicants();
+    } catch (err: any) {
+      error(err.message);
+    } finally {
+      setIsBulkDeleting(false);
     }
   };
 
@@ -353,6 +409,14 @@ export default function ApplicantsPage() {
               Assign Staff
             </Button>
             <Button
+              variant="outline"
+              size="sm"
+              className="bg-rose-950/50 text-rose-300 border-rose-800 hover:bg-rose-900 hover:text-white text-xs h-8"
+              onClick={() => setIsBulkDeleteModalOpen(true)}
+            >
+              Delete ({selectedIds.length})
+            </Button>
+            <Button
               variant="ghost"
               size="sm"
               className="text-slate-400 hover:text-white text-xs h-8"
@@ -525,17 +589,28 @@ export default function ApplicantsPage() {
                       </td>
 
                       {/* Actions */}
-                      <td className="p-3.5 text-right">
-                        <Link href={`/admin/applicants/${a.id}`}>
+                      <td className="p-3.5 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1">
+                          <Link href={`/admin/applicants/${a.id}`}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              leftIcon={<Eye className="w-3.5 h-3.5" />}
+                              className="text-xs"
+                            >
+                              360° Profile
+                            </Button>
+                          </Link>
                           <Button
                             variant="ghost"
                             size="sm"
-                            leftIcon={<Eye className="w-3.5 h-3.5" />}
-                            className="text-xs"
+                            onClick={() => setApplicantToDelete(a)}
+                            className="text-xs text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1.5 h-8 w-8"
+                            title={`Delete ${a.fullName} and purge all data`}
                           >
-                            360° Profile
+                            <Trash2 className="w-3.5 h-3.5" />
                           </Button>
-                        </Link>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -647,6 +722,31 @@ export default function ApplicantsPage() {
           </div>
         </div>
       </Modal>
+
+      {/* Confirmation Dialog for Deleting Single Applicant */}
+      <ConfirmDialog
+        isOpen={!!applicantToDelete}
+        onClose={() => setApplicantToDelete(null)}
+        onConfirm={handleDeleteApplicant}
+        title="Delete Candidate & Purge Data (স্থায়ীভাবে মুছে ফেলুন)"
+        message={`Are you sure you want to permanently delete candidate ${applicantToDelete?.fullName} (${applicantToDelete?.applicantNumber})? WARNING: This will permanently delete this applicant, all job applications, tracking records, visa cases, invoices, receipts, and remove all uploaded documents/photos from Cloudflare R2 storage. This action cannot be undone.`}
+        confirmText="Yes, Permanently Delete"
+        variant="danger"
+        isLoading={isDeleting}
+      />
+
+      {/* Confirmation Dialog for Bulk Delete */}
+      <ConfirmDialog
+        isOpen={isBulkDeleteModalOpen}
+        onClose={() => setIsBulkDeleteModalOpen(false)}
+        onConfirm={handleExecuteBulkDelete}
+        title="Permanently Delete Selected Candidates"
+        message={`Are you sure you want to permanently delete ALL ${selectedIds.length} marked candidates? WARNING: This will completely purge their records, applications, invoices, processing cases, and delete all associated files from Cloudflare R2 storage. This action CANNOT be undone.`}
+        confirmText={`Purge ${selectedIds.length} Candidates`}
+        variant="danger"
+        isLoading={isBulkDeleting}
+      />
     </div>
   );
 }
+

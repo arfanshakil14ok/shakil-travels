@@ -1,6 +1,7 @@
 import prisma from '@/lib/prisma';
 import fs from 'fs/promises';
 import path from 'path';
+import { purgeApplicant } from '@/lib/applicant-deletion';
 
 export interface TrashItem {
   id: string;
@@ -490,74 +491,23 @@ export class TrashService {
     id: string,
     deletedBy: { id: string; name: string }
   ) {
+    if (type === 'Applicant') {
+      const res = await purgeApplicant(id, deletedBy);
+      return {
+        success: true,
+        type: 'Applicant',
+        id: res.applicantId,
+        title: res.fullName,
+      };
+    }
+
     let filesToDelete: string[] = [];
     let recordTitle = id;
     let recordCode = id;
 
     await prisma.$transaction(async (tx) => {
       switch (type) {
-        case 'Applicant': {
-          const applicant = await tx.applicant.findUnique({
-            where: { id },
-            include: { documents: true },
-          });
-          if (!applicant) throw new Error(`Applicant ${id} not found`);
 
-          recordTitle = applicant.fullName;
-          recordCode = applicant.applicantNumber;
-
-          if (applicant.profilePhoto) {
-            filesToDelete.push(applicant.profilePhoto);
-          }
-
-          for (const doc of applicant.documents) {
-            if (doc.filePath) filesToDelete.push(doc.filePath);
-          }
-
-          // Clean relations
-          await tx.applicantProfile.deleteMany({ where: { applicantId: id } });
-          await tx.applicantNote.deleteMany({ where: { applicantId: id } });
-          await tx.candidateSkill.deleteMany({ where: { applicantId: id } });
-          await tx.candidateLanguage.deleteMany({ where: { applicantId: id } });
-          await tx.candidateEducation.deleteMany({ where: { applicantId: id } });
-          await tx.candidateExperience.deleteMany({ where: { applicantId: id } });
-          await tx.trainingApplication.deleteMany({ where: { applicantId: id } });
-          await tx.trainingEnrollment.deleteMany({ where: { applicantId: id } });
-          await tx.trainingCertificate.deleteMany({ where: { applicantId: id } });
-          await tx.medicalRecord.deleteMany({ where: { applicantId: id } });
-          await tx.clearanceRecord.deleteMany({ where: { applicantId: id } });
-          await tx.departureRecord.deleteMany({ where: { applicantId: id } });
-          await tx.visaApplication.deleteMany({ where: { applicantId: id } });
-          await tx.communicationLog.deleteMany({ where: { applicantId: id } });
-          await tx.supportTicket.deleteMany({ where: { applicantId: id } });
-          await tx.notification.deleteMany({ where: { applicantId: id } });
-          await tx.document.deleteMany({ where: { applicantId: id } });
-          await tx.applicationScreening.deleteMany({
-            where: { application: { applicantId: id } },
-          });
-          await tx.applicationStatusHistory.deleteMany({
-            where: { application: { applicantId: id } },
-          });
-          await tx.interview.deleteMany({
-            where: { applicantId: id },
-          });
-          await tx.application.deleteMany({ where: { applicantId: id } });
-          await tx.receipt.deleteMany({ where: { applicantId: id } });
-          await tx.refund.deleteMany({ where: { applicantId: id } });
-          await tx.financialAdjustment.deleteMany({ where: { applicantId: id } });
-          await tx.candidateLedgerEntry.deleteMany({ where: { applicantId: id } });
-          await tx.paymentPlan.deleteMany({ where: { applicantId: id } });
-          await tx.recruitmentCost.deleteMany({ where: { applicantId: id } });
-          await tx.payment.deleteMany({ where: { applicantId: id } });
-          await tx.invoiceItem.deleteMany({
-            where: { invoice: { applicantId: id } },
-          });
-          await tx.invoice.deleteMany({ where: { applicantId: id } });
-          await tx.customer.deleteMany({ where: { applicantId: id } });
-
-          await tx.applicant.delete({ where: { id } });
-          break;
-        }
 
         case 'Job': {
           const job = await tx.job.findUnique({ where: { id } });

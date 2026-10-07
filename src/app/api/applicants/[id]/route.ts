@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { requirePermission } from '@/lib/rbac';
+import { requirePermission, requireAuth, hasPermission } from '@/lib/rbac';
 import { applicantSchema } from '@/lib/validations/applicant';
 import { getMatchingJobsForApplicant } from '@/lib/matching';
 import { createAuditLog } from '@/lib/audit';
+import { storage } from '@/lib/storage';
+import { purgeApplicant } from '@/lib/applicant-deletion';
 
 export async function GET(
   request: NextRequest,
@@ -211,61 +213,37 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const currentUser = await requirePermission('APPLICANT_DELETE');
+    const currentUser = await requireAuth();
+    const canDelete =
+      currentUser.role?.name === 'SUPER_ADMIN' ||
+      currentUser.role?.name === 'ADMIN' ||
+      currentUser.role?.name === 'MANAGER' ||
+      hasPermission(currentUser, 'APPLICANT_DELETE');
+
+    if (!canDelete) {
+      return NextResponse.json(
+        { success: false, error: 'Access denied: You do not have permission to delete applicants.' },
+        { status: 403 }
+      );
+    }
+
     const { id } = await params;
+    const result = await purgeApplicant(id, currentUser);
 
-    const existing = await prisma.applicant.findUnique({
-      where: { id },
+    return NextResponse.json({
+      success: true,
+      data: result,
+      message: result.message,
     });
-
-    if (!existing) {
-      return NextResponse.json({ success: false, error: 'Applicant not found' }, { status: 404 });
-    }
-
-    // Set to INACTIVE or delete if no applications
-    const hasApplications = await prisma.application.count({
-      where: { applicantId: id },
-    });
-
-    if (hasApplications > 0) {
-      const updated = await prisma.applicant.update({
-        where: { id },
-        data: { status: 'INACTIVE' },
-      });
-      await createAuditLog({
-        userId: currentUser.id,
-        action: 'APPLICANT_DEACTIVATE',
-        entity: 'Applicant',
-        entityId: id,
-      });
-      return NextResponse.json({
-        success: true,
-        message: 'Applicant has active applications. Status set to INACTIVE.',
-        data: updated,
-      });
-    }
-
-    await prisma.$transaction([
-      prisma.customer.deleteMany({ where: { applicantId: id } }),
-      prisma.applicantNote.deleteMany({ where: { applicantId: id } }),
-      prisma.applicantProfile.deleteMany({ where: { applicantId: id } }),
-      prisma.applicant.delete({ where: { id } }),
-    ]);
-
-    await createAuditLog({
-      userId: currentUser.id,
-      action: 'APPLICANT_DELETE',
-      entity: 'Applicant',
-      entityId: id,
-      oldValue: { id, fullName: existing.fullName, applicantNumber: existing.applicantNumber },
-    });
-
-    return NextResponse.json({ success: true, message: 'Applicant deleted successfully' });
   } catch (error: any) {
     if (error.name === 'AuthorizationError' || error.name === 'AuthenticationError') {
       return NextResponse.json({ success: false, error: error.message }, { status: 403 });
     }
     console.error('Error deleting applicant:', error);
-    return NextResponse.json({ success: false, error: 'Failed to delete applicant' }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to delete applicant' },
+      { status: 500 }
+    );
   }
 }
+

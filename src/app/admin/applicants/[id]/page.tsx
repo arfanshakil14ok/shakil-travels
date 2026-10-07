@@ -621,8 +621,9 @@ export default function ApplicantDetailPage() {
             size="sm"
             onClick={() => setIsDeleteDialogOpen(true)}
             leftIcon={<Trash2 className="w-3.5 h-3.5 text-rose-500" />}
+            className="hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200"
           >
-            Remove
+            Delete Candidate
           </Button>
         </div>
       </div>
@@ -1637,9 +1638,9 @@ export default function ApplicantDetailPage() {
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={handleDelete}
-        title="Remove Applicant Record"
-        message={`Are you sure you want to remove ${applicant.fullName} (${applicant.applicantNumber})? If active applications exist, status will be safely archived to INACTIVE.`}
-        confirmText="Confirm Deletion"
+        title="Delete Candidate & Purge Data (স্থায়ীভাবে মুছে ফেলুন)"
+        message={`Are you sure you want to permanently delete ${applicant.fullName} (${applicant.applicantNumber})? WARNING: This will permanently delete this applicant, all job applications, tracking records, visa cases, invoices, receipts, and remove all uploaded documents/photos from Cloudflare R2 storage. This action cannot be undone.`}
+        confirmText="Yes, Permanently Delete"
         variant="danger"
         isLoading={isDeleting}
       />

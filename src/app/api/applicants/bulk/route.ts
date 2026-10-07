@@ -1,16 +1,63 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { requirePermission } from '@/lib/rbac';
+import { requireAuth, hasPermission } from '@/lib/rbac';
 import { createAuditLog } from '@/lib/audit';
+import { purgeApplicant } from '@/lib/applicant-deletion';
 
 export async function POST(request: NextRequest) {
   try {
-    const currentUser = await requirePermission('APPLICANT_EDIT');
+    const currentUser = await requireAuth();
     const body = await request.json();
     const { action, ids, payload } = body;
 
     if (!Array.isArray(ids) || ids.length === 0) {
       return NextResponse.json({ success: false, error: 'No applicant IDs provided' }, { status: 400 });
+    }
+
+    if (action === 'delete') {
+      const canDelete =
+        currentUser.role?.name === 'SUPER_ADMIN' ||
+        currentUser.role?.name === 'ADMIN' ||
+        currentUser.role?.name === 'MANAGER' ||
+        hasPermission(currentUser, 'APPLICANT_DELETE');
+
+      if (!canDelete) {
+        return NextResponse.json(
+          { success: false, error: 'Access denied: You do not have permission to delete applicants.' },
+          { status: 403 }
+        );
+      }
+
+      const results = [];
+      const errors = [];
+      for (const applicantId of ids) {
+        try {
+          const res = await purgeApplicant(applicantId, currentUser);
+          results.push(res);
+        } catch (err: any) {
+          errors.push({ id: applicantId, error: err.message });
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: { purgedCount: results.length, errors },
+        message: `সফলভাবে ${results.length} জন প্রার্থী এবং তাদের সমস্ত ফাইল ও ডাটা সিস্টেম থেকে সম্পূর্ণ মুছে ফেলা হয়েছে। / Successfully deleted ${results.length} applicants.`,
+      });
+    }
+
+    // Other actions require APPLICANT_EDIT
+    const canEdit =
+      currentUser.role?.name === 'SUPER_ADMIN' ||
+      currentUser.role?.name === 'ADMIN' ||
+      currentUser.role?.name === 'MANAGER' ||
+      hasPermission(currentUser, 'APPLICANT_EDIT');
+
+    if (!canEdit) {
+      return NextResponse.json(
+        { success: false, error: 'Access denied: You do not have permission to modify applicants.' },
+        { status: 403 }
+      );
     }
 
     if (action === 'status') {
@@ -86,3 +133,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Failed to perform bulk action' }, { status: 500 });
   }
 }
+
