@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { requireApplicantAuth } from '@/lib/portal-auth';
+import { requireApplicantAuth, calculateProfileCompletion } from '@/lib/portal-auth';
 import { generateFormattedId } from '@/lib/id-generator';
 import { dispatchCommunication } from '@/lib/comms/dispatcher';
 import { calculateMatch } from '@/lib/matching';
@@ -70,6 +70,29 @@ export async function POST(
       );
     }
 
+    // 4. Fetch applicant profile details and strictly enforce 100% completion
+    const fullApplicant = await prisma.applicant.findUnique({
+      where: { id: applicant.id },
+      include: {
+        profile: true,
+        preferredCountry: true,
+        preferredJobCategory: true,
+      },
+    });
+
+    const completion = calculateProfileCompletion(fullApplicant || applicant);
+    if (completion.percentage < 100) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `চাকরির আবেদন জমা দিতে আপনার প্রোফাইল ১০০% সম্পন্ন হওয়া আবশ্যক। বর্তমানে সম্পন্ন: ${completion.percentage}%। অসম্পূর্ণ তথ্য পূরণ করুন: ${completion.missingFields.join(', ')} / Your profile must be 100% complete before applying. Missing: ${completion.missingFields.join(', ')}`,
+          completion,
+          missingFields: completion.missingFields,
+        },
+        { status: 400 }
+      );
+    }
+
     let notes: string | undefined;
     try {
       const body = await request.json();
@@ -78,16 +101,11 @@ export async function POST(
       // notes is optional
     }
 
-    // 3. Fetch applicant profile details for matching snapshot
-    const fullApplicant = await prisma.applicant.findUnique({
-      where: { id: applicant.id },
-      include: { preferredCountry: true, preferredJobCategory: true },
-    });
-
     const matchSnapshot = calculateMatch(fullApplicant || applicant, job);
 
-    // 4. Generate sequential application code SGR-APP-2026-XXXXXX
+    // 5. Generate sequential application code SGR-APP-2026-XXXXXX
     const applicationCode = await generateFormattedId(prisma, 'application');
+
 
     // 5. Create application with matching snapshot
     const application = await prisma.application.create({

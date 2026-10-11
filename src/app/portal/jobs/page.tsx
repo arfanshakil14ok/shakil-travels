@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useSearchParams } from 'next/navigation';
 import {
   Briefcase,
   Search,
@@ -23,10 +24,14 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { LoadingState } from '@/components/ui/loading-state';
 import { useToast } from '@/components/ui/toast';
 import { getCountryImage, getCountryFlagUrl } from '@/lib/image-constants';
+import { JobApplyWizardModal } from '@/components/portal/job-apply-wizard-modal';
 
-export default function PortalJobsPage() {
+function PortalJobsContent() {
   const { success, error } = useToast();
   const { language, t } = useLanguage();
+  const searchParams = useSearchParams();
+  const applyJobIdParam = searchParams.get('applyJobId');
+
   const [jobs, setJobs] = useState<any[]>([]);
   const [countries, setCountries] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -43,11 +48,10 @@ export default function PortalJobsPage() {
     isLimitReached: boolean;
   }>({ currentCount: 0, maxLimit: 3, isLimitReached: false });
 
-  // Apply Modal
+  // Apply Wizard Modal
   const [selectedJob, setSelectedJob] = useState<any | null>(null);
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
-  const [applyNotes, setApplyNotes] = useState('');
-  const [applying, setApplying] = useState(false);
+
 
   const fetchJobs = useCallback(async () => {
     setLoading(true);
@@ -102,33 +106,20 @@ export default function PortalJobsPage() {
 
   const handleOpenApply = (job: any) => {
     setSelectedJob(job);
-    setApplyNotes('');
     setIsApplyModalOpen(true);
   };
 
-  const handleConfirmApply = async () => {
-    if (!selectedJob) return;
-    setApplying(true);
-    try {
-      const res = await fetch(`/api/portal/jobs/${selectedJob.id}/apply`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ notes: applyNotes }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        success(t('আবেদন সফলভাবে জমা দেওয়া হয়েছে।', 'Application submitted successfully'));
-        setIsApplyModalOpen(false);
-        fetchJobs();
-      } else {
-        error(data.error || 'Failed to submit application');
+  // Auto-open apply wizard if applyJobId is provided in query params
+  useEffect(() => {
+    if (applyJobIdParam && jobs.length > 0 && !selectedJob && !isApplyModalOpen) {
+      const targetJob = jobs.find((j) => j.id === applyJobIdParam);
+      if (targetJob) {
+        setSelectedJob(targetJob);
+        setIsApplyModalOpen(true);
       }
-    } catch {
-      error('Error submitting application');
-    } finally {
-      setApplying(false);
     }
-  };
+  }, [applyJobIdParam, jobs, selectedJob, isApplyModalOpen]);
+
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
@@ -375,86 +366,34 @@ export default function PortalJobsPage() {
         </div>
       )}
 
-      {/* Clean Apply Modal */}
-      {selectedJob && isApplyModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white border border-slate-200/90 rounded-xl shadow-xl p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="text-base font-bold text-slate-900">
-                {t('আবেদন:', 'Apply:')} {selectedJob.title}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setIsApplyModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-4 text-xs">
-              <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1">
-                <div>
-                  <span className="text-slate-500">{t('চাকরির কোড:', 'Job Code:')}</span>{' '}
-                  <span className="font-mono font-bold text-slate-800">{selectedJob.jobCode}</span>
-                </div>
-                <div>
-                  <span className="text-slate-500">{t('গন্তব্য দেশ:', 'Country:')}</span>{' '}
-                  <span className="font-semibold text-slate-800">{selectedJob.country?.name}</span>
-                </div>
-                {selectedJob.salaryMin && (
-                  <div>
-                    <span className="text-slate-500">{t('আনুমানিক বেতন:', 'Estimated Salary:')}</span>{' '}
-                    <span className="font-semibold text-emerald-700">
-                      {selectedJob.salaryMin} {selectedJob.salaryCurrency}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="font-semibold text-slate-700 block mb-1.5">
-                  {t('সংক্ষিপ্ত অভিজ্ঞতা নোট / বার্তা (ঐচ্ছিক)', 'Cover Note / Trade Experience (Optional)')}
-                </label>
-                <textarea
-                  rows={3}
-                  className="w-full text-xs p-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/15"
-                  placeholder={t('আপনার কাজের অভিজ্ঞতা সম্পর্কে সংক্ষিপ্ত বিবরণ দিন...', 'Briefly describe your trade skills...')}
-                  value={applyNotes}
-                  onChange={(e) => setApplyNotes(e.target.value)}
-                />
-              </div>
-
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-600 flex items-start gap-2">
-                <AlertCircle className="w-3.5 h-3.5 text-slate-600 mt-0.5 shrink-0" />
-                <span>
-                  {t(
-                    'আবেদন জমা দিলে তা আনুষ্ঠানিকভাবে ডাটাবেজে সংরক্ষিত হবে এবং নিয়োগকারী কোম্পানি কর্তৃক পর্যালোচনা করা হবে।',
-                    'Submitting an application creates an official recruitment record for employer review.'
-                  )}
-                </span>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setIsApplyModalOpen(false)}
-                  className="h-9 px-4 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-colors"
-                >
-                  {t('বাতিল', 'Cancel')}
-                </button>
-                <button
-                  onClick={handleConfirmApply}
-                  disabled={applying}
-                  className="h-9 px-4 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition-colors disabled:opacity-60 cursor-pointer"
-                >
-                  {applying ? t('আবেদন জমা হচ্ছে...', 'Submitting...') : t('আবেদন নিশ্চিত করুন', 'Confirm Application')}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Step-by-Step Profile Completion & Job Apply Wizard Modal */}
+      <JobApplyWizardModal
+        isOpen={isApplyModalOpen && !!selectedJob}
+        onClose={() => {
+          setIsApplyModalOpen(false);
+          setSelectedJob(null);
+        }}
+        job={selectedJob}
+        onApplicationSuccess={() => {
+          fetchJobs();
+        }}
+        applicationQuota={applicationQuota}
+      />
     </div>
   );
 }
+
+export default function PortalJobsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="space-y-6 max-w-5xl mx-auto py-12">
+          <LoadingState text="Loading vacancies & applications..." />
+        </div>
+      }
+    >
+      <PortalJobsContent />
+    </Suspense>
+  );
+}
+

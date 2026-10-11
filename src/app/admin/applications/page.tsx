@@ -830,7 +830,11 @@ export default function ApplicationsPage() {
                       {/* 2. Applicant Info */}
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600 text-xs overflow-hidden shrink-0 border border-slate-300">
+                          <Link
+                            href={app.applicantId ? `/admin/applicants/${app.applicantId}` : `/admin/applications/${app.id}`}
+                            className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600 text-xs overflow-hidden shrink-0 border border-slate-300 hover:ring-2 hover:ring-primary-500 transition-all cursor-pointer"
+                            title="View Applicant 360° Profile"
+                          >
                             {app.applicant?.profilePhoto ? (
                               <img
                                 src={app.applicant.profilePhoto}
@@ -840,15 +844,29 @@ export default function ApplicationsPage() {
                             ) : (
                               getApplicantInitials(app)
                             )}
-                          </div>
+                          </Link>
                           <div>
-                            <div className="font-medium text-slate-900 hover:text-primary-600 transition-colors line-clamp-1">
+                            <Link
+                              href={app.applicantId ? `/admin/applicants/${app.applicantId}` : `/admin/applications/${app.id}`}
+                              className="font-medium text-slate-900 hover:text-primary-600 hover:underline transition-colors line-clamp-1"
+                              title="View Applicant 360° Profile"
+                            >
                               {applicantName}
-                            </div>
+                            </Link>
                             <div className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
-                              <span>ID: {app.applicant?.applicantNumber || '—'}</span>
+                              {app.applicantId ? (
+                                <Link
+                                  href={`/admin/applicants/${app.applicantId}`}
+                                  className="hover:underline hover:text-primary-600 font-mono"
+                                  title="Candidate ID - Click to open Profile"
+                                >
+                                  ID: {app.applicant?.applicantNumber || '—'}
+                                </Link>
+                              ) : (
+                                <span>ID: {app.applicant?.applicantNumber || '—'}</span>
+                              )}
                               {app.applicant?.passportNumber && (
-                                <span className="text-slate-400">• Pass: {app.applicant.passportNumber}</span>
+                                <span className="text-slate-400 font-mono">• Pass: {app.applicant.passportNumber}</span>
                               )}
                             </div>
                           </div>

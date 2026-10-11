@@ -257,9 +257,14 @@ export default function PipelinePage() {
                         className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow group relative"
                       >
                         {/* Header: Photo + Name + Priority */}
+                        {/* Header: Photo + Name + Priority */}
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-700 text-xs overflow-hidden shrink-0">
+                            <Link
+                              href={app.applicant?.id ? `/admin/applicants/${app.applicant.id}` : `/admin/applications/${app.id}`}
+                              className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-700 text-xs overflow-hidden shrink-0 hover:ring-2 hover:ring-primary-500 transition-all cursor-pointer"
+                              title={app.applicant?.id ? 'Open Applicant 360° Profile' : 'Applicant profile unavailable'}
+                            >
                               {app.applicant?.profilePhoto ? (
                                 <img
                                   src={app.applicant.profilePhoto}
@@ -269,17 +274,36 @@ export default function PipelinePage() {
                               ) : (
                                 ((app.applicant?.fullName || 'NA').substring(0, 2)).toUpperCase()
                               )}
-                            </div>
+                            </Link>
                             <div>
                               <Link
-                                href={`/admin/applications/${app.id}`}
-                                className="font-semibold text-xs text-slate-900 hover:text-primary-600 line-clamp-1"
+                                href={app.applicant?.id ? `/admin/applicants/${app.applicant.id}` : `/admin/applications/${app.id}`}
+                                className="font-semibold text-xs text-slate-900 hover:text-primary-600 line-clamp-1 hover:underline"
+                                title="Click to open Candidate 360° Profile"
                               >
                                 {app.applicant?.fullName || 'Applicant unavailable'}
                               </Link>
-                              <span className="text-[10px] text-slate-400 font-mono">
-                                {app.applicant?.applicantNumber || '—'}
-                              </span>
+                              <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-mono">
+                                {app.applicant?.id ? (
+                                  <Link
+                                    href={`/admin/applicants/${app.applicant.id}`}
+                                    className="hover:underline hover:text-primary-600"
+                                    title="Candidate ID - Click to open Profile"
+                                  >
+                                    {app.applicant?.applicantNumber || '—'}
+                                  </Link>
+                                ) : (
+                                  <span>{app.applicant?.applicantNumber || '—'}</span>
+                                )}
+                                <span>•</span>
+                                <Link
+                                  href={`/admin/applications/${app.id}`}
+                                  className="text-slate-500 hover:text-slate-800 hover:underline font-sans"
+                                  title="View Application Details"
+                                >
+                                  {app.applicationNumber}
+                                </Link>
+                              </div>
                             </div>
                           </div>
 
@@ -318,10 +342,22 @@ export default function PipelinePage() {
                           </span>
 
                           <div className="flex items-center gap-1">
+                            {app.applicant?.id && (
+                              <Link href={`/admin/applicants/${app.applicant.id}`}>
+                                <button
+                                  type="button"
+                                  title="Candidate 360° Profile (প্রার্থীর প্রোফাইল)"
+                                  className="p-1 text-primary-600 hover:text-primary-800 hover:bg-primary-50 rounded"
+                                >
+                                  <User className="w-3.5 h-3.5" />
+                                </button>
+                              </Link>
+                            )}
+
                             <Link href={`/admin/applications/${app.id}`}>
                               <button
                                 type="button"
-                                title="View Details"
+                                title="Application Workflow & Details"
                                 className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded"
                               >
                                 <Eye className="w-3.5 h-3.5" />
@@ -334,7 +370,7 @@ export default function PipelinePage() {
                                 type="button"
                                 onClick={() => openQuickAdvance(app, columns[colIdx + 1].id)}
                                 title={`Advance to ${columns[colIdx + 1].title}`}
-                                className="p-1 text-primary-600 hover:text-primary-800 hover:bg-primary-50 rounded"
+                                className="p-1 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded"
                               >
                                 <ArrowRight className="w-3.5 h-3.5" />
                               </button>

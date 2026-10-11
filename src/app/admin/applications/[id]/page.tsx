@@ -388,22 +388,52 @@ export default function ApplicationDetailPage({ params }: { params?: { id?: stri
       {/* Main Header Banner */}
       <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-start gap-4">
-          <div className="w-16 h-16 rounded-xl bg-slate-200 flex items-center justify-center font-bold text-slate-600 text-lg overflow-hidden shrink-0 border border-slate-300">
-            {applicant?.profilePhoto ? (
-              <img src={applicant.profilePhoto} alt={applicantName} className="w-full h-full object-cover" />
-            ) : (
-              (applicantName || 'NA').substring(0, 2).toUpperCase()
-            )}
-          </div>
+          {applicant?.id ? (
+            <Link
+              href={`/admin/applicants/${applicant.id}`}
+              className="w-16 h-16 rounded-xl bg-slate-200 flex items-center justify-center font-bold text-slate-600 text-lg overflow-hidden shrink-0 border border-slate-300 hover:ring-2 hover:ring-primary-500 transition-all cursor-pointer"
+              title="Open Applicant 360° Profile"
+            >
+              {applicant?.profilePhoto ? (
+                <img src={applicant.profilePhoto} alt={applicantName} className="w-full h-full object-cover" />
+              ) : (
+                (applicantName || 'NA').substring(0, 2).toUpperCase()
+              )}
+            </Link>
+          ) : (
+            <div className="w-16 h-16 rounded-xl bg-slate-200 flex items-center justify-center font-bold text-slate-600 text-lg overflow-hidden shrink-0 border border-slate-300">
+              {(applicantName || 'NA').substring(0, 2).toUpperCase()}
+            </div>
+          )}
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl font-bold text-slate-900">{applicantName}</h1>
+              {applicant?.id ? (
+                <Link
+                  href={`/admin/applicants/${applicant.id}`}
+                  className="text-2xl font-bold text-slate-900 hover:text-primary-600 transition-colors hover:underline"
+                  title="View Applicant 360° Profile"
+                >
+                  {applicantName}
+                </Link>
+              ) : (
+                <h1 className="text-2xl font-bold text-slate-900">{applicantName}</h1>
+              )}
               <Badge variant="navy">{appNumber}</Badge>
               <Badge variant="gold">{currentStatusKey.replace(/_/g, ' ')}</Badge>
             </div>
             <div className="text-sm text-slate-600 flex flex-wrap items-center gap-3 mt-1.5">
               <span>
-                Candidate ID: <strong>{applicant?.applicantNumber || '—'}</strong>
+                Candidate ID:{' '}
+                {applicant?.id ? (
+                  <Link
+                    href={`/admin/applicants/${applicant.id}`}
+                    className="font-bold text-slate-900 hover:text-primary-600 hover:underline"
+                  >
+                    {applicant?.applicantNumber || '—'}
+                  </Link>
+                ) : (
+                  <strong>{applicant?.applicantNumber || '—'}</strong>
+                )}
               </span>
               <span>•</span>
               <span>
@@ -423,6 +453,16 @@ export default function ApplicationDetailPage({ params }: { params?: { id?: stri
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
+          {applicant?.id && (
+            <Link href={`/admin/applicants/${applicant.id}`}>
+              <Button
+                variant="outline"
+                className="flex items-center gap-1.5 text-xs text-primary-700 border-primary-300 hover:bg-primary-50 bg-primary-50/40 font-semibold"
+              >
+                <User className="w-4 h-4 text-primary-600" /> {t('প্রার্থীর ৩৬০° প্রোফাইল', '360° Candidate Profile')}
+              </Button>
+            </Link>
+          )}
           <Button
             onClick={() => setIsStatusModalOpen(true)}
             className="flex items-center gap-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs"
@@ -478,8 +518,18 @@ export default function ApplicationDetailPage({ params }: { params?: { id?: stri
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Candidate Specs */}
             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
-              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-3">
-                <User className="w-4 h-4 text-primary-600" /> {t('প্রার্থীর তথ্য', 'Candidate Profile')}
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center justify-between border-b border-slate-100 pb-3">
+                <span className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-primary-600" /> {t('প্রার্থীর তথ্য', 'Candidate Profile')}
+                </span>
+                {applicant?.id && (
+                  <Link
+                    href={`/admin/applicants/${applicant.id}`}
+                    className="text-xs font-semibold text-primary-600 hover:text-primary-800 hover:underline flex items-center gap-1 normal-case"
+                  >
+                    <span>{t('সম্পূর্ণ ৩৬০° প্রোফাইল', 'View 360° Profile')}</span> &rarr;
+                  </Link>
+                )}
               </h3>
               <div className="grid grid-cols-2 gap-4 text-xs">
                 <div>

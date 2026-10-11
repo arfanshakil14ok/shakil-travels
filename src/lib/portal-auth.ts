@@ -129,14 +129,38 @@ export function calculateProfileCompletion(applicant: any): {
   missingFields: string[];
 } {
   const checks: { label: string; pass: boolean }[] = [
-    { label: 'Full Name', pass: !!(applicant.fullName && applicant.fullName.trim().length > 0) },
-    { label: 'Contact Phone', pass: !!(applicant.phone && applicant.phone.trim().length > 0) },
-    { label: 'District / Location', pass: !!applicant.district },
-    { label: 'Education Details', pass: !!applicant.education },
-    { label: 'Profession & Skills', pass: !!(applicant.profession || applicant.skills) },
-    { label: 'Passport Information', pass: !!(applicant.passportAvailable && applicant.passportNumber) },
-    { label: 'Preferred Destination', pass: !!applicant.preferredCountryId },
-    { label: 'Emergency Contact', pass: !!applicant.profile?.emergencyContact },
+    {
+      label: 'Full Name (পূর্ণ নাম)',
+      pass: !!(applicant.fullName && applicant.fullName.trim().length > 0),
+    },
+    {
+      label: 'Contact Phone (মোবাইল নম্বর)',
+      pass: !!(applicant.phone && applicant.phone.trim().length > 0),
+    },
+    {
+      label: 'Profile Photo (পাসপোর্ট সাইজ ছবি)',
+      pass: !!(applicant.profilePhoto && applicant.profilePhoto.trim().length > 0),
+    },
+    {
+      label: 'District & Address (জেলা ও বর্তমান ঠিকানা)',
+      pass: !!(applicant.district && (applicant.address || applicant.profile?.currentAddress)),
+    },
+    {
+      label: 'Emergency Contact (জরুরি যোগাযোগ নম্বর)',
+      pass: !!(applicant.profile?.emergencyContact && applicant.profile.emergencyContact.trim().length > 0),
+    },
+    {
+      label: 'Education Details (শিক্ষাগত যোগ্যতা)',
+      pass: !!(applicant.education || applicant.profile?.education),
+    },
+    {
+      label: 'Profession & Skills (পেশা ও ট্রেড দক্ষতা)',
+      pass: !!(applicant.profession || applicant.skills || applicant.profile?.skills),
+    },
+    {
+      label: 'Passport Information (পাসপোর্ট নম্বর ও বিবরণ)',
+      pass: !!(applicant.passportAvailable && applicant.passportNumber && applicant.passportNumber.trim().length > 0),
+    },
   ];
 
   const passed = checks.filter((c) => c.pass).length;
@@ -148,3 +172,4 @@ export function calculateProfileCompletion(applicant: any): {
     missingFields,
   };
 }
+
