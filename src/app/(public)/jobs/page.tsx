@@ -71,6 +71,7 @@ export default async function JobsPublicPage({ searchParams }: JobsPageProps) {
         },
       },
       orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }],
+      take: 100,
     });
   } catch (err) {
     console.error('Jobs page DB fetch warning:', err);

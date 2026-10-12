@@ -6,9 +6,7 @@ import {
   Briefcase,
   FileCheck2,
   FileText,
-  Calendar,
   Stamp,
-  CreditCard,
   AlertCircle,
   CheckCircle2,
   ArrowRight,
@@ -17,12 +15,8 @@ import {
   ShieldCheck,
   ChevronRight,
   Receipt,
-  Sparkles,
-  Building2,
   Clock,
-  ExternalLink,
   Camera,
-  GraduationCap,
   Award,
 } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';

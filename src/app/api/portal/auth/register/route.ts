@@ -112,21 +112,17 @@ export async function POST(request: NextRequest) {
     const tempFileName = `reg_${Date.now()}_${Math.random().toString(36).substring(7)}${ext}`;
     const mime = parsedPhoto.mimeType || 'image/jpeg';
 
-    // Default to resilient Base64 data URI so photo ALWAYS works on Vercel/serverless
+    // Default photo URL: stream endpoint for candidate photo
     let photoUrl = `data:${mime};base64,${parsedPhoto.buffer.toString('base64')}`;
 
-    // Optionally try local disk write in development/writable environments
+    // Optionally write to public uploads for local static fallback
     try {
       const publicUploadsDir = path.resolve(process.cwd(), 'public/uploads/photos');
       if (!fs.existsSync(publicUploadsDir)) {
         fs.mkdirSync(publicUploadsDir, { recursive: true });
       }
       await fs.promises.writeFile(path.join(publicUploadsDir, tempFileName), parsedPhoto.buffer);
-      if (!process.env.VERCEL && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
-        photoUrl = `/uploads/photos/${tempFileName}`;
-      }
     } catch (fsErr) {
-      // In serverless / read-only environment like Vercel, disk write is safely ignored
       console.warn('Local disk write skipped in serverless environment:', fsErr);
     }
 
@@ -143,7 +139,7 @@ export async function POST(request: NextRequest) {
             passwordHash,
             isActive: true,
             email,
-            profilePhoto: photoUrl,
+            profilePhoto: `/api/portal/photo/${existingApplicant.id}`,
             candidateType: data.candidateType || existingApplicant.candidateType || 'SKILLED',
             district: data.district || existingApplicant.district,
             preferredCountryId: data.preferredCountryId || existingApplicant.preferredCountryId,
@@ -160,7 +156,7 @@ export async function POST(request: NextRequest) {
             phone,
             email,
             passwordHash,
-            profilePhoto: photoUrl,
+            profilePhoto: 'PENDING_INIT',
             candidateType: data.candidateType || 'SKILLED',
             isActive: true,
             source: 'PORTAL_REGISTRATION',
@@ -170,6 +166,27 @@ export async function POST(request: NextRequest) {
             preferredJobCategoryId: data.preferredJobCategoryId || null,
           },
         });
+
+        // Set consistent photo endpoint
+        candidate = await tx.applicant.update({
+          where: { id: candidate.id },
+          data: { profilePhoto: `/api/portal/photo/${candidate.id}` },
+        });
+      }
+
+      // Save directly to Cloudflare R2 / S3 storage under canonical key
+      try {
+        const canonicalKey = `photos/applicant_${candidate.id}${ext}`;
+        await storage.saveFile(canonicalKey, parsedPhoto.buffer, {
+          originalName: `applicant_${candidate.id}${ext}`,
+          mimeType: mime,
+          size: parsedPhoto.buffer.length,
+          uploadedAt: new Date(),
+          applicantId: candidate.id,
+          documentType: 'PROFILE_PHOTO',
+        });
+      } catch (storageErr) {
+        console.warn('R2 storage save skipped in registration:', storageErr);
       }
 
       // Initialize or link ApplicantProfile

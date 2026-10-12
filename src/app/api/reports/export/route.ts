@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
       case 'jobs': {
         const jobs = await prisma.job.findMany({
           where: dateQuery,
+          take: 5000,
           include: {
             country: { select: { name: true } },
             jobCategory: { select: { name: true } },
@@ -60,6 +61,7 @@ export async function GET(request: NextRequest) {
             status: { not: 'VOID' },
             ...(prismaDateFilter && { invoiceDate: prismaDateFilter }),
           },
+          take: 5000,
           include: {
             customer: { select: { name: true, phone: true } },
             applicant: { select: { applicantNumber: true, fullName: true } },
@@ -86,6 +88,7 @@ export async function GET(request: NextRequest) {
       case 'visa': {
         const visaCases = await prisma.visaApplication.findMany({
           where: dateQuery,
+          take: 5000,
           include: {
             country: { select: { name: true } },
             applicant: { select: { applicantNumber: true, fullName: true, phone: true } },
@@ -111,6 +114,7 @@ export async function GET(request: NextRequest) {
 
       case 'employers': {
         const employers = await prisma.employer.findMany({
+          take: 2000,
           include: {
             country: { select: { name: true } },
             jobs: { select: { vacancyCount: true, applications: { select: { status: true } } } },

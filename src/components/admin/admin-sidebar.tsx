@@ -15,7 +15,6 @@ import {
   CreditCard,
   Stamp,
   Globe2,
-  MessageCircle,
   Info,
   ChartNoAxesCombined,
   Settings,

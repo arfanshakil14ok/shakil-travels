@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { requireApplicantAuth } from '@/lib/portal-auth';
 import { calculateMatch } from '@/lib/matching';
+import { storage } from '@/lib/storage';
+import { parseBase64Photo } from '@/lib/validations/photo';
 
 export async function GET(
   request: NextRequest,
@@ -167,7 +169,31 @@ export async function POST(
       }
       if (profileData.skills !== undefined) applicantUpdate.skills = profileData.skills;
       if (profileData.languages !== undefined) applicantUpdate.languages = profileData.languages;
-      if (profileData.profilePhoto !== undefined) applicantUpdate.profilePhoto = profileData.profilePhoto;
+      if (profileData.profilePhoto !== undefined) {
+        if (typeof profileData.profilePhoto === 'string' && profileData.profilePhoto.startsWith('data:')) {
+          try {
+            const parsed = parseBase64Photo(profileData.profilePhoto);
+            if (parsed) {
+              const ext = parsed.mimeType === 'image/png' ? '.png' : parsed.mimeType === 'image/webp' ? '.webp' : '.jpg';
+              const r2Key = `photos/applicant_${applicant.id}${ext}`;
+              await storage.saveFile(r2Key, parsed.buffer, {
+                originalName: `applicant_${applicant.id}${ext}`,
+                mimeType: parsed.mimeType,
+                size: parsed.buffer.length,
+                uploadedAt: new Date(),
+                applicantId: applicant.id,
+                documentType: 'PROFILE_PHOTO',
+              });
+              applicantUpdate.profilePhoto = `/api/portal/photo/${applicant.id}`;
+            }
+          } catch (storageErr) {
+            console.warn('Storage save failed in wizard draft:', storageErr);
+            applicantUpdate.profilePhoto = profileData.profilePhoto;
+          }
+        } else {
+          applicantUpdate.profilePhoto = profileData.profilePhoto;
+        }
+      }
 
       await prisma.applicant.update({
         where: { id: applicant.id },

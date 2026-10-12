@@ -8,7 +8,6 @@ import {
   Briefcase,
   FileCheck2,
   FileText,
-  Calendar,
   Stamp,
   Receipt,
   CreditCard,
@@ -19,12 +18,10 @@ import {
   X,
   ShieldCheck,
   ExternalLink,
-  ChevronRight,
   Activity,
   LifeBuoy,
   GraduationCap,
   Headset,
-  Plane,
 } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { BRAND } from '@/config/brand';

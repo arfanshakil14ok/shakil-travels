@@ -9,6 +9,7 @@ export async function GET() {
 
     const visaApplications = await prisma.visaApplication.findMany({
       where: { applicantId: applicant.id },
+      take: 20,
       include: {
         country: {
           select: {
@@ -19,15 +20,23 @@ export async function GET() {
             recruitmentStatus: true,
           },
         },
+        applicant: {
+          include: {
+            profile: true,
+            documents: {
+              include: { documentType: true },
+            },
+          },
+        },
         application: {
-          select: {
-            id: true,
-            applicationCode: true,
+          include: {
             job: {
-              select: {
-                title: true,
-                employer: { select: { companyName: true } },
+              include: {
+                employer: true,
               },
+            },
+            documents: {
+              include: { documentType: true },
             },
           },
         },
@@ -49,10 +58,10 @@ export async function GET() {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Evaluate departure readiness for active cases
+    // Evaluate departure readiness in-memory with zero redundant DB queries
     const results = await Promise.all(
       visaApplications.map(async (visa) => {
-        const readiness = await evaluateDepartureReadiness(prisma, visa.id);
+        const readiness = await evaluateDepartureReadiness(prisma, visa.id, visa);
         return {
           ...visa,
           readiness,
@@ -60,10 +69,11 @@ export async function GET() {
       })
     );
 
-    // Also fetch post-selection records for this applicant
+    // Also fetch post-selection records for this applicant (bounded)
     const [medicalRecords, clearanceRecords, departureRecords] = await Promise.all([
       prisma.medicalRecord.findMany({
         where: { applicantId: applicant.id },
+        take: 50,
         include: {
           application: { select: { id: true, applicationCode: true, job: { select: { title: true } } } },
         },
@@ -71,6 +81,7 @@ export async function GET() {
       }),
       prisma.clearanceRecord.findMany({
         where: { applicantId: applicant.id },
+        take: 50,
         include: {
           application: { select: { id: true, applicationCode: true, job: { select: { title: true } } } },
         },
@@ -78,6 +89,7 @@ export async function GET() {
       }),
       prisma.departureRecord.findMany({
         where: { applicantId: applicant.id },
+        take: 50,
         include: {
           application: { select: { id: true, applicationCode: true, job: { select: { title: true } } } },
         },

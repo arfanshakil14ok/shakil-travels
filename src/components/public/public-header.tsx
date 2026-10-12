@@ -6,7 +6,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import {
-  ShieldCheck,
   Menu,
   X,
   LogIn,
@@ -18,12 +17,7 @@ import {
   UserRound,
   Lock,
   Phone,
-  Mail,
-  Briefcase,
   Globe2,
-  FileText,
-  LifeBuoy,
-  Sparkles,
   ArrowRight,
   ShieldAlert,
   LayoutDashboard,

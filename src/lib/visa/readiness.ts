@@ -31,32 +31,35 @@ export interface DepartureReadinessReport {
  */
 export async function calculateDepartureReadiness(
   prisma: PrismaClient,
-  visaApplicationId: string
+  visaApplicationId: string,
+  preloadedVisaApp?: any
 ): Promise<DepartureReadinessReport | null> {
-  const visaApp = await prisma.visaApplication.findUnique({
-    where: { id: visaApplicationId },
-    include: {
-      applicant: {
-        include: {
-          profile: true,
-          documents: {
-            include: { documentType: true },
+  const visaApp =
+    preloadedVisaApp ||
+    (await prisma.visaApplication.findUnique({
+      where: { id: visaApplicationId },
+      include: {
+        applicant: {
+          include: {
+            profile: true,
+            documents: {
+              include: { documentType: true },
+            },
           },
         },
-      },
-      application: {
-        include: {
-          job: {
-            include: { employer: true },
-          },
-          documents: {
-            include: { documentType: true },
+        application: {
+          include: {
+            job: {
+              include: { employer: true },
+            },
+            documents: {
+              include: { documentType: true },
+            },
           },
         },
+        country: true,
       },
-      country: true,
-    },
-  });
+    }));
 
   if (!visaApp) return null;
 

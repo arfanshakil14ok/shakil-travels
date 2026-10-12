@@ -13,57 +13,66 @@ export async function GET(request: NextRequest) {
     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
     const [
-      invoices,
-      overdueInvoices,
-      todayPayments,
-      monthPayments,
-      allRefunds,
+      invoiceAgg,
+      overdueAgg,
+      todayAgg,
+      monthAgg,
+      refundAgg,
+      invoiceStatusCounts,
     ] = await Promise.all([
-      prisma.invoice.findMany({
+      prisma.invoice.aggregate({
         where: { status: { not: 'VOID' } },
-        select: { totalAmount: true, paidAmount: true, dueAmount: true, status: true },
+        _sum: { totalAmount: true, paidAmount: true, dueAmount: true },
+        _count: true,
       }),
-      prisma.invoice.findMany({
+      prisma.invoice.aggregate({
         where: {
           status: { in: ['ISSUED', 'PARTIALLY_PAID'] },
           dueDate: { lt: new Date() },
         },
-        select: { dueAmount: true },
+        _sum: { dueAmount: true },
+        _count: true,
       }),
-      prisma.payment.findMany({
+      prisma.payment.aggregate({
         where: {
           paymentDate: { gte: today },
           status: 'COMPLETED',
         },
-        select: { amount: true },
+        _sum: { amount: true },
       }),
-      prisma.payment.findMany({
+      prisma.payment.aggregate({
         where: {
           paymentDate: { gte: firstDayOfMonth },
           status: 'COMPLETED',
         },
-        select: { amount: true },
+        _sum: { amount: true },
       }),
-      prisma.refund.findMany({
+      prisma.refund.aggregate({
         where: { status: 'COMPLETED' },
-        select: { amount: true },
+        _sum: { amount: true },
+      }),
+      prisma.invoice.groupBy({
+        by: ['status'],
+        where: { status: { not: 'VOID' } },
+        _count: true,
       }),
     ]);
 
-    const totalInvoiced = invoices.reduce((sum, inv) => sum.plus(inv.totalAmount), toDecimal('0.00'));
-    const totalCollected = invoices.reduce((sum, inv) => sum.plus(inv.paidAmount), toDecimal('0.00'));
-    const totalDue = invoices.reduce((sum, inv) => sum.plus(inv.dueAmount), toDecimal('0.00'));
+    const totalInvoiced = toDecimal(invoiceAgg._sum.totalAmount);
+    const totalCollected = toDecimal(invoiceAgg._sum.paidAmount);
+    const totalDue = toDecimal(invoiceAgg._sum.dueAmount);
 
-    const overdueCount = overdueInvoices.length;
-    const overdueAmount = overdueInvoices.reduce((sum, inv) => sum.plus(inv.dueAmount), toDecimal('0.00'));
+    const overdueCount = overdueAgg._count || 0;
+    const overdueAmount = toDecimal(overdueAgg._sum.dueAmount);
 
-    const todayCollected = todayPayments.reduce((sum, p) => sum.plus(p.amount), toDecimal('0.00'));
-    const monthCollected = monthPayments.reduce((sum, p) => sum.plus(p.amount), toDecimal('0.00'));
-    const totalRefunded = allRefunds.reduce((sum, r) => sum.plus(r.amount), toDecimal('0.00'));
+    const todayCollected = toDecimal(todayAgg._sum.amount);
+    const monthCollected = toDecimal(monthAgg._sum.amount);
+    const totalRefunded = toDecimal(refundAgg._sum.amount);
 
-    const paidInvoicesCount = invoices.filter((inv) => inv.status === 'PAID').length;
-    const partiallyPaidCount = invoices.filter((inv) => inv.status === 'PARTIALLY_PAID').length;
-    const unpaidCount = invoices.filter((inv) => inv.status === 'ISSUED').length;
+    const statusMap = Object.fromEntries(invoiceStatusCounts.map((c) => [c.status, c._count]));
+    const paidInvoicesCount = statusMap['PAID'] || 0;
+    const partiallyPaidCount = statusMap['PARTIALLY_PAID'] || 0;
+    const unpaidCount = statusMap['ISSUED'] || 0;
 
     return NextResponse.json({
       success: true,
@@ -76,7 +85,7 @@ export async function GET(request: NextRequest) {
         todayCollected: todayCollected.toFixed(2),
         monthCollected: monthCollected.toFixed(2),
         totalRefunded: totalRefunded.toFixed(2),
-        invoiceCount: invoices.length,
+        invoiceCount: invoiceAgg._count || 0,
         breakdown: {
           paidCount: paidInvoicesCount,
           partiallyPaidCount,

@@ -18,21 +18,12 @@ import {
   X,
   ShieldCheck,
   Upload,
-  Calendar,
-  MapPin,
   Building2,
   Banknote,
   Clock,
-  Sparkles,
-  Phone,
-  Mail,
   Check,
   Edit2,
   RefreshCw,
-  ExternalLink,
-  ChevronRight,
-  HelpCircle,
-  Lock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/context/language-context';

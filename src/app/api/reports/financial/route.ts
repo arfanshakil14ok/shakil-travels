@@ -20,9 +20,12 @@ export async function GET(request: NextRequest) {
           status: { not: 'VOID' },
           ...(prismaDateFilter && { invoiceDate: prismaDateFilter }),
         },
-        include: {
-          customer: { select: { name: true, customerType: true } },
-          items: true,
+        take: 2000,
+        select: {
+          totalAmount: true,
+          paidAmount: true,
+          dueAmount: true,
+          dueDate: true,
         },
       }),
       prisma.payment.findMany({
@@ -30,9 +33,18 @@ export async function GET(request: NextRequest) {
           status: 'COMPLETED',
           ...(prismaDateFilter && { paymentDate: prismaDateFilter }),
         },
+        take: 5000,
+        select: {
+          amount: true,
+          paymentMethod: true,
+        },
       }),
       prisma.refund.findMany({
         where: prismaDateFilter ? { refundDate: prismaDateFilter } : {},
+        take: 1000,
+        select: {
+          amount: true,
+        },
       }),
     ]);
 

@@ -286,7 +286,23 @@ export async function generateFormattedId(
     });
   }
 
-  const nextSequence = count + 1;
+  let nextSequence = count + 1;
+  if (type === 'applicant') {
+    try {
+      const latest = await prisma.applicant.findFirst({
+        where: { applicantNumber: { startsWith: yearPattern } },
+        orderBy: { applicantNumber: 'desc' },
+        select: { applicantNumber: true },
+      });
+      if (latest?.applicantNumber) {
+        const parts = latest.applicantNumber.split('-');
+        const lastNum = parseInt(parts[parts.length - 1], 10);
+        if (!isNaN(lastNum) && lastNum >= nextSequence) {
+          nextSequence = lastNum + 1;
+        }
+      }
+    } catch {}
+  }
   const paddedSequence = String(nextSequence).padStart(6, '0');
 
   return `${yearPattern}${paddedSequence}`;

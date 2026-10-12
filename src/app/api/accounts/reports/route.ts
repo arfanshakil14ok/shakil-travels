@@ -14,23 +14,32 @@ export async function GET(request: NextRequest) {
 
     const [
       invoiceItems,
-      payments,
+      paymentMethodAggs,
       unpaidInvoices,
     ] = await Promise.all([
       prisma.invoiceItem.findMany({
         where: { invoice: { status: { not: 'VOID' } } },
-        include: { service: true },
+        take: 2000,
+        select: {
+          serviceCode: true,
+          description: true,
+          quantity: true,
+          lineTotal: true,
+          service: { select: { serviceCode: true, serviceName: true } },
+        },
       }),
-      prisma.payment.findMany({
+      prisma.payment.groupBy({
+        by: ['paymentMethod'],
         where: { status: 'COMPLETED' },
-        select: { amount: true, paymentMethod: true, paymentDate: true },
+        _sum: { amount: true },
       }),
       prisma.invoice.findMany({
         where: {
           status: { in: ['ISSUED', 'PARTIALLY_PAID'] },
           dueDate: { lt: now },
         },
-        select: { dueAmount: true, dueDate: true, invoiceNumber: true, customerId: true, applicantId: true },
+        take: 1000,
+        select: { dueAmount: true, dueDate: true },
       }),
     ]);
 
@@ -53,12 +62,11 @@ export async function GET(request: NextRequest) {
       total: s.total.toFixed(2),
     }));
 
-    // 2. Payment Method Breakdown
-    const paymentMethods: Record<string, number> = {};
-    for (const p of payments) {
-      const m = p.paymentMethod;
-      paymentMethods[m] = (paymentMethods[m] || 0) + Number(p.amount);
-    }
+    // 2. Payment Method Breakdown (from database-level groupBy)
+    const paymentMethods = paymentMethodAggs.map((agg) => ({
+      method: agg.paymentMethod,
+      amount: agg._sum.amount ? Number(agg._sum.amount).toFixed(2) : '0.00',
+    }));
 
     // 3. Aging Analysis (Overdue)
     let aging0to30 = toDecimal('0.00');
@@ -84,10 +92,7 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         serviceRevenue,
-        paymentMethods: Object.entries(paymentMethods).map(([method, amount]) => ({
-          method,
-          amount: amount.toFixed(2),
-        })),
+        paymentMethods,
         aging: {
           '0-30 days': aging0to30.toFixed(2),
           '31-60 days': aging31to60.toFixed(2),
