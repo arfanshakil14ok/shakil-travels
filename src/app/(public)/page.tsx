@@ -13,6 +13,8 @@ import { ScamAwarenessSection } from '@/components/public/scam-awareness-section
 import { ContactCtaSection } from '@/components/public/contact-cta-section';
 import { FALLBACK_COUNTRIES, FALLBACK_JOBS } from '@/lib/homepage-fallback';
 
+import { VerifiedTrustStrip } from '@/components/public/verified-trust-strip';
+
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
@@ -39,7 +41,7 @@ export default async function PublicHomePage() {
           select: { id: true, name: true, slug: true },
         },
         employer: {
-          select: { companyName: true },
+          select: { companyName: true, verificationStatus: true },
         },
       },
       orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }],
@@ -94,34 +96,33 @@ export default async function PublicHomePage() {
 
   return (
     <div className="space-y-0">
-      {/* 1. Hero Section */}
+      {/* 1 & 2. Professional Hero Section with Primary & Secondary CTAs */}
       <HeroSection />
 
-      {/* 2. Destination Countries (Real DB Data) */}
-      <CountriesSection countries={countries} maxDisplay={12} />
+      {/* 3. Small, Verified Trust-Information Section */}
+      <VerifiedTrustStrip />
 
-      {/* 3. Latest Published Jobs (Real DB Data) */}
+      {/* 4. Selected Featured Job Opportunities */}
       <JobsPreviewSection jobs={serializedJobs} maxDisplay={6} />
 
-      {/* 4. Interactive Eligibility Checker */}
-      <EligibilityCheckerSection />
+      {/* 5. Country and Category Exploration */}
+      <CountriesSection countries={countries} maxDisplay={12} />
 
-      {/* 5. 8-Step Recruitment Process */}
+      {/* 6. Recruitment Process: Apply → Profile Review → Interview → Visa Processing → Pre-departure */}
       <HowItWorksSection />
 
-      {/* 6. Visa & Work Permit Guidelines */}
+      {/* 7. Interactive Eligibility Checker */}
+      <EligibilityCheckerSection />
+
+      {/* 8. Candidate Support and Training Information */}
+      <MigrantInfoSection />
       <VisaPreviewSection visaList={visaList} maxDisplay={3} />
 
-      {/* 7. Migrant Worker Essential Information */}
-      <MigrantInfoSection />
-
-      {/* 8. Trust & Why Choose Us */}
+      {/* 9. Trust & Fraud Awareness */}
       <TrustSection />
-
-      {/* 9. Recruitment Fraud & Scam Awareness */}
       <ScamAwarenessSection />
 
-      {/* 10. Call to Action & Direct Consultation */}
+      {/* 10. Clear Contact & Consultation Section */}
       <ContactCtaSection />
     </div>
   );

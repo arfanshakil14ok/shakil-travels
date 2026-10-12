@@ -5,15 +5,17 @@
 
 export const BRAND = {
   // Official Company Identity
-  name: 'SHAKIL TRAVELS',
-  shortName: 'Shakil Travels',
-  legalName: 'SHAKIL TRAVELS',
-  bengaliName: 'শাকিল ট্রাভেলস',
+  name: 'SHAKILWORK',
+  shortName: 'SHAKILWORK',
+  legalName: 'SHAKILWORK / SHAKIL TRAVELS',
+  bengaliName: 'শাকিলওয়ার্ক',
+  agencyName: 'SHAKIL TRAVELS',
+  agencyNameBn: 'শাকিল ট্রাভেলস',
 
   // Taglines
-  taglineBn: 'বিদেশে কর্মসংস্থান, বৈধ ভিসা ও জনশক্তি নিয়োগ',
-  taglineEn: 'Manpower Recruitment & Overseas Employment',
-  subTaglineBn: 'গণপ্রজাতন্ত্রী বাংলাদেশ সরকার ও বিএমইটি অনুমোদিত আন্তর্জাতিক রিক্রুটিং এজেন্সি',
+  taglineBn: 'বৈদেশিক কর্মসংস্থান, নিরাপদ রিক্রুটমেন্ট ও ক্যান্ডিডেট প্ল্যাটফর্ম',
+  taglineEn: 'Overseas Recruitment & International Candidate Platform',
+  subTaglineBn: 'গণপ্রজাতন্ত্রী বাংলাদেশ সরকার অনুমোদিত রিক্রুটিং এজেন্সি (RL-2579)',
   subTaglineEn: 'Govt. Approved International Recruiting Agency (RL-2579)',
 
   // Government Licensing

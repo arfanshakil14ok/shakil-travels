@@ -192,23 +192,24 @@ export const PublicHeader: React.FC = () => {
             </Link>
           </div>
 
-          <div className="flex items-center gap-4 text-slate-300 font-mono text-[11px]">
+          <div className="flex items-center gap-3 sm:gap-4 text-slate-300 font-mono text-[11px]">
             <a
               href="tel:01913681771"
               className="flex items-center gap-1 hover:text-white transition-colors"
             >
-              <Phone className="w-3 h-3 text-gold-400" />
+              <Phone className="w-3 h-3 text-[#E8A2C1]" />
               <span className="hidden sm:inline">01913681771</span>
               <span className="sm:hidden">হটলাইন</span>
             </a>
             <span className="text-slate-700 hidden sm:inline">•</span>
-            <a
-              href="mailto:info@shakilglobal.com"
-              className="hidden lg:flex items-center gap-1 hover:text-white transition-colors"
+            <Link
+              href="/staff/login"
+              className="text-slate-300 hover:text-white transition-colors font-sans flex items-center gap-1"
+              title="Staff & Administrative ERP"
             >
-              <Mail className="w-3 h-3 text-gold-400" />
-              <span>info@shakilglobal.com</span>
-            </a>
+              <Lock className="w-3 h-3 text-[#E8A2C1]" />
+              <span>{language === 'bn' ? 'স্টাফ পোর্টাল' : 'Staff Portal'}</span>
+            </Link>
           </div>
         </div>
       </div>
@@ -221,14 +222,14 @@ export const PublicHeader: React.FC = () => {
         </div>
 
         {/* Desktop Nav Links */}
-        <nav className="hidden lg:flex items-center space-x-1 xl:space-x-1.5" aria-label="Main Navigation">
+        <nav className="hidden lg:flex items-center space-x-1" aria-label="Main Navigation">
           <Link
             href="/"
             className={cn(
-              'px-3 py-2 rounded-lg text-xs xl:text-sm font-semibold transition-colors font-bengali',
+              'px-3.5 py-2 rounded-lg text-xs xl:text-sm font-semibold transition-all font-bengali',
               pathname === '/'
-                ? 'text-emerald-800 bg-emerald-50'
-                : 'text-slate-700 hover:text-navy-950 hover:bg-slate-100/70'
+                ? 'text-[#102B50] font-bold bg-[#F6F8FB] border border-[#E4EAF1] shadow-2xs'
+                : 'text-[#172B45] hover:text-[#102B50] hover:bg-[#F6F8FB]'
             )}
           >
             {language === 'bn' ? 'হোম' : 'Home'}
@@ -237,15 +238,15 @@ export const PublicHeader: React.FC = () => {
           <Link
             href="/jobs"
             className={cn(
-              'px-3 py-2 rounded-lg text-xs xl:text-sm font-semibold transition-colors font-bengali flex items-center gap-1',
+              'px-3.5 py-2 rounded-lg text-xs xl:text-sm font-semibold transition-all font-bengali flex items-center gap-1.5',
               pathname === '/jobs'
-                ? 'text-emerald-800 bg-emerald-50'
-                : 'text-slate-700 hover:text-navy-950 hover:bg-slate-100/70'
+                ? 'text-[#102B50] font-bold bg-[#F6F8FB] border border-[#E4EAF1] shadow-2xs'
+                : 'text-[#172B45] hover:text-[#102B50] hover:bg-[#F6F8FB]'
             )}
           >
-            <span>{language === 'bn' ? 'চাকরি' : 'Jobs'}</span>
-            <span className="px-1.5 py-0.2 bg-emerald-100 text-emerald-800 text-[10px] font-mono rounded-full font-bold">
-              নতুন
+            <span>{language === 'bn' ? 'চাকরি খুঁজুন' : 'Find Jobs'}</span>
+            <span className="px-1.5 py-0.5 bg-[#E8A2C1]/30 text-[#102B50] text-[10px] font-bold rounded-sm">
+              NEW
             </span>
           </Link>
 
@@ -255,17 +256,17 @@ export const PublicHeader: React.FC = () => {
               onClick={() => setIsCountriesDropdownOpen(!isCountriesDropdownOpen)}
               onMouseEnter={() => setIsCountriesDropdownOpen(true)}
               className={cn(
-                'px-3 py-2 rounded-lg text-xs xl:text-sm font-semibold transition-colors font-bengali flex items-center gap-1',
+                'px-3.5 py-2 rounded-lg text-xs xl:text-sm font-semibold transition-all font-bengali flex items-center gap-1',
                 pathname?.startsWith('/countries')
-                  ? 'text-emerald-800 bg-emerald-50'
-                  : 'text-slate-700 hover:text-navy-950 hover:bg-slate-100/70'
+                  ? 'text-[#102B50] font-bold bg-[#F6F8FB] border border-[#E4EAF1] shadow-2xs'
+                  : 'text-[#172B45] hover:text-[#102B50] hover:bg-[#F6F8FB]'
               )}
             >
               <span>{language === 'bn' ? 'দেশসমূহ' : 'Countries'}</span>
               <ChevronDown
                 className={cn(
                   'w-3.5 h-3.5 text-slate-400 transition-transform duration-200',
-                  isCountriesDropdownOpen && 'rotate-180 text-emerald-600'
+                  isCountriesDropdownOpen && 'rotate-180 text-[#102B50]'
                 )}
               />
             </button>
@@ -274,17 +275,17 @@ export const PublicHeader: React.FC = () => {
             {isCountriesDropdownOpen && (
               <div
                 onMouseLeave={() => setIsCountriesDropdownOpen(false)}
-                className="absolute top-full left-0 mt-1 w-80 sm:w-96 bg-white border border-slate-200 rounded-2xl shadow-2xl p-4 z-50 animate-fadeIn font-sans"
+                className="absolute top-full left-0 mt-1 w-80 sm:w-96 bg-white border border-[#E4EAF1] rounded-xl shadow-xl p-4 z-50 animate-fadeIn font-sans"
               >
-                <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 font-bengali">
+                <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#E4EAF1] font-bengali">
                   <div className="flex items-center gap-2">
-                    <Globe2 className="w-4 h-4 text-emerald-600" />
-                    <span className="font-bold text-xs text-slate-900">জনপ্রিয় গন্তব্য দেশসমূহ</span>
+                    <Globe2 className="w-4 h-4 text-[#102B50]" />
+                    <span className="font-bold text-xs text-[#172B45]">জনপ্রিয় গন্তব্য দেশসমূহ</span>
                   </div>
                   <Link
                     href="/countries"
                     onClick={() => setIsCountriesDropdownOpen(false)}
-                    className="text-[11px] font-bold text-emerald-700 hover:underline flex items-center gap-0.5"
+                    className="text-[11px] font-bold text-[#102B50] hover:text-[#D987AC] flex items-center gap-0.5"
                   >
                     সকল দেশ ({POPULAR_COUNTRIES_NAV.length}+) <ArrowRight className="w-3 h-3" />
                   </Link>
@@ -296,16 +297,16 @@ export const PublicHeader: React.FC = () => {
                       key={c.code}
                       href={`/countries/${c.slug}`}
                       onClick={() => setIsCountriesDropdownOpen(false)}
-                      className="p-2 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200 flex items-center gap-2.5 transition-all group"
+                      className="p-2 rounded-lg hover:bg-[#F6F8FB] border border-transparent hover:border-[#E4EAF1] flex items-center gap-2.5 transition-all group"
                     >
                       <div className="relative w-6 h-4 rounded-xs overflow-hidden shadow-2xs border border-slate-200 flex-shrink-0">
                         <Image src={c.flag} alt={c.name} fill className="object-cover" />
                       </div>
                       <div className="min-w-0">
-                        <div className="text-xs font-bold text-slate-800 group-hover:text-emerald-700 truncate font-bengali">
+                        <div className="text-xs font-bold text-[#172B45] group-hover:text-[#102B50] truncate font-bengali">
                           {c.nameBn}
                         </div>
-                        <div className="text-[10px] text-slate-400 font-sans truncate">{c.name}</div>
+                        <div className="text-[10px] text-[#66758A] font-sans truncate">{c.name}</div>
                       </div>
                     </Link>
                   ))}
@@ -317,60 +318,22 @@ export const PublicHeader: React.FC = () => {
           <Link
             href="/skill-training"
             className={cn(
-              'px-3 py-2 rounded-lg text-xs xl:text-sm font-semibold transition-colors font-bengali flex items-center gap-1',
+              'px-3.5 py-2 rounded-lg text-xs xl:text-sm font-semibold transition-all font-bengali flex items-center gap-1',
               pathname?.startsWith('/skill-training')
-                ? 'text-emerald-800 bg-emerald-50'
-                : 'text-slate-700 hover:text-navy-950 hover:bg-slate-100/70'
+                ? 'text-[#102B50] font-bold bg-[#F6F8FB] border border-[#E4EAF1] shadow-2xs'
+                : 'text-[#172B45] hover:text-[#102B50] hover:bg-[#F6F8FB]'
             )}
           >
-            <Sparkles className="w-3.5 h-3.5 text-gold-500" />
-            <span>{language === 'bn' ? 'স্কিল ট্রেনিং' : 'Training'}</span>
-          </Link>
-
-          <Link
-            href="/verify-certificate"
-            className={cn(
-              'px-3 py-2 rounded-lg text-xs xl:text-sm font-semibold transition-colors font-bengali flex items-center gap-1',
-              pathname?.startsWith('/verify-certificate')
-                ? 'text-emerald-800 bg-emerald-50'
-                : 'text-slate-700 hover:text-navy-950 hover:bg-slate-100/70'
-            )}
-          >
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            <span>{language === 'bn' ? 'সার্টিফিকেট যাচাই' : 'Verify Certificate'}</span>
-          </Link>
-
-          <Link
-            href="/visa-information"
-            className={cn(
-              'px-3 py-2 rounded-lg text-xs xl:text-sm font-semibold transition-colors font-bengali',
-              pathname?.startsWith('/visa-information')
-                ? 'text-emerald-800 bg-emerald-50'
-                : 'text-slate-700 hover:text-navy-950 hover:bg-slate-100/70'
-            )}
-          >
-            {language === 'bn' ? 'ভিসা তথ্য' : 'Visa Info'}
-          </Link>
-
-          <Link
-            href="/migrant-information"
-            className={cn(
-              'px-3 py-2 rounded-lg text-xs xl:text-sm font-semibold transition-colors font-bengali',
-              pathname?.startsWith('/migrant-information')
-                ? 'text-emerald-800 bg-emerald-50'
-                : 'text-slate-700 hover:text-navy-950 hover:bg-slate-100/70'
-            )}
-          >
-            {language === 'bn' ? 'প্রবাসী তথ্য' : 'Migrant Info'}
+            <span>{language === 'bn' ? 'ট্রেনিং' : 'Training'}</span>
           </Link>
 
           <Link
             href="/about"
             className={cn(
-              'px-3 py-2 rounded-lg text-xs xl:text-sm font-semibold transition-colors font-bengali',
+              'px-3.5 py-2 rounded-lg text-xs xl:text-sm font-semibold transition-all font-bengali',
               pathname === '/about'
-                ? 'text-emerald-800 bg-emerald-50'
-                : 'text-slate-700 hover:text-navy-950 hover:bg-slate-100/70'
+                ? 'text-[#102B50] font-bold bg-[#F6F8FB] border border-[#E4EAF1] shadow-2xs'
+                : 'text-[#172B45] hover:text-[#102B50] hover:bg-[#F6F8FB]'
             )}
           >
             {language === 'bn' ? 'আমাদের সম্পর্কে' : 'About Us'}
@@ -379,10 +342,10 @@ export const PublicHeader: React.FC = () => {
           <Link
             href="/contact"
             className={cn(
-              'px-3 py-2 rounded-lg text-xs xl:text-sm font-semibold transition-colors font-bengali',
+              'px-3.5 py-2 rounded-lg text-xs xl:text-sm font-semibold transition-all font-bengali',
               pathname === '/contact'
-                ? 'text-emerald-800 bg-emerald-50'
-                : 'text-slate-700 hover:text-navy-950 hover:bg-slate-100/70'
+                ? 'text-[#102B50] font-bold bg-[#F6F8FB] border border-[#E4EAF1] shadow-2xs'
+                : 'text-[#172B45] hover:text-[#102B50] hover:bg-[#F6F8FB]'
             )}
           >
             {language === 'bn' ? 'যোগাযোগ' : 'Contact'}
@@ -525,116 +488,29 @@ export const PublicHeader: React.FC = () => {
               )}
             </div>
           ) : (
-            /* Unauthenticated Sign In Dropdown */
-            <div className="relative" ref={signInRef}>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsSignInDropdownOpen(!isSignInDropdownOpen)}
-                leftIcon={<LogIn className="w-3.5 h-3.5 text-slate-700" />}
-                rightIcon={
-                  <ChevronDown
-                    className={cn(
-                      'w-3 h-3 text-slate-500 transition-transform duration-200',
-                      isSignInDropdownOpen && 'rotate-180 text-emerald-600'
-                    )}
-                  />
-                }
-                className="text-xs font-semibold border border-slate-300 text-slate-800 hover:bg-slate-100 hover:border-slate-400 font-bengali"
-              >
-                {language === 'bn' ? 'লগইন' : 'Sign In'}
-              </Button>
-
-              {isSignInDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-72 bg-white border border-slate-200 rounded-2xl shadow-2xl py-2 z-50 text-slate-800 animate-fadeIn font-sans">
-                  <div className="px-3.5 py-2 text-[10px] font-black text-slate-400 uppercase tracking-wider border-b border-slate-100">
-                    {language === 'bn' ? 'লগইন পোর্টাল নির্বাচন করুন' : 'Select Access Portal'}
-                  </div>
-
-                  {/* Option 1: Applicant Portal */}
-                  <Link
-                    href="/portal/login"
-                    onClick={() => setIsSignInDropdownOpen(false)}
-                    className="flex items-start gap-3 px-4 py-3 hover:bg-emerald-50 text-left transition-colors group"
-                  >
-                    <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-2xs">
-                      <UserRound className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-xs text-slate-900 group-hover:text-emerald-800 font-bengali">
-                        {language === 'bn' ? 'প্রার্থী পোর্টাল লগইন' : 'Applicant Portal Login'}
-                      </div>
-                      <div className="text-[11px] text-slate-500 leading-tight mt-0.5 font-bengali">
-                        {language === 'bn' ? 'আবেদন, ট্রেনিং ও ভিসা স্ট্যাটাস ট্র্যাক করুন' : 'Track your applications, training & visa'}
-                      </div>
-                    </div>
-                  </Link>
-
-                  {/* Option 2: Staff ERP */}
-                  <Link
-                    href="/staff/login"
-                    onClick={() => setIsSignInDropdownOpen(false)}
-                    className="flex items-start gap-3 px-4 py-3 hover:bg-navy-50 text-left transition-colors group border-t border-slate-100"
-                  >
-                    <div className="w-9 h-9 rounded-xl bg-navy-100 text-navy-800 flex items-center justify-center flex-shrink-0 group-hover:bg-navy-950 group-hover:text-white transition-all shadow-2xs">
-                      <Briefcase className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-xs text-slate-900 group-hover:text-navy-900 font-bengali">
-                        {language === 'bn' ? 'স্টাফ / অফিসার ERP লগইন' : 'Staff ERP Login'}
-                      </div>
-                      <div className="text-[11px] text-slate-500 leading-tight mt-0.5 font-bengali">
-                        {language === 'bn' ? 'ট্রেনিং, ভিসা ও পোস্ট-সিলেকশন অফিসার' : 'Departmental officers & staff operations'}
-                      </div>
-                    </div>
-                  </Link>
-
-                  {/* Option 3: Super Admin */}
-                  <Link
-                    href="/admin/login"
-                    onClick={() => setIsSignInDropdownOpen(false)}
-                    className="flex items-start gap-3 px-4 py-3 hover:bg-slate-100 text-left transition-colors group border-t border-slate-100"
-                  >
-                    <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center flex-shrink-0 group-hover:bg-slate-800 group-hover:text-white transition-all shadow-2xs">
-                      <Lock className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-xs text-slate-900 group-hover:text-slate-900 font-bengali">
-                        {language === 'bn' ? 'সুপার অ্যাডমিন কনসোল' : 'Super Admin Console'}
-                      </div>
-                      <div className="text-[11px] text-slate-500 leading-tight mt-0.5 font-bengali">
-                        {language === 'bn' ? 'পূর্ণাঙ্গ সিস্টেম ও হিসাব নিয়ন্ত্রণ' : 'Master management, security & audit'}
-                      </div>
-                    </div>
-                  </Link>
-                </div>
-              )}
+            /* Unauthenticated Candidate Action Area */
+            <div className="flex items-center gap-2 font-bengali">
+              <Link href="/portal/login">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  leftIcon={<LogIn className="w-3.5 h-3.5 text-[#102B50]" />}
+                  className="text-xs font-bold border border-[#E4EAF1] text-[#102B50] hover:bg-[#F6F8FB] hover:border-[#102B50]/30 transition-colors shadow-2xs"
+                >
+                  {language === 'bn' ? 'প্রার্থী লগইন' : 'Candidate Login'}
+                </Button>
+              </Link>
+              <Link href="/portal/register" className="hidden sm:block">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  leftIcon={<UserPlus className="w-3.5 h-3.5 text-white" />}
+                  className="bg-[#102B50] hover:bg-[#0B1D35] text-white text-xs font-bold shadow-xs px-3.5 transition-all border border-[#102B50]"
+                >
+                  {language === 'bn' ? 'প্রার্থী নিবন্ধন' : 'Register'}
+                </Button>
+              </Link>
             </div>
-          )}
-
-          {/* High-Visibility Quick Action: Dashboard if logged in, Create Account if not */}
-          {session.authenticated ? (
-            <Link href={session.dashboardUrl || '/portal'} className="hidden sm:block">
-              <Button
-                variant="primary"
-                size="sm"
-                leftIcon={<LayoutDashboard className="w-3.5 h-3.5 text-white" />}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md hover:shadow-emerald-600/25 transition-all px-3.5 font-bengali"
-              >
-                {language === 'bn' ? 'ড্যাশবোর্ড' : 'Dashboard'}
-              </Button>
-            </Link>
-          ) : (
-            <Link href="/portal/register" className="hidden sm:block">
-              <Button
-                variant="primary"
-                size="sm"
-                leftIcon={<UserPlus className="w-3.5 h-3.5 text-white" />}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md hover:shadow-emerald-600/25 transition-all px-3.5 font-bengali"
-              >
-                {language === 'bn' ? 'অ্যাকাউন্ট খুলুন' : 'Create Account'}
-              </Button>
-            </Link>
           )}
 
           {/* Mobile Hamburger Toggle */}
@@ -677,16 +553,16 @@ export const PublicHeader: React.FC = () => {
 
               {/* Mobile Auth Status Banner */}
               {session.authenticated && (
-                <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between font-bengali">
+                <div className="p-3.5 bg-[#F6F8FB] border border-[#E4EAF1] rounded-xl flex items-center justify-between font-bengali">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs">
+                    <div className="w-8 h-8 rounded-full bg-[#102B50] text-white flex items-center justify-center font-bold text-xs">
                       {session.user?.name ? session.user.name.charAt(0).toUpperCase() : 'U'}
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-slate-900 truncate max-w-[140px]">
+                      <div className="text-xs font-bold text-[#172B45] truncate max-w-[140px]">
                         {session.user?.name}
                       </div>
-                      <div className="text-[10px] text-emerald-800 font-mono">
+                      <div className="text-[10px] text-[#66758A] font-mono">
                         {session.type === 'APPLICANT' ? 'Candidate' : (session.user?.roleTitle || 'Staff')}
                       </div>
                     </div>
@@ -694,9 +570,9 @@ export const PublicHeader: React.FC = () => {
                   <Link
                     href={session.dashboardUrl || '/portal'}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="px-2.5 py-1 bg-emerald-600 text-white text-[11px] font-bold rounded-lg hover:bg-emerald-700"
+                    className="px-3 py-1.5 bg-[#102B50] text-white text-[11px] font-bold rounded-lg hover:bg-[#0B1D35] transition-colors"
                   >
-                    ড্যাশবোর্ড
+                    {language === 'bn' ? 'ড্যাশবোর্ড' : 'Dashboard'}
                   </Link>
                 </div>
               )}
@@ -708,9 +584,9 @@ export const PublicHeader: React.FC = () => {
                   placeholder={language === 'bn' ? 'পদবী বা দেশ দিয়ে খুঁজুন...' : 'Search jobs or country...'}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bengali"
+                  className="w-full pl-9 pr-4 py-2.5 text-xs bg-[#F6F8FB] border border-[#E4EAF1] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#102B50] font-bengali text-[#172B45]"
                 />
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                <Search className="w-4 h-4 text-[#66758A] absolute left-3 top-3" />
               </form>
 
               {/* Nav Links */}
@@ -720,7 +596,7 @@ export const PublicHeader: React.FC = () => {
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={cn(
                     'block px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors',
-                    pathname === '/' ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700 hover:bg-slate-50'
+                    pathname === '/' ? 'bg-[#F6F8FB] text-[#102B50] font-bold border border-[#E4EAF1]' : 'text-[#172B45] hover:bg-[#F6F8FB]'
                   )}
                 >
                   {language === 'bn' ? 'হোম' : 'Home'}
@@ -731,53 +607,13 @@ export const PublicHeader: React.FC = () => {
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={cn(
                     'flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors',
-                    pathname === '/jobs' ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700 hover:bg-slate-50'
+                    pathname === '/jobs' ? 'bg-[#F6F8FB] text-[#102B50] font-bold border border-[#E4EAF1]' : 'text-[#172B45] hover:bg-[#F6F8FB]'
                   )}
                 >
-                  <span>{language === 'bn' ? 'আন্তর্জাতিক চাকরি' : 'Overseas Jobs'}</span>
-                  <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full">
-                    চলমান
+                  <span>{language === 'bn' ? 'চাকরি খুঁজুন' : 'Find Jobs'}</span>
+                  <span className="px-2 py-0.5 bg-[#E8A2C1]/30 text-[#102B50] text-[10px] font-bold rounded-sm">
+                    {language === 'bn' ? 'চলমান' : 'Live'}
                   </span>
-                </Link>
-
-                <Link
-                  href="/skill-training"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={cn(
-                    'flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors',
-                    pathname?.startsWith('/skill-training') ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700 hover:bg-slate-50'
-                  )}
-                >
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-gold-500" />
-                    <span>{language === 'bn' ? 'স্কিল ট্রেনিং ও কোর্স' : 'Skill Training'}</span>
-                  </div>
-                  <span className="px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-full">
-                    ট্রেনিং
-                  </span>
-                </Link>
-
-                <Link
-                  href="/training-centers"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={cn(
-                    'block px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors',
-                    pathname === '/training-centers' ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700 hover:bg-slate-50'
-                  )}
-                >
-                  {language === 'bn' ? 'অনুমোদিত ট্রেনিং সেন্টার' : 'Accredited Centers'}
-                </Link>
-
-                <Link
-                  href="/verify-certificate"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={cn(
-                    'flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors',
-                    pathname?.startsWith('/verify-certificate') ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700 hover:bg-slate-50'
-                  )}
-                >
-                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  <span>{language === 'bn' ? 'সার্টিফিকেট যাচাই' : 'Verify Certificate'}</span>
                 </Link>
 
                 <Link
@@ -785,32 +621,21 @@ export const PublicHeader: React.FC = () => {
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={cn(
                     'block px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors',
-                    pathname === '/countries' ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700 hover:bg-slate-50'
+                    pathname === '/countries' ? 'bg-[#F6F8FB] text-[#102B50] font-bold border border-[#E4EAF1]' : 'text-[#172B45] hover:bg-[#F6F8FB]'
                   )}
                 >
-                  {language === 'bn' ? 'গন্তব্য দেশসমূহ' : 'Destination Countries'}
+                  {language === 'bn' ? 'দেশসমূহ' : 'Countries'}
                 </Link>
 
                 <Link
-                  href="/visa-information"
+                  href="/skill-training"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={cn(
                     'block px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors',
-                    pathname?.startsWith('/visa-information') ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700 hover:bg-slate-50'
+                    pathname?.startsWith('/skill-training') ? 'bg-[#F6F8FB] text-[#102B50] font-bold border border-[#E4EAF1]' : 'text-[#172B45] hover:bg-[#F6F8FB]'
                   )}
                 >
-                  {language === 'bn' ? 'ভিসা ও ওয়ার্ক পারমিট' : 'Visa & Permits'}
-                </Link>
-
-                <Link
-                  href="/migrant-information"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={cn(
-                    'block px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors',
-                    pathname?.startsWith('/migrant-information') ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700 hover:bg-slate-50'
-                  )}
-                >
-                  {language === 'bn' ? 'প্রবাসী তথ্য ও সুরক্ষা' : 'Migrant Information'}
+                  {language === 'bn' ? 'ট্রেনিং' : 'Training'}
                 </Link>
 
                 <Link
@@ -818,7 +643,7 @@ export const PublicHeader: React.FC = () => {
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={cn(
                     'block px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors',
-                    pathname === '/about' ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700 hover:bg-slate-50'
+                    pathname === '/about' ? 'bg-[#F6F8FB] text-[#102B50] font-bold border border-[#E4EAF1]' : 'text-[#172B45] hover:bg-[#F6F8FB]'
                   )}
                 >
                   {language === 'bn' ? 'আমাদের সম্পর্কে' : 'About Us'}
@@ -829,17 +654,17 @@ export const PublicHeader: React.FC = () => {
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={cn(
                     'block px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors',
-                    pathname === '/contact' ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700 hover:bg-slate-50'
+                    pathname === '/contact' ? 'bg-[#F6F8FB] text-[#102B50] font-bold border border-[#E4EAF1]' : 'text-[#172B45] hover:bg-[#F6F8FB]'
                   )}
                 >
-                  {language === 'bn' ? 'যোগাযোগ ও সহায়তা' : 'Contact'}
+                  {language === 'bn' ? 'যোগাযোগ' : 'Contact'}
                 </Link>
               </div>
 
-              {/* Popular Countries Chips in Mobile Drawer */}
-              <div className="pt-2 border-t border-slate-100 font-bengali">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
-                  জনপ্রিয় দেশ
+              {/* Destination Countries in Mobile Drawer */}
+              <div className="pt-2 border-t border-[#E4EAF1] font-bengali">
+                <span className="text-[11px] font-bold text-[#66758A] uppercase tracking-wider block mb-2">
+                  {language === 'bn' ? 'জনপ্রিয় গন্তব্য দেশসমূহ' : 'Popular Destinations'}
                 </span>
                 <div className="grid grid-cols-2 gap-2">
                   {POPULAR_COUNTRIES_NAV.slice(0, 6).map((c) => (
@@ -847,12 +672,12 @@ export const PublicHeader: React.FC = () => {
                       key={c.code}
                       href={`/countries/${c.slug}`}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="p-2 rounded-xl border border-slate-100 bg-slate-50 hover:bg-emerald-50 flex items-center gap-2 transition-colors"
+                      className="p-2 rounded-lg border border-[#E4EAF1] bg-[#F6F8FB] hover:bg-white flex items-center gap-2 transition-colors"
                     >
                       <div className="relative w-5 h-3.5 rounded-xs overflow-hidden flex-shrink-0">
                         <Image src={c.flag} alt={c.name} fill className="object-cover" />
                       </div>
-                      <span className="text-xs font-bold text-slate-800 truncate">{c.nameBn}</span>
+                      <span className="text-xs font-bold text-[#172B45] truncate">{c.nameBn}</span>
                     </Link>
                   ))}
                 </div>
@@ -860,7 +685,7 @@ export const PublicHeader: React.FC = () => {
             </div>
 
             {/* Mobile Footer CTAs */}
-            <div className="p-6 bg-slate-50 border-t border-slate-100 space-y-3 font-bengali">
+            <div className="p-5 bg-white border-t border-[#E4EAF1] space-y-2.5 font-bengali">
               {session.authenticated ? (
                 <>
                   <Link
@@ -870,7 +695,7 @@ export const PublicHeader: React.FC = () => {
                   >
                     <Button
                       variant="primary"
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white justify-center text-xs font-bold py-3 flex items-center gap-2 shadow-md"
+                      className="w-full bg-[#102B50] hover:bg-[#0B1D35] text-white justify-center text-xs font-bold py-2.5 flex items-center gap-2"
                     >
                       <LayoutDashboard className="w-4 h-4" />
                       {language === 'bn' ? 'আমার ড্যাশবোর্ডে যান' : 'Go to Dashboard'}
@@ -879,7 +704,7 @@ export const PublicHeader: React.FC = () => {
 
                   <button
                     onClick={handleLogout}
-                    className="w-full p-2.5 rounded-xl border border-rose-200 text-rose-600 bg-rose-50 hover:bg-rose-100 text-xs font-bold flex items-center justify-center gap-2 transition-colors"
+                    className="w-full p-2.5 rounded-lg border border-[#C2414B]/30 text-[#C2414B] bg-[#C2414B]/5 hover:bg-[#C2414B]/10 text-xs font-bold flex items-center justify-center gap-2 transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
                     {language === 'bn' ? 'সাইন আউট (লগআউট)' : 'Sign Out'}
@@ -887,7 +712,7 @@ export const PublicHeader: React.FC = () => {
                 </>
               ) : (
                 <>
-                  {/* Create Applicant Account */}
+                  {/* Candidate Register */}
                   <Link
                     href="/portal/register"
                     onClick={() => setIsMobileMenuOpen(false)}
@@ -895,14 +720,14 @@ export const PublicHeader: React.FC = () => {
                   >
                     <Button
                       variant="primary"
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white justify-center text-xs font-bold py-3 flex items-center gap-2 shadow-md"
+                      className="w-full bg-[#102B50] hover:bg-[#0B1D35] text-white justify-center text-xs font-bold py-2.5 flex items-center gap-2"
                     >
                       <UserPlus className="w-4 h-4" />
-                      {language === 'bn' ? 'প্রার্থী অ্যাকাউন্ট খুলুন' : 'Create Applicant Account'}
+                      {language === 'bn' ? 'প্রার্থী নিবন্ধন (Register)' : 'Register as Candidate'}
                     </Button>
                   </Link>
 
-                  {/* Applicant Login */}
+                  {/* Candidate Login */}
                   <Link
                     href="/portal/login"
                     onClick={() => setIsMobileMenuOpen(false)}
@@ -910,22 +735,22 @@ export const PublicHeader: React.FC = () => {
                   >
                     <Button
                       variant="outline"
-                      className="w-full border border-slate-300 text-slate-800 justify-center text-xs font-bold py-2.5 flex items-center gap-2 hover:bg-slate-100 hover:border-slate-400"
+                      className="w-full border border-[#E4EAF1] text-[#172B45] justify-center text-xs font-bold py-2 flex items-center gap-2 hover:bg-[#F6F8FB]"
                     >
-                      <UserRound className="w-4 h-4 text-emerald-600" />
-                      {language === 'bn' ? 'প্রার্থী লগইন (Applicant Portal)' : 'Applicant Portal Login'}
+                      <UserRound className="w-4 h-4 text-[#102B50]" />
+                      {language === 'bn' ? 'প্রার্থী লগইন (Candidate Login)' : 'Candidate Login'}
                     </Button>
                   </Link>
 
-                  {/* Staff Login */}
+                  {/* Staff Portal Link */}
                   <Link
-                    href="/admin/login"
+                    href="/staff/login"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="block text-center pt-1"
+                    className="block text-center pt-2 border-t border-[#E4EAF1]"
                   >
-                    <span className="text-xs text-slate-500 hover:text-navy-950 font-semibold inline-flex items-center gap-1">
-                      <Lock className="w-3 h-3" />
-                      {language === 'bn' ? 'স্টাফ / অ্যাডমিন ERP লগইন' : 'Staff ERP Login'}
+                    <span className="text-[11px] text-[#66758A] hover:text-[#102B50] font-medium inline-flex items-center gap-1">
+                      <Lock className="w-3 h-3 text-[#66758A]" />
+                      {language === 'bn' ? 'স্টাফ / অ্যাডমিন পোর্টাল' : 'Staff / Admin Portal'}
                     </span>
                   </Link>
                 </>

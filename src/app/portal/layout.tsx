@@ -193,9 +193,9 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans antialiased">
+    <div className="min-h-screen bg-[#F6F8FB] text-[#172B45] flex flex-col font-sans antialiased">
       {/* Top Header */}
-      <header className="sticky top-0 z-40 bg-white border-b border-slate-200/90 h-16 flex-shrink-0">
+      <header className="sticky top-0 z-40 bg-white border-b border-[#E4EAF1] h-16 flex-shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between">
           {/* Brand & Mobile Hamburger */}
           <div className="flex items-center gap-3">
@@ -209,7 +209,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
             <Link href="/" className="flex items-center gap-2.5">
               <BrandLogo href="/" size="sm" variant="horizontal" showTagline={false} />
-              <span className="hidden lg:inline-block text-[10px] text-slate-500 uppercase tracking-wider font-semibold border-l border-slate-200 pl-2.5">
+              <span className="hidden lg:inline-block text-[10px] text-[#66758A] uppercase tracking-wider font-semibold border-l border-[#E4EAF1] pl-2.5">
                 {BRAND.licenseNumber} • {t('প্রার্থী পোর্টাল', 'Candidate Portal')}
               </span>
             </Link>
@@ -221,7 +221,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
             <button
               type="button"
               onClick={toggleLanguage}
-              className="text-[11px] font-medium text-slate-600 hover:text-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer select-none"
+              className="text-[11px] font-medium text-[#172B45] hover:text-[#102B50] px-2.5 py-1.5 rounded-lg border border-[#E4EAF1] hover:bg-[#F6F8FB] transition-colors cursor-pointer select-none"
               aria-label="Toggle language"
             >
               {language === 'bn' ? 'English' : 'বাংলা'}
@@ -230,21 +230,21 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
             {/* Notification Icon */}
             <Link
               href="/portal/notifications"
-              className="relative p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+              className="relative p-2 rounded-lg text-[#66758A] hover:text-[#102B50] hover:bg-[#F6F8FB] transition-colors"
               title={t('নোটিফিকেশন', 'Notifications')}
             >
               <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
               {unreadCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-600 ring-2 ring-white" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#C2414B] ring-2 ring-white" />
               )}
             </Link>
 
-            <div className="h-6 w-px bg-slate-200 mx-0.5 hidden sm:block" />
+            <div className="h-6 w-px bg-[#E4EAF1] mx-0.5 hidden sm:block" />
 
             {/* Profile Avatar & Info */}
             <Link
               href="/portal/profile"
-              className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-50 transition-colors"
+              className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-[#F6F8FB] transition-colors"
             >
               <ProfileAvatar
                 src={applicant?.profilePhoto}
@@ -252,10 +252,10 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                 size="sm"
               />
               <div className="hidden lg:block text-left leading-tight">
-                <div className="text-xs font-semibold text-slate-900 truncate max-w-[130px]">
+                <div className="text-xs font-semibold text-[#172B45] truncate max-w-[130px]">
                   {applicant?.fullName || 'Candidate'}
                 </div>
-                <div className="text-[10px] font-mono text-slate-500">
+                <div className="text-[10px] font-mono text-[#66758A]">
                   {applicant?.applicantNumber || 'Candidate ID'}
                 </div>
               </div>
@@ -264,7 +264,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
             {/* Sign Out Button */}
             <button
               onClick={handleLogout}
-              className="p-2 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+              className="p-2 rounded-lg text-[#66758A] hover:text-[#C2414B] hover:bg-[#C2414B]/10 transition-colors cursor-pointer"
               title={t('সাইন আউট', 'Sign Out')}
               aria-label="Sign out"
             >
@@ -275,7 +275,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
         {/* Mobile Dropdown Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-b border-slate-200 bg-white p-3 space-y-1 shadow-lg animate-in fade-in slide-in-from-top-2 duration-150">
+          <div className="md:hidden border-b border-[#E4EAF1] bg-white p-3 space-y-1 shadow-lg animate-in fade-in slide-in-from-top-2 duration-150">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = item.exact
@@ -288,8 +288,8 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                   onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium transition-colors ${
                     isActive
-                      ? 'bg-slate-900 text-white font-semibold'
-                      : 'text-slate-700 hover:bg-slate-100'
+                      ? 'bg-[#102B50] text-white font-semibold'
+                      : 'text-[#172B45] hover:bg-[#F6F8FB]'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -297,26 +297,26 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                     <span>{language === 'bn' ? item.labelBn : item.label}</span>
                   </div>
                   {item.badge !== undefined && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-rose-600 text-white font-bold">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#C2414B] text-white font-bold">
                       {item.badge}
                     </span>
                   )}
                 </Link>
               );
             })}
-            <div className="pt-2 border-t border-slate-100 space-y-1">
+            <div className="pt-2 border-t border-[#E4EAF1] space-y-1">
               <Link
                 href="/"
-                className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-600 hover:text-slate-900"
+                className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-[#66758A] hover:text-[#102B50]"
               >
-                <ExternalLink className="w-4 h-4 text-emerald-600" />
+                <ExternalLink className="w-4 h-4 text-[#24856A]" />
                 <span>{t('মূল ওয়েবসাইট (হোমপেজ)', 'Main Website (Home)')}</span>
               </Link>
               <Link
                 href="/jobs"
-                className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-500 hover:text-slate-900"
+                className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-[#66758A] hover:text-[#102B50]"
               >
-                <Briefcase className="w-4 h-4 text-slate-400" />
+                <Briefcase className="w-4 h-4 text-[#66758A]" />
                 <span>{t('বিদেশি চাকরির মূল পাতা', 'Public Job Portal')}</span>
               </Link>
             </div>
@@ -327,10 +327,10 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       {/* Main Body with Left Sidebar */}
       <div className="max-w-7xl mx-auto w-full flex-1 flex">
         {/* Desktop Sidebar */}
-        <aside className="w-60 shrink-0 hidden md:flex flex-col justify-between border-r border-slate-200/90 bg-white py-5 px-3">
+        <aside className="w-60 shrink-0 hidden md:flex flex-col justify-between border-r border-[#E4EAF1] bg-white py-5 px-3">
           <div className="space-y-6">
             <div>
-              <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-[#66758A]">
                 {t('প্রধান মেনু', 'Main Menu')}
               </div>
               <nav className="space-y-0.5">
@@ -345,8 +345,8 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                       href={item.href}
                       className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-colors ${
                         isActive
-                          ? 'bg-slate-900 text-white font-semibold shadow-xs'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium'
+                          ? 'bg-[#102B50] text-white font-semibold shadow-xs'
+                          : 'text-[#172B45] hover:text-[#102B50] hover:bg-[#F6F8FB] font-medium'
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
@@ -357,8 +357,8 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                         <span
                           className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
                             isActive
-                              ? 'bg-rose-500 text-white'
-                              : 'bg-rose-100 text-rose-700'
+                              ? 'bg-[#E8A2C1] text-[#102B50]'
+                              : 'bg-[#C2414B]/10 text-[#C2414B]'
                           }`}
                         >
                           {item.badge}
@@ -371,22 +371,22 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
             </div>
 
             <div>
-              <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-[#66758A]">
                 {t('মূল ওয়েবসাইট', 'Main Website')}
               </div>
               <div className="space-y-0.5">
                 <Link
                   href="/"
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-[#66758A] hover:text-[#102B50] hover:bg-[#F6F8FB] transition-colors"
                 >
-                  <ExternalLink className="w-4 h-4 shrink-0 text-emerald-600" />
+                  <ExternalLink className="w-4 h-4 shrink-0 text-[#24856A]" />
                   <span>{t('মূল ওয়েবসাইট (হোম)', 'Main Website (Home)')}</span>
                 </Link>
                 <Link
                   href="/jobs"
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-[#66758A] hover:text-[#102B50] hover:bg-[#F6F8FB] transition-colors"
                 >
-                  <Briefcase className="w-4 h-4 shrink-0 text-slate-400" />
+                  <Briefcase className="w-4 h-4 shrink-0 text-[#66758A]" />
                   <span>{t('বৈদেশিক চাকরির পাতা', 'Public Job Portal')}</span>
                 </Link>
               </div>
@@ -394,15 +394,15 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           </div>
 
           {/* Agency License Info Card */}
-          <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1">
-            <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-800">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+          <div className="p-3 bg-[#F6F8FB] border border-[#E4EAF1] rounded-xl space-y-1">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#172B45]">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#24856A]" />
               <span>Govt. Approved</span>
             </div>
-            <p className="text-[10px] text-slate-500 leading-relaxed font-sans">
+            <p className="text-[10px] text-[#66758A] leading-relaxed font-sans">
               License No: {BRAND.licenseNumber}
               <br />
-              <strong className="text-slate-700">{BRAND.name}</strong>
+              <strong className="text-[#172B45]">{BRAND.name}</strong>
             </p>
           </div>
         </aside>
@@ -414,7 +414,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       </div>
 
       {/* Mobile Bottom Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 flex items-center justify-around py-2 shadow-lg">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-[#E4EAF1] flex items-center justify-around py-2 shadow-lg">
         {[
           { label: 'হোম', labelEn: 'Home', href: '/portal', icon: LayoutDashboard },
           { label: 'চাকরি', labelEn: 'Jobs', href: '/portal/jobs', icon: Briefcase },
@@ -432,7 +432,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
               key={item.href}
               href={item.href}
               className={`flex flex-col items-center gap-0.5 text-[10px] py-1 px-3 rounded-lg transition-colors ${
-                isActive ? 'text-slate-900 font-bold' : 'text-slate-500 hover:text-slate-800'
+                isActive ? 'text-[#102B50] font-bold' : 'text-[#66758A] hover:text-[#102B50]'
               }`}
             >
               <Icon className="w-4 h-4" />

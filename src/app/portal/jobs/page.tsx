@@ -352,10 +352,10 @@ function PortalJobsContent() {
                       <button
                         type="button"
                         onClick={() => handleOpenApply(job)}
-                        className="w-full h-9 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                        className="w-full h-9 bg-[#102B50] hover:bg-[#0B1D35] text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
                       >
                         <span>{t('আবেদন করুন', 'Apply for Position')}</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
+                        <ArrowRight className="w-3.5 h-3.5 text-[#E8A2C1]" />
                       </button>
                     )}
                   </div>

@@ -410,19 +410,19 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
 
               {/* Dynamic Apply Action */}
               {hasApplied ? (
-                <div className="w-full bg-emerald-50 border border-emerald-300 text-emerald-800 text-center font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <div className="w-full bg-[#24856A]/10 border border-[#24856A]/30 text-[#24856A] text-center font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-[#24856A]" />
                   ইতিমধ্যে এই চাকরিতে আবেদন সম্পন্ন হয়েছে
                 </div>
               ) : applicant ? (
-                <Link href={`/portal/jobs?applyJobId=${job.id}`} className="block">
+                <Link href={`/portal/apply/${job.id}`} className="block">
                   <Button
                     variant="primary"
                     size="lg"
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 text-sm flex items-center justify-center gap-2 shadow-md"
+                    className="w-full bg-[#102B50] hover:bg-[#0B1D35] text-white font-bold py-3 text-sm flex items-center justify-center gap-2 shadow-md"
                   >
-                    <UserPlus className="w-4 h-4" />
-                    সরাসরি আবেদন জমা দিন (1-Click Apply)
+                    <UserPlus className="w-4 h-4 text-[#E8A2C1]" />
+                    স্টেপ-বাই-স্টেপ আবেদন করুন
                   </Button>
                 </Link>
               ) : (
@@ -431,19 +431,19 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                     <Button
                       variant="primary"
                       size="lg"
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 text-sm flex items-center justify-center gap-2 shadow-md"
+                      className="w-full bg-[#102B50] hover:bg-[#0B1D35] text-white font-bold py-3 text-sm flex items-center justify-center gap-2 shadow-md"
                     >
-                      <UserPlus className="w-4 h-4" />
+                      <UserPlus className="w-4 h-4 text-[#E8A2C1]" />
                       অনলাইনে আবেদন করুন (নতুন প্রার্থী)
                     </Button>
                   </Link>
-                  <Link href={`/portal/login?redirect=/jobs/${job.slug || job.id}`} className="block">
+                  <Link href={`/portal/login?redirect=/portal/apply/${job.id}`} className="block">
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full text-xs text-slate-700 hover:bg-slate-50"
+                      className="w-full text-xs text-[#172B45] border-[#E4EAF1] hover:bg-[#F6F8FB]"
                     >
-                      লগইন করে আবেদন করুন
+                      পূর্বে অ্যাকাউন্ট থাকলে লগইন করুন
                     </Button>
                   </Link>
                 </div>

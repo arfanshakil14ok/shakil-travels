@@ -4,12 +4,17 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 216 33% 97.5%; /* #F6F8FB */
+    --foreground: 215 50% 18%;   /* #172B45 */
+    --corporate-navy: #102B50;
+    --corporate-deep-navy: #0B1D35;
+    --corporate-pink: #E8A2C1;
+    --corporate-pink-hover: #D987AC;
+    --corporate-border: #E4EAF1;
   }
 
   body {
-    @apply bg-white text-slate-900 antialiased selection:bg-navy-900 selection:text-white;
+    @apply bg-[#F6F8FB] text-[#172B45] antialiased selection:bg-[#102B50] selection:text-white;
   }
 }
 

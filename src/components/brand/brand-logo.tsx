@@ -89,19 +89,41 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
       {variant !== 'icon-only' && (
         <div
           className={cn(
-            'flex flex-col min-w-0 leading-tight',
+            'flex flex-col min-w-0 leading-none justify-center',
             iconOnlyOnMobile && 'hidden sm:flex'
           )}
         >
-          <span
-            className={cn(
-              'font-black tracking-tight uppercase font-sans truncate',
-              nameSizes[size],
-              isLight ? 'text-white' : 'text-slate-900'
-            )}
-          >
-            {BRAND.name}
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span
+              className={cn(
+                'font-black tracking-tight uppercase font-sans truncate',
+                nameSizes[size],
+                isLight ? 'text-white' : 'text-[#102B50]'
+              )}
+            >
+              {BRAND.name}
+            </span>
+            <span
+              className={cn(
+                'px-1.5 py-0.5 text-[9px] font-bold rounded-sm border font-mono tracking-wider',
+                isLight
+                  ? 'bg-white/10 text-slate-200 border-white/20'
+                  : 'bg-[#F6F8FB] text-[#102B50] border-[#E4EAF1]'
+              )}
+            >
+              {BRAND.licenseNumber}
+            </span>
+          </div>
+          {showTagline && (
+            <span
+              className={cn(
+                'text-[10px] tracking-tight font-medium mt-1 truncate',
+                isLight ? 'text-slate-300' : 'text-[#66758A]'
+              )}
+            >
+              {BRAND.taglineEn}
+            </span>
+          )}
         </div>
       )}
     </div>

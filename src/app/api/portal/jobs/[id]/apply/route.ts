@@ -32,16 +32,19 @@ export async function POST(
       );
     }
 
-    // 2. HARD LIMIT: Candidates cannot apply more than 3 times across the entire system
+    // 2. HARD LIMIT: Candidates cannot apply more than 3 times across the entire system (excluding drafts & rejected)
     const totalApplications = await prisma.application.count({
-      where: { applicantId: applicant.id },
+      where: {
+        applicantId: applicant.id,
+        status: { notIn: ['DRAFT', 'REJECTED', 'WITHDRAWN', 'CANCELLED'] },
+      },
     });
 
     if (totalApplications >= 3) {
       return NextResponse.json(
         {
           success: false,
-          error: 'আপনি সর্বোচ্চ ৩ বার চাকরির জন্য আবেদন করতে পারবেন। আপনার আবেদনের কোটা (৩টি) পূর্ণ হয়েছে। / You cannot apply more than 3 times. Your application limit (3) has been reached.',
+          error: 'আপনি সর্বোচ্চ ৩ বার চাকরির জন্য আবেদন করতে পারবেন। আপনার সক্রিয় আবেদনের কোটা (৩টি) পূর্ণ হয়েছে। / You cannot apply more than 3 times. Your active application limit (3) has been reached.',
           currentCount: totalApplications,
           maxLimit: 3,
         },
@@ -49,28 +52,28 @@ export async function POST(
       );
     }
 
-    // 3. Prevent duplicate active application for the same job
-    const existingApp = await prisma.application.findFirst({
+    // 3. Prevent duplicate active submitted application for the same job
+    const existingSubmittedApp = await prisma.application.findFirst({
       where: {
         applicantId: applicant.id,
         jobId,
-        status: { notIn: ['REJECTED', 'WITHDRAWN', 'CANCELLED'] },
+        status: { notIn: ['DRAFT', 'REJECTED', 'WITHDRAWN', 'CANCELLED'] },
       },
     });
 
-    if (existingApp) {
+    if (existingSubmittedApp) {
       return NextResponse.json(
         {
           success: false,
-          error: `You have already applied for this position (Application: ${existingApp.applicationCode || existingApp.applicationNumber}). / এই পদের জন্য আপনার সক্রিয় আবেদন ইতোমধ্যে জমা রয়েছে।`,
-          applicationId: existingApp.id,
-          applicationCode: existingApp.applicationCode || existingApp.applicationNumber,
+          error: `You have already applied for this position (Application: ${existingSubmittedApp.applicationCode || existingSubmittedApp.applicationNumber}). / এই পদের জন্য আপনার সক্রিয় আবেদন ইতোমধ্যে জমা রয়েছে।`,
+          applicationId: existingSubmittedApp.id,
+          applicationCode: existingSubmittedApp.applicationCode || existingSubmittedApp.applicationNumber,
         },
         { status: 409 }
       );
     }
 
-    // 4. Fetch applicant profile details and strictly enforce 100% completion
+    // 4. Fetch applicant profile details
     const fullApplicant = await prisma.applicant.findUnique({
       where: { id: applicant.id },
       include: {
@@ -94,11 +97,17 @@ export async function POST(
     }
 
     let notes: string | undefined;
+    let eligibilitySnapshot: any = null;
+    let documentIds: string[] = [];
     try {
       const body = await request.json();
       notes = body.notes;
+      eligibilitySnapshot = body.eligibilitySnapshot || null;
+      if (Array.isArray(body.documentIds)) {
+        documentIds = body.documentIds;
+      }
     } catch {
-      // notes is optional
+      // optional
     }
 
     const matchSnapshot = calculateMatch(fullApplicant || applicant, job);
@@ -106,45 +115,101 @@ export async function POST(
     // 5. Generate sequential application code SGR-APP-2026-XXXXXX
     const applicationCode = await generateFormattedId(prisma, 'application');
 
-
-    // 5. Create application with matching snapshot
-    const application = await prisma.application.create({
-      data: {
-        applicationCode,
-        applicationNumber: applicationCode,
+    // 6. Check for existing draft to transition or create fresh
+    const existingDraft = await prisma.application.findFirst({
+      where: {
         applicantId: applicant.id,
         jobId,
-        employerId: job.employerId || null,
-        countryId: job.countryId || null,
-        currentStage: 'APPLIED',
-        status: 'APPLIED',
-        source: 'CANDIDATE_CREATED',
-        priority: 'MEDIUM',
-        notes: notes || null,
-        matchingSnapshot: matchSnapshot as any,
-        statusHistory: {
-          create: {
-            toStage: 'APPLIED',
-            toStatus: 'APPLIED',
-            changedByRole: 'APPLICANT',
-            notes: 'Applicant self-applied via applicant portal',
-          },
-        },
-      },
-      include: {
-        job: {
-          select: {
-            title: true,
-            jobCode: true,
-            employerId: true,
-            countryId: true,
-            country: { select: { name: true } },
-          },
-        },
-        employer: { select: { id: true, companyName: true } },
-        country: { select: { id: true, name: true } },
+        status: 'DRAFT',
       },
     });
+
+    let application;
+    if (existingDraft) {
+      application = await prisma.application.update({
+        where: { id: existingDraft.id },
+        data: {
+          applicationCode,
+          applicationNumber: applicationCode,
+          employerId: job.employerId || null,
+          countryId: job.countryId || null,
+          currentStage: 'APPLIED',
+          status: 'APPLIED',
+          source: 'CANDIDATE_CREATED',
+          priority: 'MEDIUM',
+          notes: notes || null,
+          matchingSnapshot: matchSnapshot as any,
+          eligibilitySnapshot: eligibilitySnapshot || existingDraft.eligibilitySnapshot,
+          statusHistory: {
+            create: {
+              toStage: 'APPLIED',
+              toStatus: 'APPLIED',
+              changedByRole: 'APPLICANT',
+              notes: 'Applicant completed wizard and self-applied via candidate portal',
+            },
+          },
+        },
+        include: {
+          job: {
+            select: {
+              title: true,
+              jobCode: true,
+              employerId: true,
+              countryId: true,
+            },
+          },
+        },
+      });
+    } else {
+      application = await prisma.application.create({
+        data: {
+          applicationCode,
+          applicationNumber: applicationCode,
+          applicantId: applicant.id,
+          jobId,
+          employerId: job.employerId || null,
+          countryId: job.countryId || null,
+          currentStage: 'APPLIED',
+          status: 'APPLIED',
+          source: 'CANDIDATE_CREATED',
+          priority: 'MEDIUM',
+          notes: notes || null,
+          matchingSnapshot: matchSnapshot as any,
+          eligibilitySnapshot: eligibilitySnapshot as any,
+          statusHistory: {
+            create: {
+              toStage: 'APPLIED',
+              toStatus: 'APPLIED',
+              changedByRole: 'APPLICANT',
+              notes: 'Applicant self-applied via applicant portal',
+            },
+          },
+        },
+        include: {
+          job: {
+            select: {
+              title: true,
+              jobCode: true,
+              employerId: true,
+              countryId: true,
+            },
+          },
+        },
+      });
+    }
+
+    // 7. Link candidate documents to this application
+    if (documentIds.length > 0) {
+      await prisma.document.updateMany({
+        where: {
+          id: { in: documentIds },
+          applicantId: applicant.id,
+        },
+        data: {
+          applicationId: application.id,
+        },
+      });
+    }
 
     // 6. Notify candidate (In-app + comms dispatcher)
     await dispatchCommunication(prisma, {

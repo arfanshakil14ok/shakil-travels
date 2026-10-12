@@ -90,22 +90,22 @@ export const JobCard: React.FC<JobCardProps> = ({ job, className }) => {
 
   return (
     <Card
-      className={`overflow-hidden bg-white border border-slate-200/90 hover:border-emerald-500 hover:shadow-2xl transition-all duration-300 flex flex-col justify-between group rounded-2xl hover:-translate-y-1 ${className || ''}`}
+      className={`overflow-hidden bg-white border border-[#E4EAF1] hover:border-[#102B50] hover:shadow-lg transition-all duration-300 flex flex-col justify-between group rounded-xl ${className || ''}`}
     >
       {/* Visual Header with Destination Country Landmark Photo */}
-      <div className="relative h-48 w-full bg-slate-900 overflow-hidden">
+      <div className="relative h-44 w-full bg-[#0B1D35] overflow-hidden">
         <Image
           src={countryImg.src}
           alt={`${job.country?.name || 'Destination'} - ${job.title}`}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          className="object-cover group-hover:scale-110 transition-transform duration-700 opacity-90"
+          className="object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0B1D35]/95 via-[#0B1D35]/40 to-transparent" />
 
         {/* Top-Left: Country Vector Flag & Name Badge */}
-        <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-slate-200 shadow-md flex items-center gap-2 z-10">
-          <div className="relative w-5 h-3.5 rounded-xs overflow-hidden shadow-2xs border border-slate-200 flex-shrink-0">
+        <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-xs px-2.5 py-1.5 rounded-lg border border-[#E4EAF1] shadow-2xs flex items-center gap-2 z-10">
+          <div className="relative w-5 h-3.5 rounded-xs overflow-hidden border border-slate-200 flex-shrink-0">
             <Image
               src={flagUrl}
               alt={job.country?.name || 'Flag'}
@@ -113,7 +113,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, className }) => {
               className="object-cover"
             />
           </div>
-          <span className="text-xs font-black text-slate-900 font-sans">
+          <span className="text-xs font-bold text-[#172B45] font-sans">
             {job.country?.name || 'International'}
           </span>
         </div>
@@ -121,92 +121,98 @@ export const JobCard: React.FC<JobCardProps> = ({ job, className }) => {
         {/* Top-Right: Trade Category / Featured Pill */}
         <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
           {job.featured && (
-            <div className="bg-gold-500 text-navy-950 font-black text-[10px] px-2 py-0.5 rounded-lg uppercase tracking-wider shadow-sm flex items-center gap-1">
-              <Sparkles className="w-3 h-3" />
+            <div className="bg-[#E8A2C1] text-[#102B50] font-bold text-[10px] px-2 py-0.5 rounded-md uppercase tracking-wider shadow-2xs flex items-center gap-1">
+              <Sparkles className="w-3 h-3 text-[#102B50]" />
               Featured
             </div>
           )}
-          <div className="bg-navy-950/85 backdrop-blur-md text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded-lg font-sans">
+          <div className="bg-[#102B50]/90 backdrop-blur-xs text-white border border-white/10 text-[10px] font-semibold px-2 py-0.5 rounded-md font-sans">
             {job.jobCategory?.name || 'General'}
           </div>
         </div>
 
         {/* Job Title on Gradient Overlay */}
-        <div className="absolute bottom-3 left-3 right-3 text-white z-10">
-          <div className="flex items-center justify-between text-[10px] text-emerald-300 font-bold mb-1">
+        <div className="absolute bottom-3 left-3.5 right-3.5 text-white z-10">
+          <div className="flex items-center justify-between text-[11px] text-slate-300 font-medium mb-1">
             <span>পদসংখ্যা: {job.vacancyCount || 1} জন</span>
-            <span className="text-slate-300 font-sans">কাজের কোড: {job.jobCode || 'SK-JOB'}</span>
+            <span className="text-slate-300 font-sans text-[10px]">কোড: {job.jobCode || 'SK-JOB'}</span>
           </div>
-          <h3 className="text-base font-extrabold line-clamp-1 text-white group-hover:text-emerald-300 transition-colors font-bengali">
+          <h3 className="text-base font-bold line-clamp-1 text-white group-hover:text-[#E8A2C1] transition-colors font-bengali">
             {job.title}
           </h3>
         </div>
       </div>
 
       {/* Card Body & Details */}
-      <CardContent className="p-5 space-y-4 flex-1 flex flex-col justify-between font-bengali">
-        <div className="space-y-3 text-xs text-slate-600">
+      <CardContent className="p-4 sm:p-5 space-y-3.5 flex-1 flex flex-col justify-between font-bengali">
+        <div className="space-y-3 text-xs text-[#66758A]">
           {/* Employer with Verified Badge */}
           <div className="flex items-center justify-between gap-1.5 text-[11px]">
-            <div className="flex items-center gap-1 text-slate-700 font-semibold truncate">
-              <BriefcaseBusiness className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+            <div className="flex items-center gap-1.5 text-[#172B45] font-medium truncate">
+              <BriefcaseBusiness className="w-3.5 h-3.5 text-[#66758A] flex-shrink-0" />
               <span className="truncate">
-                {job.employer?.companyName || 'অনুমোদিত বিদেশি কোম্পানি'}
+                {job.employer?.companyName || 'অনুমোদিত বিদেশি নিয়োগকারী'}
               </span>
             </div>
-            <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded flex-shrink-0">
-              <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Verified
-            </span>
+            {job.employer?.verificationStatus === 'VERIFIED' ? (
+              <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#24856A] bg-[#24856A]/10 px-1.5 py-0.5 rounded flex-shrink-0">
+                <CheckCircle2 className="w-3 h-3 text-[#24856A]" /> Verified
+              </span>
+            ) : (
+              <span className="inline-flex items-center text-[10px] font-medium text-[#66758A] bg-[#F6F8FB] px-1.5 py-0.5 rounded border border-[#E4EAF1] flex-shrink-0">
+                নিবন্ধিত
+              </span>
+            )}
           </div>
 
           {/* Salary Box */}
-          <div className="p-3 bg-emerald-50/80 border border-emerald-100 rounded-xl flex items-center justify-between">
-            <span className="text-slate-600 text-[11px] font-medium flex items-center gap-1">
-              <Banknote className="w-4 h-4 text-emerald-700" />
+          <div className="p-2.5 bg-[#F6F8FB] border border-[#E4EAF1] rounded-lg flex items-center justify-between">
+            <span className="text-[#66758A] text-[11px] font-medium flex items-center gap-1">
+              <Banknote className="w-4 h-4 text-[#102B50]" />
               মাসিক বেতন:
             </span>
-            <span className="font-black text-emerald-800 text-xs sm:text-sm font-sans">
+            <span className="font-bold text-[#102B50] text-xs sm:text-sm font-sans">
               {formatSalary(job.salaryMin, job.salaryMax, job.currency)}
             </span>
           </div>
 
           {/* Experience & Deadline */}
-          <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
-            <div className="flex items-center gap-1 text-slate-600 truncate">
-              <Clock className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-              <span>
+          <div className="grid grid-cols-2 gap-2 pt-0.5 text-[11px]">
+            <div className="flex items-center gap-1 text-[#66758A] truncate">
+              <Clock className="w-3.5 h-3.5 text-[#66758A] flex-shrink-0" />
+              <span className="truncate">
                 {job.experienceRequired
                   ? `${job.experienceRequired} বছরের অভিজ্ঞতা`
                   : 'ফ্রেশার আবেদনযোগ্য'}
               </span>
             </div>
-            <div className="flex items-center gap-1 text-slate-600 truncate">
-              <Calendar className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-              <span>{formatDeadline(job.applicationDeadline)}</span>
+            <div className="flex items-center gap-1 text-[#66758A] truncate">
+              <Calendar className="w-3.5 h-3.5 text-[#66758A] flex-shrink-0" />
+              <span className="truncate">{formatDeadline(job.applicationDeadline)}</span>
             </div>
           </div>
         </div>
 
         {/* Dual Action CTAs */}
-        <div className="pt-3 border-t border-slate-100 grid grid-cols-2 gap-2">
+        <div className="pt-3 border-t border-[#E4EAF1] grid grid-cols-2 gap-2">
           <Link href={`/jobs/${job.slug || job.id}`} className="w-full">
             <Button
               variant="outline"
               size="sm"
-              className="w-full text-xs border border-slate-300 text-slate-800 hover:bg-slate-100 hover:border-slate-400 font-bold"
+              className="w-full text-xs border border-[#E4EAF1] text-[#172B45] hover:bg-[#F6F8FB] hover:border-slate-300 font-semibold py-2"
             >
               বিস্তারিত দেখুন
             </Button>
           </Link>
 
-          <Link href={`/portal/register?jobId=${job.id}`} className="w-full">
+          <Link href={`/portal/apply/${job.id}`} className="w-full">
             <Button
               variant="primary"
               size="sm"
-              className="w-full text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-1 shadow-xs"
+              className="w-full text-xs bg-[#102B50] hover:bg-[#0B1D35] text-white font-semibold flex items-center justify-center gap-1 py-2"
             >
               আবেদন করুন
-              <ArrowRight className="w-3 h-3" />
+              <ArrowRight className="w-3 h-3 text-[#E8A2C1]" />
             </Button>
           </Link>
         </div>
