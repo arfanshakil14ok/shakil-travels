@@ -20,6 +20,7 @@ import {
   Trash2,
   RefreshCw,
   AlertTriangle,
+  Edit2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,7 @@ import { Select } from '@/components/ui/select';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useToast } from '@/components/ui/toast';
 import { formatDate } from '@/lib/utils';
+import { CountryFlag } from '@/components/ui/country-flag';
 
 export default function JobDetailPage() {
   const params = useParams();
@@ -233,6 +235,17 @@ export default function JobDetailPage() {
             />
           </div>
 
+          <Link href={`/admin/jobs/${job.id}/edit`}>
+            <Button
+              variant="outline"
+              size="sm"
+              leftIcon={<Edit2 className="w-3.5 h-3.5 text-navy-700" />}
+              className="text-navy-950 hover:bg-navy-50 font-medium"
+            >
+              Edit Demand
+            </Button>
+          </Link>
+
           <Button
             variant="outline"
             size="sm"
@@ -269,7 +282,7 @@ export default function JobDetailPage() {
               <div>
                 <span className="text-slate-400 block font-medium">Destination</span>
                 <span className="text-slate-900 font-semibold text-sm flex items-center gap-1.5 mt-0.5">
-                  {job.country?.flag && <span>{job.country.flag}</span>}
+                  <CountryFlag flag={job.country?.flag} name={job.country?.name} size="md" />
                   {job.country?.name}
                 </span>
               </div>

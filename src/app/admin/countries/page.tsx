@@ -20,6 +20,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/toast';
+import { CountryFlag } from '@/components/ui/country-flag';
 
 export default function AdminCountriesPage() {
   const { success, error } = useToast();
@@ -38,6 +39,8 @@ export default function AdminCountriesPage() {
     name: '',
     code: '',
     flag: '',
+    currency: '',
+    currencyCode: '',
     description: '',
     isActive: true,
   });
@@ -70,6 +73,8 @@ export default function AdminCountriesPage() {
       name: '',
       code: '',
       flag: '',
+      currency: '',
+      currencyCode: '',
       description: '',
       isActive: true,
     });
@@ -82,6 +87,8 @@ export default function AdminCountriesPage() {
       name: c.name,
       code: c.code,
       flag: c.flag || '',
+      currency: c.currency || '',
+      currencyCode: c.currencyCode || '',
       description: c.description || '',
       isActive: c.isActive,
     });
@@ -186,6 +193,7 @@ export default function AdminCountriesPage() {
               <tr>
                 <th className="p-3.5">Country & Flag</th>
                 <th className="p-3.5">ISO Code</th>
+                <th className="p-3.5">Default Currency</th>
                 <th className="p-3.5">Active Demands</th>
                 <th className="p-3.5">Applicant Preferences</th>
                 <th className="p-3.5">Corridor Status</th>
@@ -195,14 +203,14 @@ export default function AdminCountriesPage() {
             <tbody className="divide-y divide-slate-200">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="p-12 text-center text-slate-400">
+                  <td colSpan={7} className="p-12 text-center text-slate-400">
                     <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-navy-900" />
                     Loading countries...
                   </td>
                 </tr>
               ) : filteredCountries.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-12 text-center text-slate-400">
+                  <td colSpan={7} className="p-12 text-center text-slate-400">
                     No countries found.
                   </td>
                 </tr>
@@ -211,7 +219,7 @@ export default function AdminCountriesPage() {
                   <tr key={c.id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="p-3.5">
                       <div className="flex items-center gap-2.5">
-                        <span className="text-xl leading-none">{c.flag || '🌐'}</span>
+                        <CountryFlag flag={c.flag} name={c.name} size="md" />
                         <span className="font-semibold text-slate-900 text-sm">{c.name}</span>
                       </div>
                     </td>
@@ -220,6 +228,17 @@ export default function AdminCountriesPage() {
                       <span className="font-mono font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs border border-slate-200">
                         {c.code}
                       </span>
+                    </td>
+
+                    <td className="p-3.5">
+                      {c.currencyCode ? (
+                        <span className="inline-flex items-center gap-1 font-mono font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded text-xs">
+                          {c.currencyCode}
+                          {c.currency && <span className="text-[10px] text-emerald-600 font-sans font-normal">({c.currency})</span>}
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 text-xs italic">Not configured</span>
+                      )}
                     </td>
 
                     <td className="p-3.5">
@@ -274,47 +293,111 @@ export default function AdminCountriesPage() {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editingCountry ? 'Edit Destination Country' : 'Add Destination Country'}
+        title={editingCountry ? 'Edit Destination Country / দেশ সম্পাদনা' : 'Add Destination Country / নতুন দেশ যোগ করুন'}
       >
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           <Input
-            label="Country Name"
+            label="Country Name *"
             required
-            placeholder="e.g. Kingdom of Saudi Arabia"
+            placeholder="e.g. Kingdom of Saudi Arabia, Japan, Qatar"
             value={formData.name}
             onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
           />
 
           <div className="grid grid-cols-2 gap-3">
             <Input
-              label="Country Code (ISO 2-letter)"
+              label="Country Code (ISO 2/3 letter) *"
               required
               maxLength={3}
-              placeholder="e.g. SA, AE, QA"
+              placeholder="e.g. SA, JP, QA, RO"
               value={formData.code}
-              onChange={(e) => setFormData((p) => ({ ...p, code: e.target.value.toUpperCase() }))}
+              onChange={(e) => {
+                const code = e.target.value.toUpperCase();
+                setFormData((p) => {
+                  const updated: any = { ...p, code };
+                  // Auto-suggest flag and currency for common codes if not set
+                  if (!p.flag || p.flag.includes('flagcdn.com')) {
+                    updated.flag = code.length >= 2 ? `https://flagcdn.com/w40/${code.slice(0, 2).toLowerCase()}.png` : '';
+                  }
+                  if (!p.currencyCode) {
+                    const map: Record<string, { code: string; name: string }> = {
+                      SA: { code: 'SAR', name: 'Saudi Riyal' },
+                      AE: { code: 'AED', name: 'UAE Dirham' },
+                      QA: { code: 'QAR', name: 'Qatari Riyal' },
+                      KW: { code: 'KWD', name: 'Kuwaiti Dinar' },
+                      OM: { code: 'OMR', name: 'Omani Rial' },
+                      BH: { code: 'BHD', name: 'Bahraini Dinar' },
+                      MY: { code: 'MYR', name: 'Malaysian Ringgit' },
+                      SG: { code: 'SGD', name: 'Singapore Dollar' },
+                      JP: { code: 'JPY', name: 'Japanese Yen' },
+                      KR: { code: 'KRW', name: 'South Korean Won' },
+                      RO: { code: 'RON', name: 'Romanian Leu' },
+                      PL: { code: 'PLN', name: 'Polish Zloty' },
+                      GB: { code: 'GBP', name: 'British Pound' },
+                      US: { code: 'USD', name: 'US Dollar' },
+                      BD: { code: 'BDT', name: 'Bangladeshi Taka' },
+                    };
+                    if (map[code]) {
+                      updated.currencyCode = map[code].code;
+                      updated.currency = map[code].name;
+                    }
+                  }
+                  return updated;
+                });
+              }}
             />
 
             <Input
-              label="Flag Symbol / Emoji"
-              placeholder="e.g. 🇸🇦"
+              label="Flag Symbol / Image URL"
+              placeholder="e.g. 🇸🇦 or flagcdn URL"
               value={formData.flag}
               onChange={(e) => setFormData((p) => ({ ...p, flag: e.target.value }))}
+            />
+          </div>
+
+          {/* Live Flag & Currency Preview */}
+          <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500 font-medium">Flag Preview:</span>
+              <CountryFlag flag={formData.flag || (formData.code.length >= 2 ? `https://flagcdn.com/w40/${formData.code.slice(0, 2).toLowerCase()}.png` : null)} name={formData.name} size="md" />
+              <span className="text-xs font-semibold text-slate-800">{formData.name || 'Country'}</span>
+            </div>
+            {formData.currencyCode && (
+              <span className="font-mono text-xs font-bold bg-white text-emerald-800 px-2 py-0.5 rounded border border-emerald-300">
+                {formData.currencyCode} {formData.currency ? `(${formData.currency})` : ''}
+              </span>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              label="Default Currency Code"
+              placeholder="e.g. SAR, JPY, EUR, QAR"
+              maxLength={5}
+              value={formData.currencyCode}
+              onChange={(e) => setFormData((p) => ({ ...p, currencyCode: e.target.value.toUpperCase() }))}
+            />
+
+            <Input
+              label="Currency Name / Symbol"
+              placeholder="e.g. Saudi Riyal, Yen, Euro"
+              value={formData.currency}
+              onChange={(e) => setFormData((p) => ({ ...p, currency: e.target.value }))}
             />
           </div>
 
           <Textarea
             label="Description & Migration Policy Brief"
             placeholder="Key visa policies, processing guidelines, or notes..."
-            rows={3}
+            rows={2}
             value={formData.description}
             onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))}
           />
 
           <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between">
             <div>
-              <span className="text-xs font-semibold text-slate-800">Active Corridor</span>
-              <p className="text-[11px] text-slate-500">Enable candidate matching and job publishing</p>
+              <span className="text-xs font-semibold text-slate-800">Active Migration Corridor</span>
+              <p className="text-[11px] text-slate-500">Enable candidate matching and job publishing for this country</p>
             </div>
             <Switch
               checked={formData.isActive}
@@ -327,7 +410,7 @@ export default function AdminCountriesPage() {
               Cancel
             </Button>
             <Button variant="primary" size="sm" type="submit" isLoading={isSubmitting}>
-              {editingCountry ? 'Update Country' : 'Add Country'}
+              {editingCountry ? 'Update Country / আপডেট করুন' : 'Add Country / দেশ যুক্ত করুন'}
             </Button>
           </div>
         </form>

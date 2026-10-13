@@ -13,6 +13,7 @@ import {
   Globe2,
   CheckCircle2,
   AlertCircle,
+  Edit2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/components/ui/toast';
 import { formatDate } from '@/lib/utils';
+import { CountryFlag } from '@/components/ui/country-flag';
 
 export default function JobsPage() {
   const { error } = useToast();
@@ -256,7 +258,7 @@ export default function JobsPage() {
 
                     <td className="p-3.5">
                       <span className="font-medium text-slate-800 flex items-center gap-1.5">
-                        {job.country?.flag && <span>{job.country.flag}</span>}
+                        <CountryFlag flag={job.country?.flag} name={job.country?.name} size="md" />
                         <span>{job.country?.name}</span>
                       </span>
                       <span className="text-[10px] text-slate-400 block mt-0.5">
@@ -317,16 +319,28 @@ export default function JobsPage() {
                     </td>
 
                     <td className="p-3.5 text-right">
-                      <Link href={`/admin/jobs/${job.id}`}>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          leftIcon={<Eye className="w-3.5 h-3.5" />}
-                          className="text-xs"
-                        >
-                          View Demand
-                        </Button>
-                      </Link>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <Link href={`/admin/jobs/${job.id}`}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            leftIcon={<Eye className="w-3.5 h-3.5" />}
+                            className="text-xs"
+                          >
+                            View
+                          </Button>
+                        </Link>
+                        <Link href={`/admin/jobs/${job.id}/edit`}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            leftIcon={<Edit2 className="w-3.5 h-3.5 text-slate-500" />}
+                            className="text-xs hover:text-navy-900"
+                          >
+                            Edit
+                          </Button>
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))

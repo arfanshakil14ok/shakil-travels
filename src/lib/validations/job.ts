@@ -68,18 +68,6 @@ export const jobSchema = jobBaseSchema
       message: 'Filled vacancies cannot exceed total vacancies',
       path: ['filledCount'],
     }
-  )
-  .refine(
-    (data) => {
-      if (data.status === 'PUBLISHED') {
-        return Boolean(data.employerId && data.employerId.trim().length > 0);
-      }
-      return true;
-    },
-    {
-      message: 'An employer must be assigned before publishing a job vacancy. / চাকরি প্রকাশ করার পূর্বে নিয়োগকর্তা নির্বাচন বাধ্যতামূলক।',
-      path: ['employerId'],
-    }
   );
 
 export type JobInput = z.infer<typeof jobBaseSchema>;

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { requirePermission } from '@/lib/rbac';
+import { requirePermission, requireAuth, hasPermission, AuthorizationError } from '@/lib/rbac';
 import { jobCategorySchema } from '@/lib/validations/category';
 import { createAuditLog } from '@/lib/audit';
 
@@ -45,7 +45,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const currentUser = await requirePermission('CATEGORY_CREATE');
+    const currentUser = await requireAuth();
+    if (!hasPermission(currentUser, 'CATEGORY_CREATE') && !hasPermission(currentUser, 'JOB_CREATE')) {
+      throw new AuthorizationError('Access denied: requires CATEGORY_CREATE or JOB_CREATE permission');
+    }
     const body = await request.json();
 
     const parsed = jobCategorySchema.safeParse(body);

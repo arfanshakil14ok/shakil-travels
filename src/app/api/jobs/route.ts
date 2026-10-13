@@ -38,12 +38,19 @@ export async function GET(request: NextRequest) {
     const isStaff = Boolean(user && user.role?.name !== 'CANDIDATE');
     if (!isStaff) {
       where.status = 'PUBLISHED';
-      where.employer = {
-        is: {
-          verificationStatus: 'VERIFIED',
-          status: 'ACTIVE',
+      where.AND = [
+        {
+          OR: [
+            { employerId: null },
+            {
+              employer: {
+                verificationStatus: 'VERIFIED',
+                status: 'ACTIVE',
+              },
+            },
+          ],
         },
-      };
+      ];
       // For public marketplace, optionally filter past deadlines if requested or keep visible with badge
     } else if (requestedStatus && requestedStatus !== 'ALL') {
       where.status = requestedStatus;
@@ -164,34 +171,15 @@ export async function POST(request: NextRequest) {
 
     const data = parsed.data;
 
-    // Invariant check if attempting to create as PUBLISHED
-    if (data.status === 'PUBLISHED') {
-      if (!data.employerId || !data.employerId.trim()) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'An employer must be assigned before publishing a job vacancy. / চাকরি প্রকাশ করার পূর্বে নিয়োগকর্তা নির্বাচন বাধ্যতামূলক।',
-          },
-          { status: 400 }
-        );
-      }
-
+    // Validate employer if provided; if not provided, vacancy publishes as Agency Direct / Confidential Principal
+    let employerId = data.employerId?.trim() || null;
+    if (employerId) {
       const assignedEmployer = await prisma.employer.findUnique({
-        where: { id: data.employerId },
+        where: { id: employerId },
       });
 
       if (!assignedEmployer) {
-        return NextResponse.json({ success: false, error: 'Employer not found' }, { status: 404 });
-      }
-
-      if (assignedEmployer.verificationStatus !== 'VERIFIED' || assignedEmployer.status !== 'ACTIVE') {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Only verified and active employers can have published job vacancies. Please verify the employer first or save job as DRAFT. / শুধুমাত্র যাচাইকৃত ও সক্রিয় নিয়োগকর্তার চাকরি প্রকাশ করা যাবে।',
-          },
-          { status: 400 }
-        );
+        return NextResponse.json({ success: false, error: 'Selected employer could not be found' }, { status: 404 });
       }
     }
 

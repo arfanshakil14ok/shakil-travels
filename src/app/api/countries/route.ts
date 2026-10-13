@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { requirePermission } from '@/lib/rbac';
+import { requirePermission, requireAuth, hasPermission, AuthorizationError } from '@/lib/rbac';
 import { countrySchema } from '@/lib/validations/country';
 import { createAuditLog } from '@/lib/audit';
 
@@ -45,7 +45,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const currentUser = await requirePermission('COUNTRY_CREATE');
+    const currentUser = await requireAuth();
+    if (!hasPermission(currentUser, 'COUNTRY_CREATE') && !hasPermission(currentUser, 'JOB_CREATE')) {
+      throw new AuthorizationError('Access denied: requires COUNTRY_CREATE or JOB_CREATE permission');
+    }
     const body = await request.json();
 
     const parsed = countrySchema.safeParse(body);
@@ -57,17 +60,40 @@ export async function POST(request: NextRequest) {
     }
 
     const data = parsed.data;
+    const code = data.code.toUpperCase();
+
+    // Check duplicate
+    const existing = await prisma.country.findFirst({
+      where: {
+        OR: [
+          { code },
+          { name: { equals: data.name, mode: 'insensitive' } },
+        ],
+      },
+    });
+
+    if (existing) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Country "${data.name}" (${code}) already exists in the system.`,
+        },
+        { status: 409 }
+      );
+    }
+
     const slug = data.slug || slugify(data.name);
+    const flag = data.flag?.trim() || `https://flagcdn.com/w40/${code.toLowerCase()}.png`;
 
     const country = await prisma.country.create({
       data: {
         name: data.name,
-        code: data.code.toUpperCase(),
-        flag: data.flag || null,
+        code,
+        flag,
         slug,
         continent: data.continent || null,
         currency: data.currency || null,
-        currencyCode: data.currencyCode || null,
+        currencyCode: data.currencyCode ? data.currencyCode.toUpperCase() : null,
         timezone: data.timezone || null,
         recruitmentStatus: data.recruitmentStatus || 'ACTIVE',
         description: data.description || null,

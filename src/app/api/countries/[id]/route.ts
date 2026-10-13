@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { requirePermission } from '@/lib/rbac';
+import { requirePermission, requireAuth, hasPermission, AuthorizationError } from '@/lib/rbac';
 import { countrySchema } from '@/lib/validations/country';
 import { createAuditLog } from '@/lib/audit';
 
@@ -46,7 +46,10 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const currentUser = await requirePermission('COUNTRY_EDIT');
+    const currentUser = await requireAuth();
+    if (!hasPermission(currentUser, 'COUNTRY_EDIT') && !hasPermission(currentUser, 'JOB_EDIT')) {
+      throw new AuthorizationError('Access denied: requires COUNTRY_EDIT or JOB_EDIT permission');
+    }
     const { id } = await params;
     const body = await request.json();
 
