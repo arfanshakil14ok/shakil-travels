@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Modal } from '@/components/ui/modal';
+import { ProfileAvatar } from '@/components/ui/profile-avatar';
 
 interface Column {
   id: string;
@@ -262,18 +263,14 @@ export default function PipelinePage() {
                           <div className="flex items-center gap-2">
                             <Link
                               href={app.applicant?.id ? `/admin/applicants/${app.applicant.id}` : `/admin/applications/${app.id}`}
-                              className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-700 text-xs overflow-hidden shrink-0 hover:ring-2 hover:ring-primary-500 transition-all cursor-pointer"
+                              className="shrink-0 hover:ring-2 hover:ring-primary-500 rounded-full transition-all cursor-pointer"
                               title={app.applicant?.id ? 'Open Applicant 360° Profile' : 'Applicant profile unavailable'}
                             >
-                              {app.applicant?.profilePhoto ? (
-                                <img
-                                  src={app.applicant.profilePhoto}
-                                  alt={app.applicant?.fullName || 'Candidate'}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                ((app.applicant?.fullName || 'NA').substring(0, 2)).toUpperCase()
-                              )}
+                              <ProfileAvatar
+                                photoUrl={app.applicant?.profilePhoto}
+                                name={app.applicant?.fullName || 'Candidate'}
+                                size="xs"
+                              />
                             </Link>
                             <div>
                               <Link

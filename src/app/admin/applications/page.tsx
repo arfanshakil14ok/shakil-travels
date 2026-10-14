@@ -32,6 +32,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Modal } from '@/components/ui/modal';
+import { ProfileAvatar } from '@/components/ui/profile-avatar';
 import { useLanguage } from '@/context/language-context';
 
 export interface ApplicationItem {
@@ -832,18 +833,14 @@ export default function ApplicationsPage() {
                         <div className="flex items-center gap-2.5">
                           <Link
                             href={app.applicantId ? `/admin/applicants/${app.applicantId}` : `/admin/applications/${app.id}`}
-                            className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600 text-xs overflow-hidden shrink-0 border border-slate-300 hover:ring-2 hover:ring-primary-500 transition-all cursor-pointer"
+                            className="shrink-0 hover:ring-2 hover:ring-primary-500 rounded-full transition-all cursor-pointer"
                             title="View Applicant 360° Profile"
                           >
-                            {app.applicant?.profilePhoto ? (
-                              <img
-                                src={app.applicant.profilePhoto}
-                                alt={applicantName}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              getApplicantInitials(app)
-                            )}
+                            <ProfileAvatar
+                              photoUrl={app.applicant?.profilePhoto}
+                              name={applicantName}
+                              size="sm"
+                            />
                           </Link>
                           <div>
                             <Link

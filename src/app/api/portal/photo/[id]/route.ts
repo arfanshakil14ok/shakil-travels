@@ -9,50 +9,70 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } | Promise<{ id: string }> }
 ) {
   try {
-    const applicantId = params.id;
+    const resolvedParams = await Promise.resolve(params);
+    const applicantId = resolvedParams?.id;
+
     if (!applicantId) {
       return new NextResponse('Applicant ID is required', { status: 400 });
     }
 
     const applicant = await prisma.applicant.findUnique({
       where: { id: applicantId },
-      select: { profilePhoto: true },
+      select: { id: true, profilePhoto: true, fullName: true },
     });
 
-    if (!applicant || !applicant.profilePhoto) {
-      return new NextResponse('Photo not found', { status: 404 });
+    if (!applicant) {
+      return new NextResponse('Applicant not found', { status: 404 });
     }
 
     const photo = applicant.profilePhoto;
 
-    // 1. If it's a data URL, decode and stream
-    if (photo.startsWith('data:')) {
-      const parsed = parseBase64Photo(photo);
-      if (!parsed) {
-        return new NextResponse('Invalid photo data', { status: 500 });
-      }
-
-      return new NextResponse(new Uint8Array(parsed.buffer), {
+    // Helper to send image response
+    const sendImageResponse = (buffer: Buffer | Uint8Array, mime: string) => {
+      const bodyBytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+      return new NextResponse(bodyBytes as any, {
         status: 200,
         headers: {
-          'Content-Type': parsed.mimeType || 'image/jpeg',
+          'Content-Type': mime || 'image/jpeg',
           'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
+          'Content-Length': buffer.length.toString(),
         },
       });
+    };
+
+    // 1. If profilePhoto is a Base64 data URL, decode and stream directly
+    if (photo && photo.startsWith('data:')) {
+      const parsed = parseBase64Photo(photo);
+      if (parsed) {
+        return sendImageResponse(parsed.buffer, parsed.mimeType || 'image/jpeg');
+      }
     }
 
-    // 2. Try fetching from Cloudflare R2 / S3 storage provider
-    const storageKeysToTry: string[] = [];
-    if (!photo.startsWith('/') && !photo.startsWith('http')) {
-      storageKeysToTry.push(photo);
+    // 2. If it's a full external URL, redirect
+    if (photo && (photo.startsWith('http://') || photo.startsWith('https://'))) {
+      return NextResponse.redirect(photo);
     }
-    // Also try standard applicant photo keys
+
+    // 3. Try Cloudflare R2 / S3 storage
+    const storageKeysToTry: string[] = [];
+
+    // If photo is a relative file path (like "photos/applicant_..."), try it
+    if (photo && !photo.startsWith('/api/') && !photo.startsWith('http')) {
+      const cleanKey = photo.replace(/^\/+/, '');
+      storageKeysToTry.push(cleanKey);
+      if (cleanKey.startsWith('uploads/photos/')) {
+        storageKeysToTry.push(cleanKey.replace(/^uploads\//, ''));
+      }
+    }
+
+    // Canonical R2 photo keys
     storageKeysToTry.push(
       `photos/applicant_${applicantId}.jpg`,
       `photos/applicant_${applicantId}.png`,
+      `photos/applicant_${applicantId}.jpeg`,
       `photos/applicant_${applicantId}.webp`
     );
 
@@ -62,47 +82,127 @@ export async function GET(
         if (exists) {
           const buffer = await storage.getFile(key);
           const ext = key.slice(key.lastIndexOf('.')).toLowerCase();
+          const mime =
+            ext === '.png'
+              ? 'image/png'
+              : ext === '.webp'
+              ? 'image/webp'
+              : 'image/jpeg';
+          return sendImageResponse(buffer, mime);
+        }
+      } catch (err) {
+        // Continue to next candidate
+      }
+    }
+
+    // 4. Try local disk files
+    const localUploadsDir = path.resolve(process.cwd(), 'public/uploads/photos');
+    const localCandidates: string[] = [
+      path.join(localUploadsDir, `applicant_${applicantId}.jpg`),
+      path.join(localUploadsDir, `applicant_${applicantId}.png`),
+      path.join(localUploadsDir, `applicant_${applicantId}.jpeg`),
+      path.join(localUploadsDir, `applicant_${applicantId}.webp`),
+      path.join(process.cwd(), 'uploads/private/photos', `applicant_${applicantId}.jpg`),
+      path.join(process.cwd(), 'uploads/private/photos', `applicant_${applicantId}.png`),
+    ];
+
+    if (photo && photo.startsWith('/uploads/')) {
+      localCandidates.unshift(path.join(process.cwd(), 'public', photo.replace(/^\/+/, '')));
+    }
+
+    for (const cand of localCandidates) {
+      if (fs.existsSync(cand) && fs.statSync(cand).isFile()) {
+        try {
+          const buffer = await fs.promises.readFile(cand);
+          const ext = path.extname(cand).toLowerCase();
           const mime = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
-          return new NextResponse(new Uint8Array(buffer), {
-            status: 200,
-            headers: {
-              'Content-Type': mime,
-              'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
-            },
-          });
+          return sendImageResponse(buffer, mime);
+        } catch {}
+      }
+    }
+
+    // Also scan public/uploads/photos for any file matching applicant_${applicantId}*
+    if (fs.existsSync(localUploadsDir)) {
+      try {
+        const files = await fs.promises.readdir(localUploadsDir);
+        const match = files.find((f) => f.startsWith(`applicant_${applicantId}`));
+        if (match) {
+          const fullPath = path.join(localUploadsDir, match);
+          const buffer = await fs.promises.readFile(fullPath);
+          const ext = path.extname(match).toLowerCase();
+          const mime = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
+          return sendImageResponse(buffer, mime);
         }
       } catch {}
     }
 
-    // 3. Fallback: local disk file resolution
-    const localCandidates = [
-      path.join(process.cwd(), 'public', photo.replace(/^\//, '')),
-      path.join(process.cwd(), 'public/uploads/photos', `applicant_${applicantId}.jpg`),
-      path.join(process.cwd(), 'public/uploads/photos', `applicant_${applicantId}.png`),
-      path.join(process.cwd(), 'uploads/private/photos', `applicant_${applicantId}.jpg`),
-      path.join(process.cwd(), 'uploads/private/photos', `applicant_${applicantId}.png`),
-    ];
-    for (const cand of localCandidates) {
-      if (fs.existsSync(cand) && fs.statSync(cand).isFile()) {
-        const buffer = await fs.promises.readFile(cand);
-        const ext = path.extname(cand).toLowerCase();
-        const mime = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
-        return new NextResponse(new Uint8Array(buffer), {
-          status: 200,
-          headers: {
-            'Content-Type': mime,
-            'Cache-Control': 'public, max-age=86400',
-          },
-        });
+    // 5. Self-Healing Fallback: Check if applicant has any image document in documents table
+    try {
+      const doc = await prisma.document.findFirst({
+        where: {
+          applicantId,
+          OR: [
+            { documentType: { code: 'PHOTO' } },
+            { mimeType: { startsWith: 'image/' } },
+            { fileName: { contains: 'photo', mode: 'insensitive' } },
+            { fileName: { contains: 'passport', mode: 'insensitive' } },
+          ],
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      if (doc && doc.filePath) {
+        let buffer: Buffer | null = null;
+        let mime = doc.mimeType || 'image/jpeg';
+
+        if (doc.filePath.startsWith('data:')) {
+          const commaIdx = doc.filePath.indexOf(',');
+          if (commaIdx !== -1) {
+            buffer = Buffer.from(doc.filePath.slice(commaIdx + 1), 'base64');
+          }
+        } else if (await storage.fileExists(doc.filePath)) {
+          buffer = await storage.getFile(doc.filePath);
+        } else {
+          const localDocPath = path.resolve(process.cwd(), doc.filePath.replace(/^\/+/, ''));
+          if (fs.existsSync(localDocPath) && fs.statSync(localDocPath).isFile()) {
+            buffer = await fs.promises.readFile(localDocPath);
+          }
+        }
+
+        if (buffer && buffer.length > 0) {
+          // Self-heal: Save to R2 canonical key and local disk so future lookups are instant
+          const canonicalR2Key = `photos/applicant_${applicantId}.jpg`;
+          try {
+            await storage.saveFile(canonicalR2Key, buffer, {
+              originalName: `applicant_${applicantId}.jpg`,
+              mimeType: 'image/jpeg',
+              size: buffer.length,
+              uploadedAt: new Date(),
+              applicantId,
+              documentType: 'PROFILE_PHOTO',
+            });
+
+            if (fs.existsSync(localUploadsDir)) {
+              await fs.promises.writeFile(path.join(localUploadsDir, `applicant_${applicantId}.jpg`), buffer);
+            }
+          } catch (healErr) {
+            console.warn('Self-healing photo save to R2 encountered non-fatal error:', healErr);
+          }
+
+          return sendImageResponse(buffer, mime);
+        }
       }
+    } catch (docErr) {
+      console.warn('Document fallback inspection error:', docErr);
     }
 
-    // 4. If it's a full external URL, redirect
-    if (photo.startsWith('http://') || photo.startsWith('https://')) {
-      return NextResponse.redirect(photo);
-    }
-
-    return new NextResponse('Photo not found in storage', { status: 404 });
+    // 6. Final Fallback: Return 404
+    return new NextResponse('Photo not found in storage', {
+      status: 404,
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+      },
+    });
   } catch (error) {
     console.error('Error serving applicant photo:', error);
     return new NextResponse('Internal server error', { status: 500 });

@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 import prisma from '@/lib/prisma';
 import { requireApplicantAuth } from '@/lib/portal-auth';
 import { calculateMatch } from '@/lib/matching';
@@ -169,13 +171,15 @@ export async function POST(
       }
       if (profileData.skills !== undefined) applicantUpdate.skills = profileData.skills;
       if (profileData.languages !== undefined) applicantUpdate.languages = profileData.languages;
-      if (profileData.profilePhoto !== undefined) {
-        if (typeof profileData.profilePhoto === 'string' && profileData.profilePhoto.startsWith('data:')) {
+      if (profileData.profilePhoto && typeof profileData.profilePhoto === 'string' && profileData.profilePhoto.trim().length > 0) {
+        if (profileData.profilePhoto.startsWith('data:')) {
           try {
             const parsed = parseBase64Photo(profileData.profilePhoto);
             if (parsed) {
               const ext = parsed.mimeType === 'image/png' ? '.png' : parsed.mimeType === 'image/webp' ? '.webp' : '.jpg';
               const r2Key = `photos/applicant_${applicant.id}${ext}`;
+              const r2JpgKey = `photos/applicant_${applicant.id}.jpg`;
+              
               await storage.saveFile(r2Key, parsed.buffer, {
                 originalName: `applicant_${applicant.id}${ext}`,
                 mimeType: parsed.mimeType,
@@ -184,6 +188,55 @@ export async function POST(
                 applicantId: applicant.id,
                 documentType: 'PROFILE_PHOTO',
               });
+
+              if (r2Key !== r2JpgKey) {
+                await storage.saveFile(r2JpgKey, parsed.buffer, {
+                  originalName: `applicant_${applicant.id}.jpg`,
+                  mimeType: parsed.mimeType,
+                  size: parsed.buffer.length,
+                  uploadedAt: new Date(),
+                  applicantId: applicant.id,
+                  documentType: 'PROFILE_PHOTO',
+                });
+              }
+
+              // Also backup to local disk
+              try {
+                const publicUploadsDir = path.resolve(process.cwd(), 'public/uploads/photos');
+                if (!fs.existsSync(publicUploadsDir)) {
+                  fs.mkdirSync(publicUploadsDir, { recursive: true });
+                }
+                await fs.promises.writeFile(path.join(publicUploadsDir, `applicant_${applicant.id}.jpg`), parsed.buffer);
+              } catch (fsErr) {}
+
+              // Backup in documents table
+              try {
+                const photoDocType = await prisma.documentType.findFirst({ where: { code: 'PHOTO' } });
+                if (photoDocType) {
+                  const existingDoc = await prisma.document.findFirst({
+                    where: { applicantId: applicant.id, documentTypeId: photoDocType.id },
+                  });
+                  if (existingDoc) {
+                    await prisma.document.update({
+                      where: { id: existingDoc.id },
+                      data: { filePath: r2Key, fileSize: parsed.buffer.length, mimeType: parsed.mimeType, status: 'VERIFIED' },
+                    });
+                  } else {
+                    await prisma.document.create({
+                      data: {
+                        applicantId: applicant.id,
+                        documentTypeId: photoDocType.id,
+                        fileName: `profile_photo_${applicant.id}${ext}`,
+                        filePath: r2Key,
+                        fileSize: parsed.buffer.length,
+                        mimeType: parsed.mimeType,
+                        status: 'VERIFIED',
+                      },
+                    });
+                  }
+                }
+              } catch (docErr) {}
+
               applicantUpdate.profilePhoto = `/api/portal/photo/${applicant.id}`;
             }
           } catch (storageErr) {

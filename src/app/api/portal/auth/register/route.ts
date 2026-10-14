@@ -174,9 +174,12 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // Save directly to Cloudflare R2 / S3 storage under canonical key
+      // Save directly to Cloudflare R2 / S3 storage under canonical keys
+      let r2Success = false;
+      const canonicalKey = `photos/applicant_${candidate.id}${ext}`;
+      const canonicalJpgKey = `photos/applicant_${candidate.id}.jpg`;
+
       try {
-        const canonicalKey = `photos/applicant_${candidate.id}${ext}`;
         await storage.saveFile(canonicalKey, parsedPhoto.buffer, {
           originalName: `applicant_${candidate.id}${ext}`,
           mimeType: mime,
@@ -185,8 +188,56 @@ export async function POST(request: NextRequest) {
           applicantId: candidate.id,
           documentType: 'PROFILE_PHOTO',
         });
+
+        if (canonicalKey !== canonicalJpgKey) {
+          await storage.saveFile(canonicalJpgKey, parsedPhoto.buffer, {
+            originalName: `applicant_${candidate.id}.jpg`,
+            mimeType: mime,
+            size: parsedPhoto.buffer.length,
+            uploadedAt: new Date(),
+            applicantId: candidate.id,
+            documentType: 'PROFILE_PHOTO',
+          });
+        }
+        r2Success = true;
       } catch (storageErr) {
         console.warn('R2 storage save skipped in registration:', storageErr);
+      }
+
+      // Also persist to local disk under canonical applicant name
+      try {
+        const publicUploadsDir = path.resolve(process.cwd(), 'public/uploads/photos');
+        if (!fs.existsSync(publicUploadsDir)) {
+          fs.mkdirSync(publicUploadsDir, { recursive: true });
+        }
+        await fs.promises.writeFile(path.join(publicUploadsDir, `applicant_${candidate.id}.jpg`), parsedPhoto.buffer);
+        await fs.promises.writeFile(path.join(publicUploadsDir, `applicant_${candidate.id}${ext}`), parsedPhoto.buffer);
+      } catch (fsErr) {
+        console.warn('Local disk write skipped in serverless environment:', fsErr);
+      }
+
+      // Record in documents table under PHOTO type for document checklist & self-healing backup
+      try {
+        const photoDocType = await tx.documentType.findFirst({
+          where: { code: 'PHOTO' },
+        });
+
+        if (photoDocType) {
+          const docFilePath = r2Success ? canonicalKey : `data:${mime};base64,${parsedPhoto.buffer.toString('base64')}`;
+          await tx.document.create({
+            data: {
+              applicantId: candidate.id,
+              documentTypeId: photoDocType.id,
+              fileName: `profile_photo_${candidate.id}${ext}`,
+              filePath: docFilePath,
+              fileSize: parsedPhoto.buffer.length,
+              mimeType: mime,
+              status: 'VERIFIED',
+            },
+          });
+        }
+      } catch (docErr) {
+        console.warn('Registration document table backup skipped:', docErr);
       }
 
       // Initialize or link ApplicantProfile

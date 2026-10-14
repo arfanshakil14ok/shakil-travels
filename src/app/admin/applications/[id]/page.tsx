@@ -35,6 +35,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Modal } from '@/components/ui/modal';
+import { ProfileAvatar } from '@/components/ui/profile-avatar';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useLanguage } from '@/context/language-context';
 
@@ -391,19 +392,21 @@ export default function ApplicationDetailPage({ params }: { params?: { id?: stri
           {applicant?.id ? (
             <Link
               href={`/admin/applicants/${applicant.id}`}
-              className="w-16 h-16 rounded-xl bg-slate-200 flex items-center justify-center font-bold text-slate-600 text-lg overflow-hidden shrink-0 border border-slate-300 hover:ring-2 hover:ring-primary-500 transition-all cursor-pointer"
+              className="shrink-0 hover:ring-2 hover:ring-primary-500 rounded-xl transition-all cursor-pointer"
               title="Open Applicant 360° Profile"
             >
-              {applicant?.profilePhoto ? (
-                <img src={applicant.profilePhoto} alt={applicantName} className="w-full h-full object-cover" />
-              ) : (
-                (applicantName || 'NA').substring(0, 2).toUpperCase()
-              )}
+              <ProfileAvatar
+                photoUrl={applicant?.profilePhoto}
+                name={applicantName}
+                size="xl"
+              />
             </Link>
           ) : (
-            <div className="w-16 h-16 rounded-xl bg-slate-200 flex items-center justify-center font-bold text-slate-600 text-lg overflow-hidden shrink-0 border border-slate-300">
-              {(applicantName || 'NA').substring(0, 2).toUpperCase()}
-            </div>
+            <ProfileAvatar
+              photoUrl={applicant?.profilePhoto}
+              name={applicantName}
+              size="xl"
+            />
           )}
           <div>
             <div className="flex flex-wrap items-center gap-2">

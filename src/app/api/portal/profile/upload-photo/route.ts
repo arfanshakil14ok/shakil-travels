@@ -71,14 +71,16 @@ export async function POST(request: NextRequest) {
 
     const ext = validation.extension || '.jpg';
     const cleanFileName = `applicant_${applicant.id}_${Date.now()}${ext}`;
-    const storageSubPath = `photos/${cleanFileName}`;
-
     const mime = validation.mimeType || 'image/jpeg';
-    let publicPhotoUrl = `data:${mime};base64,${buffer.toString('base64')}`;
 
-    // Save to unified private storage if available
+    // 1. Save to R2 with both Canonical Key and Timestamped Backup Key
+    const canonicalKey = `photos/applicant_${applicant.id}${ext}`;
+    const canonicalJpgKey = `photos/applicant_${applicant.id}.jpg`;
+    const timestampKey = `photos/${cleanFileName}`;
+
+    let r2Saved = false;
     try {
-      await storage.saveFile(storageSubPath, buffer, {
+      await storage.saveFile(canonicalKey, buffer, {
         originalName: fileName,
         mimeType: mime,
         size: buffer.length,
@@ -86,51 +88,121 @@ export async function POST(request: NextRequest) {
         applicantId: applicant.id,
         documentType: 'PROFILE_PHOTO',
       });
+
+      // Also ensure .jpg alias exists for standard lookups
+      if (canonicalKey !== canonicalJpgKey) {
+        await storage.saveFile(canonicalJpgKey, buffer, {
+          originalName: fileName,
+          mimeType: mime,
+          size: buffer.length,
+          uploadedAt: new Date(),
+          applicantId: applicant.id,
+          documentType: 'PROFILE_PHOTO',
+        });
+      }
+
+      await storage.saveFile(timestampKey, buffer, {
+        originalName: fileName,
+        mimeType: mime,
+        size: buffer.length,
+        uploadedAt: new Date(),
+        applicantId: applicant.id,
+        documentType: 'PROFILE_PHOTO',
+      });
+      r2Saved = true;
     } catch (storageErr) {
-      console.warn('Optional storage save skipped:', storageErr);
+      console.warn('R2 storage save failed in upload-photo, proceeding with fallbacks:', storageErr);
     }
 
-    // Also persist in public uploads for development if writable
+    // 2. Persist in local public uploads for development and immediate disk resolution
     try {
       const publicUploadsDir = path.resolve(process.cwd(), 'public/uploads/photos');
       if (!fs.existsSync(publicUploadsDir)) {
         fs.mkdirSync(publicUploadsDir, { recursive: true });
       }
+      await fs.promises.writeFile(path.join(publicUploadsDir, `applicant_${applicant.id}.jpg`), buffer);
+      await fs.promises.writeFile(path.join(publicUploadsDir, `applicant_${applicant.id}${ext}`), buffer);
       await fs.promises.writeFile(path.join(publicUploadsDir, cleanFileName), buffer);
-      if (!process.env.VERCEL && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
-        publicPhotoUrl = `/uploads/photos/${cleanFileName}`;
-      }
     } catch (fsErr) {
       console.warn('Local disk write skipped in serverless environment:', fsErr);
     }
 
-    // Update applicant record and profile
+    // 3. Backup to documents table under 'PHOTO' document type (failsafe redundancy)
+    try {
+      const photoDocType = await prisma.documentType.findFirst({
+        where: { code: 'PHOTO' },
+      });
+
+      if (photoDocType) {
+        // If R2 failed, store base64 in document as ultra-failsafe, otherwise store R2 key
+        const docFilePath = r2Saved ? canonicalKey : `data:${mime};base64,${buffer.toString('base64')}`;
+
+        // Check if an existing profile photo document exists for this candidate
+        const existingPhotoDoc = await prisma.document.findFirst({
+          where: {
+            applicantId: applicant.id,
+            documentTypeId: photoDocType.id,
+          },
+        });
+
+        if (existingPhotoDoc) {
+          await prisma.document.update({
+            where: { id: existingPhotoDoc.id },
+            data: {
+              fileName: `profile_photo_${applicant.id}${ext}`,
+              filePath: docFilePath,
+              fileSize: buffer.length,
+              mimeType: mime,
+              status: 'VERIFIED',
+              updatedAt: new Date(),
+            },
+          });
+        } else {
+          await prisma.document.create({
+            data: {
+              applicantId: applicant.id,
+              documentTypeId: photoDocType.id,
+              fileName: `profile_photo_${applicant.id}${ext}`,
+              filePath: docFilePath,
+              fileSize: buffer.length,
+              mimeType: mime,
+              status: 'VERIFIED',
+            },
+          });
+        }
+      }
+    } catch (docErr) {
+      console.warn('Document table backup skipped:', docErr);
+    }
+
+    // 4. Update applicant record with consistent endpoint
+    const endpointUrl = `/api/portal/photo/${applicant.id}`;
     const updatedApplicant = await prisma.applicant.update({
       where: { id: applicant.id },
       data: {
-        profilePhoto: publicPhotoUrl,
+        profilePhoto: endpointUrl,
         status: applicant.status === 'PROFILE_INCOMPLETE' ? 'ACTIVE' : applicant.status,
       },
     });
 
     await prisma.applicantProfile.upsert({
       where: { applicantId: applicant.id },
-      create: {
-        applicantId: applicant.id,
-      },
+      create: { applicantId: applicant.id },
       update: {},
     });
+
+    const cacheBustedUrl = `${endpointUrl}?v=${Date.now()}`;
 
     return NextResponse.json({
       success: true,
       message: 'Profile photo uploaded successfully.',
-      photoUrl: publicPhotoUrl,
+      photoUrl: cacheBustedUrl,
       data: {
-        photoUrl: publicPhotoUrl,
+        photoUrl: cacheBustedUrl,
         applicant: {
           id: updatedApplicant.id,
           fullName: updatedApplicant.fullName,
-          profilePhoto: updatedApplicant.profilePhoto,
+          profilePhoto: cacheBustedUrl,
         },
       },
     });

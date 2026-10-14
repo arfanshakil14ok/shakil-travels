@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { User } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -36,6 +36,11 @@ export const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
   const [imageError, setImageError] = useState(false);
   const effectiveSrc = photoUrl || src;
 
+  // Reset error state whenever the image source URL changes
+  useEffect(() => {
+    setImageError(false);
+  }, [effectiveSrc]);
+
   const getInitials = (fullName?: string | null) => {
     if (!fullName) return 'U';
     const parts = fullName.trim().split(/\s+/);
@@ -43,7 +48,14 @@ export const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
   };
 
-  const hasValidImage = effectiveSrc && !imageError && typeof effectiveSrc === 'string' && effectiveSrc.trim().length > 0;
+  const isValidString =
+    typeof effectiveSrc === 'string' &&
+    effectiveSrc.trim().length > 0 &&
+    effectiveSrc !== 'PENDING_INIT' &&
+    effectiveSrc !== 'null' &&
+    effectiveSrc !== 'undefined';
+
+  const hasValidImage = isValidString && !imageError;
 
   return (
     <div className={cn('relative inline-flex items-center justify-center flex-shrink-0', className)}>
@@ -59,7 +71,7 @@ export const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
               src={effectiveSrc!}
               alt={name || 'Profile avatar'}
               fill
-              unoptimized={typeof effectiveSrc === 'string' && effectiveSrc.startsWith('data:')}
+              unoptimized={true}
               sizes="(max-width: 768px) 64px, 128px"
               className="object-cover"
               onError={() => setImageError(true)}
