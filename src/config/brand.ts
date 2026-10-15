@@ -5,10 +5,10 @@
 
 export const BRAND = {
   // Official Company Identity
-  name: 'SHAKILWORK',
-  shortName: 'SHAKILWORK',
-  legalName: 'SHAKILWORK / SHAKIL TRAVELS',
-  bengaliName: 'শাকিলওয়ার্ক',
+  name: 'SHAKIL TRAVELS',
+  shortName: 'SHAKIL TRAVELS',
+  legalName: 'SHAKIL TRAVELS',
+  bengaliName: 'শাকিল ট্রাভেলস',
   agencyName: 'SHAKIL TRAVELS',
   agencyNameBn: 'শাকিল ট্রাভেলস',
 

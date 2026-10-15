@@ -187,7 +187,7 @@ export default function NewJobDemandPage() {
       .join('\n');
 
     const template = `JOB DEMAND SUMMARY / নিয়োগ বিবরণী:
-We are officially recruiting qualified and disciplined personnel for the position of "${title}" in ${countryName}. Selected candidates will be deployed under official employment contracts with complete visa and travel processing handled by SHAKILWORK (RL-2579).
+We are officially recruiting qualified and disciplined personnel for the position of "${title}" in ${countryName}. Selected candidates will be deployed under official employment contracts with complete visa and travel processing handled by SHAKIL TRAVELS (RL-2579).
 
 KEY RESPONSIBILITIES / কাজের দায়িত্ব ও ভূমিকা:
 1. Carry out trade-specific duties related to ${title} adhering to international project guidelines and safety protocols.
@@ -209,7 +209,7 @@ ELIGIBILITY & CANDIDATE REQUIREMENTS / প্রার্থীর যোগ্�
 ${formData.skillsRequired ? `• Required Skills: ${formData.skillsRequired}` : ''}
 
 RECRUITMENT PROCESS / নিয়োগ প্রক্রিয়া:
-Direct screening by SHAKILWORK Technical Selection Team → Medical Fitness Test (GAMCA / Embassy Approved) → Visa Stamping & BMET Smart Card Clearance → Pre-Departure Briefing & Flight Departure.`;
+Direct screening by SHAKIL TRAVELS Technical Selection Team → Medical Fitness Test (GAMCA / Embassy Approved) → Visa Stamping & BMET Smart Card Clearance → Pre-Departure Briefing & Flight Departure.`;
 
     setFormData((prev) => ({ ...prev, description: template }));
     if (fieldErrors.description) {
