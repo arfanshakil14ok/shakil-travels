@@ -28,17 +28,45 @@ export const ContactCtaSection: React.FC = () => {
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+    setErrorMessage(null);
+
+    try {
+      const subject = `পরামর্শ ও ভিসা অনুসন্ধান (${destination})`;
+      const fullMessage = message.trim()
+        ? `আগ্রহী দেশ: ${destination}\n\nবার্তা:\n${message.trim()}`
+        : `প্রার্থী ${destination} দেশে কর্মসংস্থানের জন্য প্রাথমিক পরামর্শ ও যোগ্যতা অনুসন্ধান চেয়েছেন।`;
+
+      const res = await fetch('/api/inquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name.trim(),
+          phone: phone.trim(),
+          subject,
+          message: fullMessage,
+          source: 'WEBSITE_CONTACT',
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to submit inquiry');
+      }
+
       setIsSubmitted(true);
       setName('');
       setPhone('');
       setMessage('');
-    }, 600);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'বার্তা পাঠাতে সমস্যা হয়েছে। অনুগ্রহ করে সরাসরি আমাদের নম্বরে কল করুন।');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -169,6 +197,14 @@ export const ContactCtaSection: React.FC = () => {
               <p className="text-xs text-slate-500 mb-6">
                 আপনার সঠিক তথ্য দিন, আমাদের প্রতিনিধি ১ কার্যদিবসের মধ্যে যোগাযোগ করবেন।
               </p>
+
+              {errorMessage && (
+                <div className="mb-4">
+                  <Alert variant="error" title="ত্রুটি">
+                    {errorMessage}
+                  </Alert>
+                </div>
+              )}
 
               {isSubmitted ? (
                 <Alert variant="success" title="আপনার বার্তাটি সফলভাবে পাঠানো হয়েছে">
