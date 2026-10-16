@@ -6,14 +6,10 @@ import { CountriesSection } from '@/components/public/countries-section';
 import { JobsPreviewSection } from '@/components/public/jobs-preview-section';
 import { EligibilityCheckerSection } from '@/components/public/eligibility-checker-section';
 import { HowItWorksSection } from '@/components/public/how-it-works-section';
-import { VisaPreviewSection } from '@/components/public/visa-preview-section';
-import { MigrantInfoSection } from '@/components/public/migrant-info-section';
 import { TrustSection } from '@/components/public/trust-section';
 import { ScamAwarenessSection } from '@/components/public/scam-awareness-section';
 import { ContactCtaSection } from '@/components/public/contact-cta-section';
 import { FALLBACK_COUNTRIES, FALLBACK_JOBS } from '@/lib/homepage-fallback';
-
-import { VerifiedTrustStrip } from '@/components/public/verified-trust-strip';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -27,7 +23,6 @@ export const metadata = {
 export default async function PublicHomePage() {
   let jobs: any[] = [];
   let countries: any[] = [];
-  let visaList: any[] = [];
 
   try {
     // Fetch real published jobs
@@ -62,18 +57,6 @@ export default async function PublicHomePage() {
       },
       orderBy: [{ featured: 'desc' }, { displayOrder: 'asc' }, { name: 'asc' }],
     });
-
-    // Fetch active visa information
-    visaList = await prisma.visaInformation.findMany({
-      where: { isActive: true },
-      include: {
-        country: {
-          select: { id: true, name: true, code: true, slug: true },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 3,
-    });
   } catch (err) {
     console.error('Homepage database fetch warning:', err);
   }
@@ -96,33 +79,26 @@ export default async function PublicHomePage() {
 
   return (
     <div className="space-y-0">
-      {/* 1 & 2. Professional Hero Section with Primary & Secondary CTAs */}
+      {/* 1. Professional Hero Section with Primary & Secondary CTAs */}
       <HeroSection />
 
-      {/* 3. Small, Verified Trust-Information Section */}
-      <VerifiedTrustStrip />
-
-      {/* 4. Selected Featured Job Opportunities */}
+      {/* 2. Selected Featured Job Opportunities */}
       <JobsPreviewSection jobs={serializedJobs} maxDisplay={6} />
 
-      {/* 5. Country and Category Exploration */}
+      {/* 3. Country and Category Exploration */}
       <CountriesSection countries={countries} maxDisplay={12} />
 
-      {/* 6. Recruitment Process: Apply → Profile Review → Interview → Visa Processing → Pre-departure */}
+      {/* 4. Recruitment Process: Apply → Profile Review → Interview → Visa Processing → Pre-departure */}
       <HowItWorksSection />
 
-      {/* 7. Interactive Eligibility Checker */}
+      {/* 5. Interactive Eligibility Checker */}
       <EligibilityCheckerSection />
 
-      {/* 8. Candidate Support and Training Information */}
-      <MigrantInfoSection />
-      <VisaPreviewSection visaList={visaList} maxDisplay={3} />
-
-      {/* 9. Trust & Fraud Awareness */}
+      {/* 6. Trust & Fraud Awareness */}
       <TrustSection />
       <ScamAwarenessSection />
 
-      {/* 10. Clear Contact & Consultation Section */}
+      {/* 7. Clear Contact & Consultation Section */}
       <ContactCtaSection />
     </div>
   );
