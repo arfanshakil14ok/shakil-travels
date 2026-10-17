@@ -34,6 +34,7 @@ import {
   ExternalLink,
   Trash2,
   GraduationCap,
+  Inbox,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { IconButton } from '@/components/ui/icon-button';
@@ -59,6 +60,11 @@ const NAV_SECTIONS: NavSection[] = [
         title: 'Dashboard',
         href: '/admin/dashboard',
         icon: LayoutDashboard,
+      },
+      {
+        title: 'Inbox / ইনবক্স',
+        href: '/admin/inquiries',
+        icon: Inbox,
       },
     ],
   },
@@ -111,7 +117,7 @@ const NAV_SECTIONS: NavSection[] = [
   {
     title: 'COMMUNICATIONS & LEADS',
     items: [
-      { title: 'Inquiries & Leads', href: '/admin/inquiries', icon: MessageSquare },
+      { title: 'Inbox (ইনবক্স ও অনুসন্ধান)', href: '/admin/inquiries', icon: Inbox },
       { title: 'Message Delivery', href: '/admin/communications', icon: Send },
       { title: 'Message Templates', href: '/admin/communications/templates', icon: FileText },
       { title: 'Articles & Overseas News', href: '/admin/blog', icon: BookOpen },

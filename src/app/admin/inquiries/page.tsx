@@ -17,6 +17,7 @@ import {
   RefreshCw,
   AlertCircle,
   Tag,
+  Inbox,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -143,12 +144,12 @@ export default function InquiriesPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <MessageSquare className="w-7 h-7 text-primary" />
-            Website Inquiries & Leads
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2.5 text-slate-900">
+            <Inbox className="w-7 h-7 text-[#102B50]" />
+            Inbox & Inquiries / ইনবক্স ও যোগাযোগ
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Review inbound inquiries, track lead communications, and convert prospects directly into registered candidates.
+            Review inbound candidate inquiries, track lead communications, and convert prospects directly into registered candidates.
           </p>
         </div>
         <div className="flex items-center gap-2">

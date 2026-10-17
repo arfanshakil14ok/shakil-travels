@@ -34,7 +34,19 @@ export const HeroSection: React.FC = () => {
   };
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-[#F6F8FB] via-white to-[#F6F8FB] text-[#172B45] pt-10 sm:pt-14 lg:pt-16 pb-12 sm:pb-16 border-b border-[#E4EAF1]">
+    <section className="relative overflow-hidden bg-gradient-to-b from-[#EEF3F8] via-[#F5F8FA] to-[#EDF2F7] text-[#172B45] pt-12 sm:pt-16 lg:pt-20 pb-12 sm:pb-16 border-b border-[#E4EAF1]">
+      {/* Subtle Architectural Dot Matrix Texture */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-50 bg-[radial-gradient(#CBD5E1_1px,transparent_1px)] [background-size:24px_24px] [mask-image:radial-gradient(ellipse_70%_60%_at_50%_35%,#000_60%,transparent_100%)]"
+        aria-hidden="true"
+      />
+
+      {/* Gentle Executive Navy Radial Illumination */}
+      <div
+        className="absolute -top-32 left-1/2 -translate-x-1/2 w-[800px] h-[360px] bg-gradient-to-b from-[#102B50]/[0.07] via-[#102B50]/[0.03] to-transparent rounded-full blur-3xl pointer-events-none"
+        aria-hidden="true"
+      />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           {/* Left Column: Headlines, Trust Pill, Primary/Secondary CTAs & Destinations */}
