@@ -128,15 +128,13 @@ export async function POST(request: NextRequest) {
     }
 
     // 3. Backup to documents table under 'PHOTO' document type (failsafe redundancy)
+    const base64DataUri = `data:${mime};base64,${buffer.toString('base64')}`;
     try {
       const photoDocType = await prisma.documentType.findFirst({
         where: { code: 'PHOTO' },
       });
 
       if (photoDocType) {
-        // If R2 failed, store base64 in document as ultra-failsafe, otherwise store R2 key
-        const docFilePath = r2Saved ? canonicalKey : `data:${mime};base64,${buffer.toString('base64')}`;
-
         // Check if an existing profile photo document exists for this candidate
         const existingPhotoDoc = await prisma.document.findFirst({
           where: {
@@ -150,7 +148,9 @@ export async function POST(request: NextRequest) {
             where: { id: existingPhotoDoc.id },
             data: {
               fileName: `profile_photo_${applicant.id}${ext}`,
-              filePath: docFilePath,
+              filePath: canonicalKey,
+              fileUrl: canonicalKey,
+              notes: base64DataUri, // Guaranteed permanent backup in database
               fileSize: buffer.length,
               mimeType: mime,
               status: 'VERIFIED',
@@ -163,7 +163,9 @@ export async function POST(request: NextRequest) {
               applicantId: applicant.id,
               documentTypeId: photoDocType.id,
               fileName: `profile_photo_${applicant.id}${ext}`,
-              filePath: docFilePath,
+              filePath: canonicalKey,
+              fileUrl: canonicalKey,
+              notes: base64DataUri, // Guaranteed permanent backup in database
               fileSize: buffer.length,
               mimeType: mime,
               status: 'VERIFIED',
@@ -187,8 +189,13 @@ export async function POST(request: NextRequest) {
 
     await prisma.applicantProfile.upsert({
       where: { applicantId: applicant.id },
-      create: { applicantId: applicant.id },
-      update: {},
+      create: {
+        applicantId: applicant.id,
+        notes: `PHOTO_B64:${base64DataUri}`,
+      },
+      update: {
+        notes: `PHOTO_B64:${base64DataUri}`,
+      },
     });
 
     const cacheBustedUrl = `${endpointUrl}?v=${Date.now()}`;

@@ -219,7 +219,14 @@ export async function POST(
                   if (existingDoc) {
                     await prisma.document.update({
                       where: { id: existingDoc.id },
-                      data: { filePath: r2Key, fileSize: parsed.buffer.length, mimeType: parsed.mimeType, status: 'VERIFIED' },
+                      data: {
+                        filePath: r2Key,
+                        fileUrl: r2Key,
+                        notes: profileData.profilePhoto,
+                        fileSize: parsed.buffer.length,
+                        mimeType: parsed.mimeType,
+                        status: 'VERIFIED',
+                      },
                     });
                   } else {
                     await prisma.document.create({
@@ -228,6 +235,8 @@ export async function POST(
                         documentTypeId: photoDocType.id,
                         fileName: `profile_photo_${applicant.id}${ext}`,
                         filePath: r2Key,
+                        fileUrl: r2Key,
+                        notes: profileData.profilePhoto,
                         fileSize: parsed.buffer.length,
                         mimeType: parsed.mimeType,
                         status: 'VERIFIED',
@@ -237,6 +246,20 @@ export async function POST(
                 }
               } catch (docErr) {}
 
+              // Also backup to applicant profile notes
+              try {
+                await prisma.applicantProfile.upsert({
+                  where: { applicantId: applicant.id },
+                  create: {
+                    applicantId: applicant.id,
+                    notes: `PHOTO_B64:${profileData.profilePhoto}`,
+                  },
+                  update: {
+                    notes: `PHOTO_B64:${profileData.profilePhoto}`,
+                  },
+                });
+              } catch (profErr) {}
+
               applicantUpdate.profilePhoto = `/api/portal/photo/${applicant.id}`;
             }
           } catch (storageErr) {
@@ -244,7 +267,15 @@ export async function POST(
             applicantUpdate.profilePhoto = profileData.profilePhoto;
           }
         } else {
-          applicantUpdate.profilePhoto = profileData.profilePhoto;
+          // If it's not base64, only keep if it is our canonical endpoint or a valid http URL.
+          // Never overwrite an existing valid photo with empty string, blob:, or invalid data!
+          if (
+            profileData.profilePhoto === `/api/portal/photo/${applicant.id}` ||
+            profileData.profilePhoto.startsWith('http://') ||
+            profileData.profilePhoto.startsWith('https://')
+          ) {
+            applicantUpdate.profilePhoto = profileData.profilePhoto;
+          }
         }
       }
 

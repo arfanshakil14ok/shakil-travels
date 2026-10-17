@@ -1,3 +1,5 @@
+import path from 'path';
+import fs from 'fs';
 import prisma from '@/lib/prisma';
 import { storage } from '@/lib/storage';
 import { createAuditLog } from '@/lib/audit';
@@ -45,18 +47,28 @@ export async function purgeApplicant(
   const applicantId = existing.id;
   let filesDeleted = 0;
 
-  // 1. Delete physical files from Cloudflare R2 / Storage
-  if (existing.profilePhoto) {
+  // 1. Delete physical files from Cloudflare R2 / Storage & local disk
+  const photoKeysToDelete = [
+    `photos/applicant_${applicantId}.jpg`,
+    `photos/applicant_${applicantId}.png`,
+    `photos/applicant_${applicantId}.jpeg`,
+    `photos/applicant_${applicantId}.webp`,
+  ];
+  if (existing.profilePhoto && !existing.profilePhoto.startsWith('/api/') && !existing.profilePhoto.startsWith('data:')) {
+    photoKeysToDelete.push(existing.profilePhoto);
+  }
+
+  for (const k of photoKeysToDelete) {
     try {
-      await storage.deleteFile(existing.profilePhoto);
-      filesDeleted++;
+      const deleted = await storage.deleteFile(k);
+      if (deleted) filesDeleted++;
     } catch (err) {
-      console.warn(`Failed to delete profile photo ${existing.profilePhoto}:`, err);
+      console.warn(`Failed to delete profile photo key ${k}:`, err);
     }
   }
 
   for (const doc of existing.documents) {
-    if (doc.filePath) {
+    if (doc.filePath && !doc.filePath.startsWith('data:')) {
       try {
         await storage.deleteFile(doc.filePath);
         filesDeleted++;
@@ -65,6 +77,19 @@ export async function purgeApplicant(
       }
     }
   }
+
+  // Also clean local disk photos if present
+  try {
+    const localDir = path.resolve(process.cwd(), 'public/uploads/photos');
+    if (fs.existsSync(localDir)) {
+      const files = fs.readdirSync(localDir);
+      for (const f of files) {
+        if (f.startsWith(`applicant_${applicantId}`)) {
+          fs.unlinkSync(path.join(localDir, f));
+        }
+      }
+    }
+  } catch {}
 
   // 2. Perform atomic database cascade purge in dependency order
   await prisma.$transaction(async (tx) => {

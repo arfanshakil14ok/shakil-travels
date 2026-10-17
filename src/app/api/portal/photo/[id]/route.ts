@@ -145,24 +145,56 @@ export async function GET(
             { documentType: { code: 'PHOTO' } },
             { mimeType: { startsWith: 'image/' } },
             { fileName: { contains: 'photo', mode: 'insensitive' } },
+            { fileName: { contains: 'profile', mode: 'insensitive' } },
             { fileName: { contains: 'passport', mode: 'insensitive' } },
           ],
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { updatedAt: 'desc' },
       });
 
-      if (doc && doc.filePath) {
+      if (doc) {
         let buffer: Buffer | null = null;
         let mime = doc.mimeType || 'image/jpeg';
 
-        if (doc.filePath.startsWith('data:')) {
-          const commaIdx = doc.filePath.indexOf(',');
-          if (commaIdx !== -1) {
-            buffer = Buffer.from(doc.filePath.slice(commaIdx + 1), 'base64');
+        // Check doc.notes for permanent Base64 Data URI backup
+        if (doc.notes && doc.notes.includes('data:image/')) {
+          const match = doc.notes.match(/data:image\/[a-zA-Z0-9+.-]+;base64,[A-Za-z0-9+/=]+/);
+          if (match) {
+            const parsed = parseBase64Photo(match[0]);
+            if (parsed) {
+              buffer = parsed.buffer;
+              mime = parsed.mimeType || mime;
+            }
           }
-        } else if (await storage.fileExists(doc.filePath)) {
-          buffer = await storage.getFile(doc.filePath);
-        } else {
+        }
+
+        // Check doc.filePath for Base64 Data URI
+        if (!buffer && doc.filePath && doc.filePath.startsWith('data:')) {
+          const parsed = parseBase64Photo(doc.filePath);
+          if (parsed) {
+            buffer = parsed.buffer;
+            mime = parsed.mimeType || mime;
+          }
+        }
+
+        // Check storage for doc.filePath or doc.fileUrl
+        if (!buffer && doc.filePath) {
+          try {
+            if (await storage.fileExists(doc.filePath)) {
+              buffer = await storage.getFile(doc.filePath);
+            }
+          } catch {}
+        }
+        if (!buffer && doc.fileUrl && doc.fileUrl !== doc.filePath) {
+          try {
+            if (await storage.fileExists(doc.fileUrl)) {
+              buffer = await storage.getFile(doc.fileUrl);
+            }
+          } catch {}
+        }
+
+        // Check local disk
+        if (!buffer && doc.filePath) {
           const localDocPath = path.resolve(process.cwd(), doc.filePath.replace(/^\/+/, ''));
           if (fs.existsSync(localDocPath) && fs.statSync(localDocPath).isFile()) {
             buffer = await fs.promises.readFile(localDocPath);
@@ -175,7 +207,7 @@ export async function GET(
           try {
             await storage.saveFile(canonicalR2Key, buffer, {
               originalName: `applicant_${applicantId}.jpg`,
-              mimeType: 'image/jpeg',
+              mimeType: mime,
               size: buffer.length,
               uploadedAt: new Date(),
               applicantId,
@@ -196,11 +228,53 @@ export async function GET(
       console.warn('Document fallback inspection error:', docErr);
     }
 
-    // 6. Final Fallback: Return 404
+    // 6. Secondary Failsafe: Check ApplicantProfile notes for Base64 Data URI
+    try {
+      const applicantProfile = await prisma.applicantProfile.findUnique({
+        where: { applicantId },
+        select: { notes: true },
+      });
+
+      if (applicantProfile?.notes && applicantProfile.notes.includes('data:image/')) {
+        const match = applicantProfile.notes.match(/data:image\/[a-zA-Z0-9+.-]+;base64,[A-Za-z0-9+/=]+/);
+        if (match) {
+          const parsed = parseBase64Photo(match[0]);
+          if (parsed) {
+            const buffer = parsed.buffer;
+            const mime = parsed.mimeType || 'image/jpeg';
+
+            // Self-heal to R2 and local disk
+            const canonicalR2Key = `photos/applicant_${applicantId}.jpg`;
+            try {
+              await storage.saveFile(canonicalR2Key, buffer, {
+                originalName: `applicant_${applicantId}.jpg`,
+                mimeType: mime,
+                size: buffer.length,
+                uploadedAt: new Date(),
+                applicantId,
+                documentType: 'PROFILE_PHOTO',
+              });
+
+              if (fs.existsSync(localUploadsDir)) {
+                await fs.promises.writeFile(path.join(localUploadsDir, `applicant_${applicantId}.jpg`), buffer);
+              }
+            } catch (healErr) {}
+
+            return sendImageResponse(buffer, mime);
+          }
+        }
+      }
+    } catch (profErr) {
+      console.warn('ApplicantProfile fallback error:', profErr);
+    }
+
+    // 7. Final Fallback: Return 404 (with no-cache headers so future uploads are never blocked)
     return new NextResponse('Photo not found in storage', {
       status: 404,
       headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+        Pragma: 'no-cache',
+        Expires: '0',
       },
     });
   } catch (error) {

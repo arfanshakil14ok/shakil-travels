@@ -174,11 +174,13 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // Save directly to Cloudflare R2 / S3 storage under canonical keys
-      let r2Success = false;
+      // Permanent Base64 Data URI backup
+      const base64DataUri = `data:${mime};base64,${parsedPhoto.buffer.toString('base64')}`;
       const canonicalKey = `photos/applicant_${candidate.id}${ext}`;
       const canonicalJpgKey = `photos/applicant_${candidate.id}.jpg`;
 
+      // Save directly to Cloudflare R2 / S3 storage under canonical keys
+      let r2Success = false;
       try {
         await storage.saveFile(canonicalKey, parsedPhoto.buffer, {
           originalName: `applicant_${candidate.id}${ext}`,
@@ -216,20 +218,21 @@ export async function POST(request: NextRequest) {
         console.warn('Local disk write skipped in serverless environment:', fsErr);
       }
 
-      // Record in documents table under PHOTO type for document checklist & self-healing backup
+      // Record in documents table under PHOTO type for document checklist & permanent self-healing backup
       try {
         const photoDocType = await tx.documentType.findFirst({
           where: { code: 'PHOTO' },
         });
 
         if (photoDocType) {
-          const docFilePath = r2Success ? canonicalKey : `data:${mime};base64,${parsedPhoto.buffer.toString('base64')}`;
           await tx.document.create({
             data: {
               applicantId: candidate.id,
               documentTypeId: photoDocType.id,
               fileName: `profile_photo_${candidate.id}${ext}`,
-              filePath: docFilePath,
+              filePath: canonicalKey,
+              fileUrl: canonicalKey,
+              notes: base64DataUri, // Guaranteed permanent backup in database notes
               fileSize: parsedPhoto.buffer.length,
               mimeType: mime,
               status: 'VERIFIED',
@@ -240,7 +243,7 @@ export async function POST(request: NextRequest) {
         console.warn('Registration document table backup skipped:', docErr);
       }
 
-      // Initialize or link ApplicantProfile
+      // Initialize or link ApplicantProfile with base64 backup as secondary failsafe
       await tx.applicantProfile.upsert({
         where: { applicantId: candidate.id },
         create: {
@@ -248,9 +251,11 @@ export async function POST(request: NextRequest) {
           skills: null,
           experienceYears: 0,
           education: null,
-          notes: 'Auto-initialized during portal registration with mandatory profile photo',
+          notes: `PHOTO_B64:${base64DataUri}`,
         },
-        update: {},
+        update: {
+          notes: `PHOTO_B64:${base64DataUri}`,
+        },
       });
 
       // Ensure Customer record exists for accounting and invoice reconciliation
