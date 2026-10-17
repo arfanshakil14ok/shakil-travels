@@ -133,10 +133,10 @@ export default function PipelinePage() {
           </div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
             <Layers className="w-7 h-7 text-primary-600" />
-            Recruitment Pipeline Board
+            ফাইল কানবান বোর্ড (Recruitment Pipeline)
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Visual stage progression workflow and job vacancy quota monitoring.
+            আবেদনকারী ও ক্যান্ডিডেট ফাইল প্রক্রিয়াকরণের কানবান বোর্ড ও ভ্যাকান্সি মনিটরিং।
           </p>
         </div>
 
