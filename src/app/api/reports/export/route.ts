@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { requirePermission } from '@/lib/rbac';
+import { requireAuth, hasPermission, AuthorizationError } from '@/lib/rbac';
 import { generateCsvString } from '@/lib/reports/csv-export';
 import { parseDateFilter } from '@/lib/reports/date-filter';
 
@@ -8,11 +8,20 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    await requirePermission('REPORT_VIEW');
-
     const searchParams = request.nextUrl.searchParams;
     const type = searchParams.get('type') || 'jobs';
     const preset = searchParams.get('preset') || 'ALL_TIME';
+
+    const user = await requireAuth();
+    const canExport =
+      hasPermission(user, 'REPORT_VIEW') ||
+      user.role?.name === 'SUPER_ADMIN' ||
+      user.role?.name === 'ADMIN' ||
+      (type === 'visa' && (hasPermission(user, 'VISA_REPORT_VIEW') || hasPermission(user, 'VISA_VIEW')));
+
+    if (!canExport) {
+      throw new AuthorizationError('Access denied: requires REPORT_VIEW permission');
+    }
 
     const { prismaDateFilter } = parseDateFilter(preset);
     const dateQuery = prismaDateFilter ? { createdAt: prismaDateFilter } : {};

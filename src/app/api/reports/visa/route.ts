@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { requirePermission } from '@/lib/rbac';
+import { requireAuth, hasPermission, AuthorizationError } from '@/lib/rbac';
 import { parseDateFilter } from '@/lib/reports/date-filter';
 
 export async function GET(request: NextRequest) {
   try {
-    await requirePermission('REPORT_VIEW');
+    const user = await requireAuth();
+    const canView =
+      hasPermission(user, 'REPORT_VIEW') ||
+      hasPermission(user, 'VISA_REPORT_VIEW') ||
+      hasPermission(user, 'VISA_VIEW') ||
+      user.role?.name === 'SUPER_ADMIN' ||
+      user.role?.name === 'ADMIN';
+
+    if (!canView) {
+      throw new AuthorizationError('Access denied: requires REPORT_VIEW or VISA_REPORT_VIEW permission');
+    }
 
     const searchParams = request.nextUrl.searchParams;
     const preset = searchParams.get('preset') || 'THIS_YEAR';
