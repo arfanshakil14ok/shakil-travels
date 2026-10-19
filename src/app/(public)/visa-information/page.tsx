@@ -15,6 +15,9 @@ import { getCountryFlagUrl } from '@/lib/image-constants';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export const metadata = {
   title: 'Official Work Visa & Immigration Information | SHAKIL TRAVELS',
   description: 'Country-specific foreign employment visa requirements, eligibility criteria, documentation, and official embassy guidelines.',

@@ -19,6 +19,9 @@ import prisma from '@/lib/prisma';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export const metadata = {
   title: 'Migrant Worker Information Portal | SHAKIL TRAVELS',
   description: 'Pre-departure guidance, airport procedures, labor rights, salary protection, contract awareness, and emergency consular assistance.',
