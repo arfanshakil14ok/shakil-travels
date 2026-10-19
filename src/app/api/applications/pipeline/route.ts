@@ -53,6 +53,7 @@ export async function GET(request: NextRequest) {
 
     const applications = await prisma.application.findMany({
       where,
+      take: 500,
       orderBy: [{ priority: 'desc' }, { updatedAt: 'desc' }],
       include: {
         applicant: {

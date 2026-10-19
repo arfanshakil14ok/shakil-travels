@@ -41,37 +41,27 @@ export async function GET(request: NextRequest) {
         where: { status: { in: ['SUBMITTED', 'UNDER_REVIEW', 'APPOINTMENT_SCHEDULED', 'BIOMETRICS_DONE', 'MEDICAL_DONE', 'EMBASSY_PROCESSING'] } },
       }),
       prisma.inquiry.count({ where: dateQuery }),
-      prisma.invoice.findMany({
+      prisma.invoice.aggregate({
         where: {
           status: { not: 'VOID' },
           ...(prismaDateFilter && { invoiceDate: prismaDateFilter }),
         },
-        select: { totalAmount: true, paidAmount: true, dueAmount: true },
+        _sum: { totalAmount: true, paidAmount: true, dueAmount: true },
       }),
-      prisma.payment.findMany({
+      prisma.payment.aggregate({
         where: {
           status: 'COMPLETED',
           ...(prismaDateFilter && { paymentDate: prismaDateFilter }),
         },
-        select: { amount: true },
+        _sum: { amount: true },
       }),
       prisma.job.count({ where: { status: 'ACTIVE' } }),
     ]);
 
-    let totalBilled = 0;
-    let totalPaid = 0;
-    let totalDue = 0;
-
-    for (const inv of invoices) {
-      totalBilled += Number(inv.totalAmount || 0);
-      totalPaid += Number(inv.paidAmount || 0);
-      totalDue += Number(inv.dueAmount || 0);
-    }
-
-    let periodCollections = 0;
-    for (const pay of payments) {
-      periodCollections += Number(pay.amount || 0);
-    }
+    const totalBilled = Number(invoices._sum.totalAmount || 0);
+    const totalPaid = Number(invoices._sum.paidAmount || 0);
+    const totalDue = Number(invoices._sum.dueAmount || 0);
+    const periodCollections = Number(payments._sum.amount || 0);
 
     return NextResponse.json({
       success: true,

@@ -42,7 +42,9 @@ export async function PUT(req: NextRequest) {
     }
 
     const { settings } = parsed.data;
-    const oldSettings = await prisma.systemSetting.findMany();
+    const oldSettings = await prisma.systemSetting.findMany({
+      select: { key: true, value: true },
+    });
     const oldMap: Record<string, string> = {};
     for (const item of oldSettings) {
       oldMap[item.key] = item.value;

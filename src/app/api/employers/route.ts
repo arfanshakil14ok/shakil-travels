@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
         take: limit,
         orderBy: { createdAt: 'desc' },
         include: {
-          country: true,
+          country: { select: { id: true, name: true, code: true, flag: true, slug: true } },
           contacts: {
             orderBy: [{ isPrimary: 'desc' }, { createdAt: 'asc' }],
           },
