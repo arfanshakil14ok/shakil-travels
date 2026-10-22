@@ -18,16 +18,16 @@ export interface BrandLogoProps {
 
 /**
  * Official Brand Emblem Mark for SHAKIL TRAVELS
- * Incorporates the official upward arrow geometric S-emblem mark.
+ * Modern custom emblem incorporating the S-curve aviation mark.
  */
 export const BrandMark: React.FC<{
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
 }> = ({ size = 'md', className }) => {
   const sizeClasses = {
-    xs: 'w-6 h-6',
-    sm: 'w-8 h-8',
-    md: 'w-10 h-10',
+    xs: 'w-7 h-7',
+    sm: 'w-9 h-9',
+    md: 'w-11 h-11',
     lg: 'w-12 h-12',
     xl: 'w-14 h-14',
   };
@@ -35,7 +35,7 @@ export const BrandMark: React.FC<{
   return (
     <div
       className={cn(
-        'relative inline-flex items-center justify-center shrink-0 rounded-xl bg-white border border-slate-200/90 shadow-xs select-none transition-transform group-hover:scale-105 overflow-hidden p-1',
+        'relative inline-flex items-center justify-center shrink-0 rounded-xl bg-white border border-slate-200/90 shadow-xs select-none transition-transform group-hover:scale-105 overflow-hidden p-0.5',
         sizeClasses[size],
         className
       )}
@@ -43,10 +43,11 @@ export const BrandMark: React.FC<{
     >
       <Image
         src="/brand/logo-mark.png"
-        alt="SHAKIL TRAVELS"
+        alt="SHAKIL TRAVELS Logo"
         fill
-        sizes="56px"
-        className="object-contain p-0.5"
+        sizes="64px"
+        className="object-contain"
+        priority
       />
     </div>
   );
@@ -56,7 +57,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   variant = 'horizontal',
   theme = 'dark',
   size = 'md',
-  showTagline = false,
+  showTagline = true,
   href,
   className,
   iconOnlyOnMobile = false,
@@ -89,7 +90,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
       {variant !== 'icon-only' && (
         <div
           className={cn(
-            'flex flex-col min-w-0 leading-none justify-center',
+            'flex flex-col min-w-0 leading-tight justify-center',
             iconOnlyOnMobile && 'hidden sm:flex'
           )}
         >
@@ -103,25 +104,15 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
             >
               {BRAND.name}
             </span>
-            <span
-              className={cn(
-                'px-1.5 py-0.5 text-[9px] font-bold rounded-sm border font-mono tracking-wider',
-                isLight
-                  ? 'bg-white/10 text-slate-200 border-white/20'
-                  : 'bg-[#F6F8FB] text-[#102B50] border-[#E4EAF1]'
-              )}
-            >
-              {BRAND.licenseNumber}
-            </span>
           </div>
           {showTagline && (
             <span
               className={cn(
-                'text-[10px] tracking-tight font-medium mt-1 truncate',
+                'text-[10px] tracking-tight font-medium mt-0.5 truncate font-bengali',
                 isLight ? 'text-slate-300' : 'text-[#66758A]'
               )}
             >
-              {BRAND.taglineEn}
+              আন্তর্জাতিক রিক্রুটমেন্ট ও ভিসা সার্ভিস
             </span>
           )}
         </div>

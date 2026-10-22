@@ -73,7 +73,7 @@ export const TrustSection: React.FC = () => {
             নিরাপদ আন্তর্জাতিক ক্যারিয়ারে {BRAND.name}
           </h2>
           <p className="text-xs sm:text-base text-slate-600 leading-relaxed">
-            সরকারি অনুমোদন ({BRAND.licenseNumber}), আন্তর্জাতিক মানদণ্ড ও ডিজিটাল জবাবদিহিতায় আমরা প্রতিটি প্রার্থীর আস্থার ঠিকানা।
+            সরকারি অনুমোদন, আন্তর্জাতিক মানদণ্ড ও ডিজিটাল জবাবদিহিতায় আমরা প্রতিটি প্রার্থীর আস্থার ঠিকানা।
           </p>
         </div>
 

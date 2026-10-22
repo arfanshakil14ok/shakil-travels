@@ -15,15 +15,19 @@ import {
   UserPlus,
   Briefcase,
   PhoneCall,
+  FileSearch,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { POPULAR_COUNTRIES_NAV } from '@/lib/image-constants';
 import { BRAND } from '@/config/brand';
+import { FileTrackingWidget } from './file-tracking-widget';
+import { cn } from '@/lib/utils';
 
 export const HeroSection: React.FC = () => {
   const router = useRouter();
   const [keyword, setKeyword] = useState('');
   const [selectedCountry, setSelectedCountry] = useState('');
+  const [activeTab, setActiveTab] = useState<'jobs' | 'track'>('jobs');
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +73,7 @@ export const HeroSection: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           {/* Left Column: Headlines, Trust Pill, Primary/Secondary CTAs & Destinations */}
           <div className="lg:col-span-7 space-y-5">
-            {/* 1. Official License Trust Pill Badge */}
+            {/* 1. Official License Trust Pill Badge (No RL Number) */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/95 backdrop-blur-md border border-[#C8DCF0] shadow-xs text-xs text-[#172B45] font-medium font-bengali">
               <span className="relative flex h-2 w-2 flex-shrink-0">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#24856A] opacity-75" />
@@ -78,7 +82,7 @@ export const HeroSection: React.FC = () => {
               <ShieldCheck className="w-4 h-4 text-[#24856A] flex-shrink-0" />
               <span className="font-semibold text-[#102B50]">{BRAND.name}</span>
               <span className="text-[#66758A]">•</span>
-              <span>লাইসেন্স নং {BRAND.licenseNumber} (BMET অনুমোদিত)</span>
+              <span>BMET অনুমোদিত রিক্রুটমেন্ট ও ভিসা প্রসেসিং</span>
             </div>
 
             {/* 2. Corporate Main Headline */}
@@ -110,14 +114,14 @@ export const HeroSection: React.FC = () => {
                 </Button>
               </Link>
 
-              <Link href="/portal/register">
+              <Link href="/track">
                 <Button
                   variant="outline"
                   size="md"
-                  leftIcon={<UserPlus className="w-4 h-4 text-[#102B50]" />}
+                  leftIcon={<FileSearch className="w-4 h-4 text-[#24856A]" />}
                   className="border border-[#CBDDF0] bg-white/95 backdrop-blur-xs text-[#102B50] hover:bg-white hover:border-[#102B50]/40 font-bengali text-sm px-6 py-2.5 font-semibold rounded-xl shadow-2xs hover:-translate-y-0.5 transition-all duration-200"
                 >
-                  প্রার্থী হিসেবে নিবন্ধন
+                  ফাইল ট্র্যাক করুন
                 </Button>
               </Link>
             </div>
@@ -172,78 +176,116 @@ export const HeroSection: React.FC = () => {
           {/* Right Column: Clean Search Desk & Direct Candidate Access */}
           <div className="lg:col-span-5">
             <div className="bg-white/95 backdrop-blur-md border border-[#CBDDF0] rounded-2xl p-6 sm:p-7 shadow-xl shadow-[#102B50]/[0.06] transition-all duration-300">
-              {/* Card Header with Status Indicator */}
-              <div className="flex items-center justify-between pb-4 border-b border-[#E4EAF1] font-bengali">
-                <div>
-                  <h2 className="text-base font-bold text-[#102B50] flex items-center gap-2">
-                    <Briefcase className="w-4 h-4 text-[#102B50]" />
-                    বৈদেশিক সার্কুলার অনুসন্ধান
-                  </h2>
-                  <p className="text-xs text-[#66758A] mt-0.5">অনুমোদিত বৈদেশিক কোম্পানিতে সরাসরি নিয়োগ</p>
-                </div>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[#24856A] text-[11px] font-semibold">
+              {/* Dual Tab Switcher: Job Search vs File Tracking */}
+              <div className="flex items-center p-1 bg-[#F1F5F9] rounded-xl mb-5 font-bengali">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('jobs')}
+                  className={cn(
+                    'flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5',
+                    activeTab === 'jobs'
+                      ? 'bg-white text-[#102B50] shadow-xs'
+                      : 'text-[#66758A] hover:text-[#102B50]'
+                  )}
+                >
+                  <Briefcase className="w-3.5 h-3.5" />
+                  <span>সার্কুলার অনুসন্ধান</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('track')}
+                  className={cn(
+                    'flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5',
+                    activeTab === 'track'
+                      ? 'bg-white text-[#24856A] shadow-xs'
+                      : 'text-[#66758A] hover:text-[#102B50]'
+                  )}
+                >
+                  <FileSearch className="w-3.5 h-3.5 text-[#24856A]" />
+                  <span>ফাইল ট্র্যাক</span>
                   <span className="w-1.5 h-1.5 rounded-full bg-[#24856A] animate-pulse" />
-                  আবেদন চালু
-                </span>
+                </button>
               </div>
 
-              {/* Search Form */}
-              <form onSubmit={handleSearch} className="mt-5 space-y-3.5 font-bengali">
-                <div>
-                  <label className="block text-xs font-semibold text-[#172B45] mb-1.5">
-                    পদের নাম বা ক্যাটাগরি
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={keyword}
-                      onChange={(e) => setKeyword(e.target.value)}
-                      placeholder="যেমন: ইলেকট্রিশিয়ান, ড্রাইভার, ওয়েল্ডার..."
-                      className="w-full pl-9 pr-3.5 py-2.5 text-xs sm:text-sm bg-[#F6F8FB] border border-[#E4EAF1] rounded-xl text-[#172B45] placeholder-[#66758A] focus:outline-none focus:border-[#102B50] focus:bg-white focus:ring-1 focus:ring-[#102B50] transition-all"
-                    />
-                    <Search className="w-4 h-4 text-[#66758A] absolute left-3 top-3 pointer-events-none" />
+              {activeTab === 'jobs' ? (
+                <>
+                  {/* Card Header with Status Indicator */}
+                  <div className="flex items-center justify-between pb-3 border-b border-[#E4EAF1] font-bengali">
+                    <div>
+                      <h2 className="text-sm font-bold text-[#102B50]">বৈদেশিক সার্কুলার অনুসন্ধান</h2>
+                      <p className="text-[11px] text-[#66758A] mt-0.5">অনুমোদিত বৈদেশিক কোম্পানিতে সরাসরি নিয়োগ</p>
+                    </div>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[#24856A] text-[11px] font-semibold">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#24856A] animate-pulse" />
+                      আবেদন চালু
+                    </span>
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-[#172B45] mb-1.5">
-                    গন্তব্য দেশ
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={selectedCountry}
-                      onChange={(e) => setSelectedCountry(e.target.value)}
-                      className="w-full pl-9 pr-3.5 py-2.5 text-xs sm:text-sm bg-[#F6F8FB] border border-[#E4EAF1] rounded-xl text-[#172B45] focus:outline-none focus:border-[#102B50] focus:bg-white focus:ring-1 focus:ring-[#102B50] appearance-none transition-all cursor-pointer"
+                  {/* Search Form */}
+                  <form onSubmit={handleSearch} className="mt-4 space-y-3 font-bengali">
+                    <div>
+                      <label className="block text-xs font-semibold text-[#172B45] mb-1">
+                        পদের নাম বা ক্যাটাগরি
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={keyword}
+                          onChange={(e) => setKeyword(e.target.value)}
+                          placeholder="যেমন: ইলেকট্রিশিয়ান, ড্রাইভার, ওয়েল্ডার..."
+                          className="w-full pl-9 pr-3.5 py-2.5 text-xs sm:text-sm bg-[#F6F8FB] border border-[#E4EAF1] rounded-xl text-[#172B45] placeholder-[#66758A] focus:outline-none focus:border-[#102B50] focus:bg-white focus:ring-1 focus:ring-[#102B50] transition-all"
+                        />
+                        <Search className="w-4 h-4 text-[#66758A] absolute left-3 top-3 pointer-events-none" />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-[#172B45] mb-1">
+                        গন্তব্য দেশ
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={selectedCountry}
+                          onChange={(e) => setSelectedCountry(e.target.value)}
+                          className="w-full pl-9 pr-3.5 py-2.5 text-xs sm:text-sm bg-[#F6F8FB] border border-[#E4EAF1] rounded-xl text-[#172B45] focus:outline-none focus:border-[#102B50] focus:bg-white focus:ring-1 focus:ring-[#102B50] appearance-none transition-all cursor-pointer"
+                        >
+                          <option value="">সকল গন্তব্য দেশ (সৌদি, কাতার, সিঙ্গাপুর...)</option>
+                          <option value="saudi-arabia">সৌদি আরব</option>
+                          <option value="united-arab-emirates">সংযুক্ত আরব আমিরাত</option>
+                          <option value="qatar">কাতার</option>
+                          <option value="kuwait">কুয়েত</option>
+                          <option value="oman">ওমান</option>
+                          <option value="singapore">সিঙ্গাপুর</option>
+                          <option value="malaysia">মালয়েশিয়া</option>
+                          <option value="japan">জাপান</option>
+                          <option value="south-korea">দক্ষিণ কোরিয়া</option>
+                          <option value="romania">রোমানিয়া</option>
+                        </select>
+                        <Globe2 className="w-4 h-4 text-[#66758A] absolute left-3 top-3 pointer-events-none" />
+                      </div>
+                    </div>
+
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      size="md"
+                      rightIcon={<ArrowRight className="w-4 h-4" />}
+                      className="w-full font-bold text-xs sm:text-sm py-2.5 bg-[#102B50] hover:bg-[#0B1D35] text-white rounded-xl shadow-xs transition-all"
                     >
-                      <option value="">সকল গন্তব্য দেশ (সৌদি, কাতার, সিঙ্গাপুর...)</option>
-                      <option value="saudi-arabia">সৌদি আরব</option>
-                      <option value="united-arab-emirates">সংযুক্ত আরব আমিরাত</option>
-                      <option value="qatar">কাতার</option>
-                      <option value="kuwait">কুয়েত</option>
-                      <option value="oman">ওমান</option>
-                      <option value="singapore">সিঙ্গাপুর</option>
-                      <option value="malaysia">মালয়েশিয়া</option>
-                      <option value="japan">জাপান</option>
-                      <option value="south-korea">দক্ষিণ কোরিয়া</option>
-                      <option value="romania">রোমানিয়া</option>
-                    </select>
-                    <Globe2 className="w-4 h-4 text-[#66758A] absolute left-3 top-3 pointer-events-none" />
-                  </div>
+                      সার্কুলার খুঁজুন
+                    </Button>
+                  </form>
+                </>
+              ) : (
+                /* Tab 2: Live File Tracking Widget */
+                <div>
+                  <FileTrackingWidget variant="compact" />
                 </div>
-
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="md"
-                  rightIcon={<ArrowRight className="w-4 h-4" />}
-                  className="w-full font-bold text-sm py-2.5 bg-[#102B50] hover:bg-[#0B1D35] text-white rounded-xl shadow-xs transition-all"
-                >
-                  সার্কুলার খুঁজুন
-                </Button>
-              </form>
+              )}
 
               {/* Portal Actions */}
-              <div className="mt-5 pt-4 border-t border-[#E4EAF1] grid grid-cols-2 gap-2.5 font-bengali">
+              <div className="mt-4 pt-3 border-t border-[#E4EAF1] grid grid-cols-2 gap-2.5 font-bengali">
                 <Link href="/portal/register" className="w-full">
                   <div className="flex items-center justify-center gap-1.5 p-2 rounded-xl bg-[#F6F8FB] hover:bg-[#E4EAF1]/60 text-xs font-semibold text-[#102B50] transition-colors border border-[#E4EAF1]">
                     <UserPlus className="w-3.5 h-3.5 text-[#102B50]" />
@@ -259,8 +301,8 @@ export const HeroSection: React.FC = () => {
                 </Link>
               </div>
 
-              {/* Verified recruitment micro-status */}
-              <div className="mt-3.5 pt-3 border-t border-[#E4EAF1] flex items-center justify-between text-[11px] text-[#66758A] font-bengali">
+              {/* Contact hotline status */}
+              <div className="mt-3 pt-2.5 border-t border-[#E4EAF1] flex items-center justify-between text-[11px] text-[#66758A] font-bengali">
                 <span className="flex items-center gap-1 text-[#24856A]">
                   <ShieldCheck className="w-3.5 h-3.5" />
                   নিরাপদ ও স্বচ্ছ অভিবাসন
@@ -280,5 +322,3 @@ export const HeroSection: React.FC = () => {
     </section>
   );
 };
-
-

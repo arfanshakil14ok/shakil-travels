@@ -31,13 +31,13 @@ export const PublicFooter: React.FC = () => {
             <BrandLogo href="/" size="lg" theme="light" variant="full" />
 
             <p className="text-xs text-slate-400 leading-relaxed font-bengali max-w-sm">
-              বাংলাদেশ সরকার অনুমোদিত ({BRAND.licenseNumber}) আন্তর্জাতিক জনশক্তি রিক্রুটিং ও অভিবাসন কনসালটেন্সি। বৈধ প্রক্রিয়া, স্বচ্ছ খরচ ও প্রবাসীদের সর্বোচ্চ সুরক্ষায় আমরা প্রতিশ্রুতিবদ্ধ।
+              বাংলাদেশ সরকার অনুমোদিত আন্তর্জাতিক জনশক্তি রিক্রুটিং ও অভিবাসন কনসালটেন্সি। বৈধ প্রক্রিয়া, স্বচ্ছ খরচ ও প্রবাসীদের সর্বোচ্চ সুরক্ষায় আমরা প্রতিশ্রুতিবদ্ধ।
             </p>
 
-            <div className="p-3 bg-navy-900/90 rounded-xl border border-navy-800 text-xs text-gold-400 font-medium font-bengali space-y-1">
+            <div className="p-3 bg-navy-900/90 rounded-xl border border-navy-800 text-xs text-emerald-400 font-medium font-bengali space-y-1">
               <div className="flex items-center gap-2 font-bold text-white">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>সরকারি লাইসেন্স নম্বর: {BRAND.licenseNumber}</span>
+                <span>BMET নিবন্ধিত রিক্রুটমেন্ট এজেন্সি</span>
               </div>
               <p className="text-[11px] text-slate-400">
                 প্রবাসী কল্যাণ ও বৈদেশিক কর্মসংস্থান মন্ত্রণালয় এবং BMET কর্তৃক নিবন্ধিত।
@@ -54,6 +54,12 @@ export const PublicFooter: React.FC = () => {
               <li>
                 <Link href="/jobs" className="hover:text-white transition-colors">
                   চাকরি সার্কুলার (Jobs)
+                </Link>
+              </li>
+              <li>
+                <Link href="/track" className="hover:text-white text-emerald-400 font-semibold transition-colors flex items-center gap-1">
+                  <span>ফাইল ট্র্যাকিং (Track File)</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                 </Link>
               </li>
               <li>
@@ -167,7 +173,7 @@ export const PublicFooter: React.FC = () => {
         {/* Legal & Compliance Bottom Bar */}
         <div className="mt-12 pt-6 border-t border-navy-900 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500 font-sans">
           <p className="text-center md:text-left font-bengali">
-            © {new Date().getFullYear()} {BRAND.name} ({BRAND.licenseNumber}). সর্বস্বত্ব সংরক্ষিত।
+            © {new Date().getFullYear()} {BRAND.name}. সর্বস্বত্ব সংরক্ষিত।
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs">

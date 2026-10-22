@@ -2,12 +2,12 @@ import React from 'react';
 import prisma from '@/lib/prisma';
 import { BRAND } from '@/config/brand';
 import { HeroSection } from '@/components/public/hero-section';
+import { HomeTrackingSection } from '@/components/public/home-tracking-section';
 import { CountriesSection } from '@/components/public/countries-section';
 import { JobsPreviewSection } from '@/components/public/jobs-preview-section';
 import { EligibilityCheckerSection } from '@/components/public/eligibility-checker-section';
 import { HowItWorksSection } from '@/components/public/how-it-works-section';
 import { TrustSection } from '@/components/public/trust-section';
-import { ScamAwarenessSection } from '@/components/public/scam-awareness-section';
 import { ContactCtaSection } from '@/components/public/contact-cta-section';
 import { FALLBACK_COUNTRIES, FALLBACK_JOBS } from '@/lib/homepage-fallback';
 
@@ -16,7 +16,7 @@ export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
 export const metadata = {
-  title: `${BRAND.name} | সরকারি অনুমোদিত আন্তর্জাতিক নিয়োগ ও অভিবাসন (${BRAND.licenseNumber})`,
+  title: `${BRAND.name} | সরকারি অনুমোদিত আন্তর্জাতিক নিয়োগ ও বৈদেশিক কর্মসংস্থান`,
   description: 'সৌদি আরব, আমিরাত, কাতার, কুয়েত, ওমান, সিঙ্গাপুর, মালয়েশিয়া, জাপান ও ইউরোপে বৈধ কর্মসংস্থান, ভিসা তথ্য ও নিরাপদ অভিবাসন সেবা।',
 };
 
@@ -79,26 +79,28 @@ export default async function PublicHomePage() {
 
   return (
     <div className="space-y-0">
-      {/* 1. Professional Hero Section with Primary & Secondary CTAs */}
+      {/* 1. Professional Hero Section with Dual Search & File Tracking */}
       <HeroSection />
 
-      {/* 2. Selected Featured Job Opportunities */}
+      {/* 2. Interactive File & Visa Tracking Section */}
+      <HomeTrackingSection />
+
+      {/* 3. Selected Featured Job Opportunities */}
       <JobsPreviewSection jobs={serializedJobs} maxDisplay={6} />
 
-      {/* 3. Country and Category Exploration */}
+      {/* 4. Country and Category Exploration */}
       <CountriesSection countries={countries} maxDisplay={12} />
 
-      {/* 4. Recruitment Process: Apply → Profile Review → Interview → Visa Processing → Pre-departure */}
+      {/* 5. Recruitment Process: Apply → Profile Review → Interview → Visa Processing → Pre-departure */}
       <HowItWorksSection />
 
-      {/* 5. Interactive Eligibility Checker */}
+      {/* 6. Interactive Eligibility Checker */}
       <EligibilityCheckerSection />
 
-      {/* 6. Trust & Fraud Awareness */}
+      {/* 7. Corporate Trust & Excellence (Cleaned from negative scam warnings) */}
       <TrustSection />
-      <ScamAwarenessSection />
 
-      {/* 7. Clear Contact & Consultation Section */}
+      {/* 8. Clear Contact & Consultation Section */}
       <ContactCtaSection />
     </div>
   );

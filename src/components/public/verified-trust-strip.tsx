@@ -15,10 +15,10 @@ export const VerifiedTrustStrip: React.FC = () => {
             </div>
             <div>
               <div className="text-xs font-bold text-[#172B45]">
-                লাইসেন্স {BRAND.licenseNumber}
+                সরকারি অনুমোদন
               </div>
               <div className="text-[11px] text-[#66758A]">
-                BMET ও সরকার অনুমোদিত
+                BMET স্মার্টকার্ড ও বৈধ নিয়োগ
               </div>
             </div>
           </div>
