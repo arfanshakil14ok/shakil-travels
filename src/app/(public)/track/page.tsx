@@ -7,8 +7,8 @@ import { BRAND } from '@/config/brand';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'অনলাইন ফাইল ও ভিসা ট্র্যাকিং | SHAKIL TRAVELS',
-  description: 'আপনার বৈদেশিক চাকরির ফাইল, ভিসা স্ট্যাম্পিং, সাক্ষাৎকার ও BMET ছাড়পত্রের রিয়েল-টাইম প্রগ্রেস অনলাইনে ট্র্যাক করুন।',
+  title: 'অনলাইন ফাইল ও ডেলিভারি স্লিপ ট্র্যাকিং | শাকিল ট্রাভেলস',
+  description: 'আপনার বৈদেশিক চাকরির আবেদন, ডেলিভারি স্লিপ ও অগ্রগতির রিয়েল-টাইম তথ্য অনলাইনে ট্র্যাক করুন।',
 };
 
 interface TrackPageProps {

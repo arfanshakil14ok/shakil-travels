@@ -16,6 +16,8 @@ import {
   Briefcase,
   PhoneCall,
   FileSearch,
+  Award,
+  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { POPULAR_COUNTRIES_NAV } from '@/lib/image-constants';
@@ -39,31 +41,25 @@ export const HeroSection: React.FC = () => {
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-[#D9E8F9] via-[#E8F1FA] via-[#F0F6FC] to-[#D6E7F8] text-[#172B45] pt-12 sm:pt-16 lg:pt-20 pb-12 sm:pb-16 border-b border-[#C8DCF0]">
-      {/* 1. Primary Royal & Deep Navy Ambient Orb (Top-Left) */}
+      {/* 1. Primary Royal & Deep Navy Ambient Orb */}
       <div
         className="absolute -top-36 -left-20 w-[650px] sm:w-[850px] h-[520px] bg-gradient-to-br from-[#2563EB]/25 via-[#1D4ED8]/18 via-[#102B50]/12 to-transparent rounded-full blur-3xl pointer-events-none transform -rotate-12"
         aria-hidden="true"
       />
 
-      {/* 2. Vibrant Sky & Cyan Highlight Aura (Top-Right behind Search Desk) */}
+      {/* 2. Vibrant Sky & Cyan Highlight Aura */}
       <div
         className="absolute -top-20 -right-20 w-[550px] sm:w-[750px] h-[550px] bg-gradient-to-bl from-[#0284C7]/25 via-[#38BDF8]/22 via-[#06B6D4]/15 to-transparent rounded-full blur-3xl pointer-events-none"
         aria-hidden="true"
       />
 
-      {/* 3. Subtle Mint & Emerald Success Glow (Bottom-Left / Center) */}
+      {/* 3. Subtle Mint & Emerald Success Glow */}
       <div
         className="absolute -bottom-24 left-[20%] sm:left-[30%] w-[500px] sm:w-[650px] h-[350px] bg-gradient-to-tr from-[#24856A]/18 via-[#10B981]/12 to-transparent rounded-full blur-3xl pointer-events-none"
         aria-hidden="true"
       />
 
-      {/* 4. Warm Rose / Brand Pink Accent Glow (Bottom-Right) */}
-      <div
-        className="absolute -bottom-16 right-[10%] w-[400px] h-[300px] bg-gradient-to-tl from-[#E8A2C1]/35 via-[#F472B6]/15 to-transparent rounded-full blur-2xl pointer-events-none"
-        aria-hidden="true"
-      />
-
-      {/* Modern High-End Architectural Dot Matrix Texture with Smooth Center Fade */}
+      {/* Modern High-End Architectural Dot Matrix Texture */}
       <div
         className="absolute inset-0 pointer-events-none opacity-45 bg-[radial-gradient(#475569_1.2px,transparent_1.2px)] [background-size:24px_24px] [mask-image:radial-gradient(ellipse_80%_70%_at_50%_35%,#000_65%,transparent_100%)]"
         aria-hidden="true"
@@ -71,9 +67,9 @@ export const HeroSection: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-          {/* Left Column: Headlines, Trust Pill, Primary/Secondary CTAs & Destinations */}
+          {/* Left Column: Master Prompt Hero Content */}
           <div className="lg:col-span-7 space-y-5">
-            {/* 1. Official License Trust Pill Badge (No RL Number) */}
+            {/* 1. Trust Pill Badge */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/95 backdrop-blur-md border border-[#C8DCF0] shadow-xs text-xs text-[#172B45] font-medium font-bengali">
               <span className="relative flex h-2 w-2 flex-shrink-0">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#24856A] opacity-75" />
@@ -82,55 +78,54 @@ export const HeroSection: React.FC = () => {
               <ShieldCheck className="w-4 h-4 text-[#24856A] flex-shrink-0" />
               <span className="font-semibold text-[#102B50]">{BRAND.name}</span>
               <span className="text-[#66758A]">•</span>
-              <span>BMET অনুমোদিত রিক্রুটমেন্ট ও ভিসা প্রসেসিং</span>
+              <span>৭ বছরের অভিজ্ঞতায় নেত্রকোনার মানুষের পাশে</span>
             </div>
 
-            {/* 2. Corporate Main Headline */}
+            {/* 2. Headline & Subheadline */}
             <div className="space-y-2.5">
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-[#102B50] leading-[1.22] font-bengali">
-                আন্তর্জাতিক কর্মসংস্থান ও <br className="hidden sm:inline" />
-                <span className="text-[#102B50] relative inline-block">
-                  নির্ভরযোগ্য রিক্রুটমেন্ট সেবা
-                  <span className="absolute bottom-1 left-0 w-full h-2 bg-[#E8A2C1]/35 -z-10 rounded-xs" />
-                </span>
+                বিদেশে কর্মসংস্থানের বিশ্বস্ত সহযোগী
               </h1>
+              <p className="text-lg sm:text-xl font-bold text-[#24856A] font-bengali leading-snug">
+                ৭ বছরের অভিজ্ঞতায় আপনার বিদেশযাত্রার প্রস্তুতিতে পাশে।
+              </p>
             </div>
 
-            {/* 3. Supporting Subtitle */}
-            <p className="text-sm sm:text-base text-[#66758A] font-normal leading-relaxed font-bengali max-w-xl">
-              সরকারি অনুমোদন ও শতভাগ স্বচ্ছ প্রক্রিয়ায় মধ্যপ্রাচ্য, পূর্ব এশিয়া ও ইউরোপের অনুমোদিত কোম্পানিতে দক্ষ, আধাদক্ষ ও পেশাজীবীদের বৈদেশিক কর্মসংস্থান।
+            {/* 3. Description */}
+            <p className="text-sm sm:text-base text-[#475569] font-normal leading-relaxed font-bengali max-w-xl">
+              বিদেশে চাকরির সুযোগ সম্পর্কে জানুন, নিজের যোগ্যতা অনুযায়ী প্রস্তুতি নিন এবং প্রয়োজনীয় কাগজপত্র ও বৈধ প্রক্রিয়া সম্পর্কে সঠিক দিকনির্দেশনা পান।
             </p>
 
             {/* 4. Primary & Secondary CTAs */}
             <div className="flex flex-wrap items-center gap-3 pt-1 font-bengali">
-              <Link href="/jobs">
+              <Link href="/contact">
                 <Button
                   variant="primary"
                   size="md"
-                  leftIcon={<Search className="w-4 h-4" />}
+                  leftIcon={<PhoneCall className="w-4 h-4" />}
                   className="font-bengali text-sm px-6 py-2.5 bg-[#102B50] hover:bg-[#0B1D35] text-white rounded-xl font-bold shadow-xs hover:shadow transition-all duration-200 hover:-translate-y-0.5"
                 >
-                  চাকরি খুঁজুন
+                  পরামর্শ নিতে যোগাযোগ করুন
                 </Button>
               </Link>
 
-              <Link href="/track">
+              <Link href="/jobs">
                 <Button
                   variant="outline"
                   size="md"
-                  leftIcon={<FileSearch className="w-4 h-4 text-[#24856A]" />}
-                  className="border border-[#CBDDF0] bg-white/95 backdrop-blur-xs text-[#102B50] hover:bg-white hover:border-[#102B50]/40 font-bengali text-sm px-6 py-2.5 font-semibold rounded-xl shadow-2xs hover:-translate-y-0.5 transition-all duration-200"
+                  leftIcon={<Search className="w-4 h-4 text-[#102B50]" />}
+                  className="border border-[#CBDDF0] bg-white/95 backdrop-blur-xs text-[#102B50] hover:bg-white hover:border-[#102B50]/40 font-bengali text-sm px-6 py-2.5 font-bold rounded-xl shadow-2xs hover:-translate-y-0.5 transition-all duration-200"
                 >
-                  ফাইল ট্র্যাক করুন
+                  চাকরির সুযোগ দেখুন
                 </Button>
               </Link>
             </div>
 
-            {/* 5. Minimal Destination Chips with Flags */}
+            {/* 5. Destination Chips */}
             <div className="pt-2 font-bengali">
               <div className="text-[11px] text-[#66758A] font-semibold uppercase tracking-wider flex items-center gap-1.5 mb-2.5">
                 <MapPin className="w-3.5 h-3.5 text-[#102B50]" />
-                <span>শীর্ষ কর্মসংস্থান গন্তব্য:</span>
+                <span>সম্ভাব্য কর্মসংস্থান গন্তব্য:</span>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 {POPULAR_COUNTRIES_NAV.slice(0, 7).map((c) => (
@@ -154,26 +149,31 @@ export const HeroSection: React.FC = () => {
               </div>
             </div>
 
-            {/* 6. Clean Trust Highlights with Verified Check Icons */}
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-4 border-t border-[#CBDDF0] text-xs text-[#66758A] font-bengali">
-              <div className="flex items-center gap-1.5">
+            {/* 6. Supporting Trust Points (as specified in Master Prompt) */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-4 border-t border-[#CBDDF0] text-xs font-bengali">
+              <div className="flex items-center gap-1.5 p-2 rounded-lg bg-white/80 border border-[#E2E8F0] shadow-2xs">
                 <CheckCircle2 className="w-4 h-4 text-[#24856A] flex-shrink-0" />
-                <span>BMET স্মার্ট কার্ড ছাড়পত্র</span>
+                <span className="font-semibold text-[#102B50]">৭ বছরের অভিজ্ঞতা</span>
               </div>
 
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 p-2 rounded-lg bg-white/80 border border-[#E2E8F0] shadow-2xs">
                 <CheckCircle2 className="w-4 h-4 text-[#24856A] flex-shrink-0" />
-                <span>সরাসরি কোম্পানি ডিমান্ড</span>
+                <span className="font-semibold text-[#102B50]">নেত্রকোনাকেন্দ্রিক সেবা</span>
               </div>
 
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 p-2 rounded-lg bg-white/80 border border-[#E2E8F0] shadow-2xs">
                 <CheckCircle2 className="w-4 h-4 text-[#24856A] flex-shrink-0" />
-                <span>দালাল ও গোপন চার্জমুক্ত</span>
+                <span className="font-semibold text-[#102B50]">স্বচ্ছ তথ্য ও দিকনির্দেশনা</span>
+              </div>
+
+              <div className="flex items-center gap-1.5 p-2 rounded-lg bg-white/80 border border-[#E2E8F0] shadow-2xs">
+                <CheckCircle2 className="w-4 h-4 text-[#24856A] flex-shrink-0" />
+                <span className="font-semibold text-[#102B50]">নিরাপদ ও বৈধ অভিবাসন</span>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Clean Search Desk & Direct Candidate Access */}
+          {/* Right Column: Search Desk & Candidate Portal Access */}
           <div className="lg:col-span-5">
             <div className="bg-white/95 backdrop-blur-md border border-[#CBDDF0] rounded-2xl p-6 sm:p-7 shadow-xl shadow-[#102B50]/[0.06] transition-all duration-300">
               {/* Dual Tab Switcher: Job Search vs File Tracking */}
@@ -189,7 +189,7 @@ export const HeroSection: React.FC = () => {
                   )}
                 >
                   <Briefcase className="w-3.5 h-3.5" />
-                  <span>সার্কুলার অনুসন্ধান</span>
+                  <span>চাকরির তথ্য অনুসন্ধান</span>
                 </button>
 
                 <button
@@ -213,12 +213,12 @@ export const HeroSection: React.FC = () => {
                   {/* Card Header with Status Indicator */}
                   <div className="flex items-center justify-between pb-3 border-b border-[#E4EAF1] font-bengali">
                     <div>
-                      <h2 className="text-sm font-bold text-[#102B50]">বৈদেশিক সার্কুলার অনুসন্ধান</h2>
-                      <p className="text-[11px] text-[#66758A] mt-0.5">অনুমোদিত বৈদেশিক কোম্পানিতে সরাসরি নিয়োগ</p>
+                      <h2 className="text-sm font-bold text-[#102B50]">বিদেশে কর্মসংস্থান অনুসন্ধান</h2>
+                      <p className="text-[11px] text-[#66758A] mt-0.5">যোগ্যতা অনুযায়ী সুযোগ যাচাই ও প্রস্তুতি</p>
                     </div>
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[#24856A] text-[11px] font-semibold">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#24856A] animate-pulse" />
-                      আবেদন চালু
+                      তথ্য সক্রিয়
                     </span>
                   </div>
 
@@ -226,14 +226,14 @@ export const HeroSection: React.FC = () => {
                   <form onSubmit={handleSearch} className="mt-4 space-y-3 font-bengali">
                     <div>
                       <label className="block text-xs font-semibold text-[#172B45] mb-1">
-                        পদের নাম বা ক্যাটাগরি
+                        কাজের ধরন বা পেশা
                       </label>
                       <div className="relative">
                         <input
                           type="text"
                           value={keyword}
                           onChange={(e) => setKeyword(e.target.value)}
-                          placeholder="যেমন: ইলেকট্রিশিয়ান, ড্রাইভার, ওয়েল্ডার..."
+                          placeholder="যেমন: ড্রাইভার, ইলেকট্রিশিয়ান, ফ্যাক্টরি কর্মী..."
                           className="w-full pl-9 pr-3.5 py-2.5 text-xs sm:text-sm bg-[#F6F8FB] border border-[#E4EAF1] rounded-xl text-[#172B45] placeholder-[#66758A] focus:outline-none focus:border-[#102B50] focus:bg-white focus:ring-1 focus:ring-[#102B50] transition-all"
                         />
                         <Search className="w-4 h-4 text-[#66758A] absolute left-3 top-3 pointer-events-none" />
@@ -242,7 +242,7 @@ export const HeroSection: React.FC = () => {
 
                     <div>
                       <label className="block text-xs font-semibold text-[#172B45] mb-1">
-                        গন্তব্য দেশ
+                        পছন্দের দেশ
                       </label>
                       <div className="relative">
                         <select
@@ -250,7 +250,7 @@ export const HeroSection: React.FC = () => {
                           onChange={(e) => setSelectedCountry(e.target.value)}
                           className="w-full pl-9 pr-3.5 py-2.5 text-xs sm:text-sm bg-[#F6F8FB] border border-[#E4EAF1] rounded-xl text-[#172B45] focus:outline-none focus:border-[#102B50] focus:bg-white focus:ring-1 focus:ring-[#102B50] appearance-none transition-all cursor-pointer"
                         >
-                          <option value="">সকল গন্তব্য দেশ (সৌদি, কাতার, সিঙ্গাপুর...)</option>
+                          <option value="">সকল দেশ (সৌদি আরব, কাতার, মালয়েশিয়া...)</option>
                           <option value="saudi-arabia">সৌদি আরব</option>
                           <option value="united-arab-emirates">সংযুক্ত আরব আমিরাত</option>
                           <option value="qatar">কাতার</option>
@@ -273,7 +273,7 @@ export const HeroSection: React.FC = () => {
                       rightIcon={<ArrowRight className="w-4 h-4" />}
                       className="w-full font-bold text-xs sm:text-sm py-2.5 bg-[#102B50] hover:bg-[#0B1D35] text-white rounded-xl shadow-xs transition-all"
                     >
-                      সার্কুলার খুঁজুন
+                      সুযোগ ও প্রস্তুতি যাচাই করুন
                     </Button>
                   </form>
                 </>
@@ -289,7 +289,7 @@ export const HeroSection: React.FC = () => {
                 <Link href="/portal/register" className="w-full">
                   <div className="flex items-center justify-center gap-1.5 p-2 rounded-xl bg-[#F6F8FB] hover:bg-[#E4EAF1]/60 text-xs font-semibold text-[#102B50] transition-colors border border-[#E4EAF1]">
                     <UserPlus className="w-3.5 h-3.5 text-[#102B50]" />
-                    <span>নতুন নিবন্ধন</span>
+                    <span>নতুন প্রোফাইল নিবন্ধন</span>
                   </div>
                 </Link>
 
@@ -305,7 +305,7 @@ export const HeroSection: React.FC = () => {
               <div className="mt-3 pt-2.5 border-t border-[#E4EAF1] flex items-center justify-between text-[11px] text-[#66758A] font-bengali">
                 <span className="flex items-center gap-1 text-[#24856A]">
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  নিরাপদ ও স্বচ্ছ অভিবাসন
+                  নিরাপদ ও সচেতন বিদেশযাত্রা
                 </span>
                 <a
                   href={BRAND.phoneTel}

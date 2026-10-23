@@ -7,8 +7,8 @@ import { FALLBACK_COUNTRIES } from '@/lib/homepage-fallback';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'গন্তব্য দেশসমূহ ও ভিসা নীতিমালা | SHAKIL TRAVELS',
-  description: 'সৌদি আরব, আমিরাত, কাতার, কুয়েত, ওমান, সিঙ্গাপুর, মালয়েশিয়া, জাপান, পর্তুগাল, পোল্যান্ড ও অন্যান্য দেশে অভিবাসন শর্তাবলী।',
+  title: 'বিদেশে কর্মসংস্থানের সম্ভাবনা ও দেশ নির্দেশিকা | শাকিল ট্রাভেলস',
+  description: 'বিভিন্ন দেশের কর্মসংস্থানসংক্রান্ত সুযোগ সম্পর্কে জানুন এবং আপনার যোগ্যতা ও অভিজ্ঞতা অনুযায়ী প্রস্তুতি নিন। নেত্রকোনায় ৭ বছরের অভিজ্ঞতায় সঠিক দিকনির্দেশনা।',
 };
 
 export default async function CountriesPublicPage() {

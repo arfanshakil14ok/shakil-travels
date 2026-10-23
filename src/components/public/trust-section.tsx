@@ -2,112 +2,100 @@
 
 import React from 'react';
 import {
+  Award,
+  MapPin,
+  MessageSquare,
   ShieldCheck,
-  CheckCircle2,
-  FileCheck,
-  Activity,
-  Stamp,
-  Headphones,
-  Scale,
-  FolderCheck,
+  UserCheck,
+  HelpCircle,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { BRAND } from '@/config/brand';
 
 export const TrustSection: React.FC = () => {
-  const trustPoints = [
+  const cards = [
     {
-      title: 'যাচাইকৃত চাকরি তথ্য',
-      titleEn: 'Verified Job Information',
-      desc: 'সরাসরি বিদেশী নিয়োগকর্তা ও সরকারি সংশ্লিষ্ট মন্ত্রণালয় কর্তৃক অনুমোদিত শতভাগ নির্ভরযোগ্য নিয়োগ বিজ্ঞপ্তি।',
-      icon: <CheckCircle2 className="w-5 h-5 text-emerald-600" />,
-      badge: 'BMET অনুমোদিত',
+      title: '৭ বছরের অভিজ্ঞতা',
+      desc: 'বিদেশে কর্মসংস্থানসংক্রান্ত কাজে অর্জিত অভিজ্ঞতার ভিত্তিতে দিকনির্দেশনা।',
+      icon: <Award className="w-5 h-5 text-[#24856A]" />,
+      badge: 'বাস্তব অভিজ্ঞতা',
     },
     {
-      title: 'স্বচ্ছ নিয়োগ প্রক্রিয়া',
-      titleEn: 'Transparent Process',
-      desc: 'চুক্তিপত্রের প্রতিটি শর্ত ও সরকারি ফি প্রার্থীর সম্মুখে উন্মুক্ত; কোনো প্রকার গোপন বা অতিরিক্ত ফি নেই।',
-      icon: <Scale className="w-5 h-5 text-navy-800" />,
-      badge: 'নো হিডেন ফি',
+      title: 'স্থানীয়ভাবে যোগাযোগ',
+      desc: 'নেত্রকোনার মানুষের কাছে কর্মসংস্থানসংক্রান্ত তথ্য ও প্রাথমিক সহযোগিতা সহজলভ্য করার উদ্যোগ।',
+      icon: <MapPin className="w-5 h-5 text-[#102B50]" />,
+      badge: 'নেত্রকোনা অফিস',
     },
     {
-      title: 'ডকুমেন্ট ও সনদ সহায়তা',
-      titleEn: 'Document Guidance',
-      desc: 'পাসপোর্ট, পুলিশ ক্লিয়ারেন্স, কারিগরি সনদ ও মেডিকেল টেস্টের সঠিক প্রস্তুতিতে প্রাতিষ্ঠানিক দিকনির্দেশনা।',
-      icon: <FolderCheck className="w-5 h-5 text-gold-600" />,
-      badge: 'দক্ষ সহায়তা',
+      title: 'স্বচ্ছ যোগাযোগ',
+      desc: 'প্রয়োজনীয় তথ্য, শর্ত এবং প্রক্রিয়া সম্পর্কে পরিষ্কার ধারণা দেওয়ার অঙ্গীকার।',
+      icon: <MessageSquare className="w-5 h-5 text-[#B7791F]" />,
+      badge: 'সততা ও স্বচ্ছতা',
     },
     {
-      title: 'ডিজিটাল ট্র্যাকিং সুবিধা',
-      titleEn: 'Application Tracking',
-      desc: 'অনলাইন পোর্টালে আপনার আবেদন, ইন্টারভিউ শিডিউল ও ভিসা ফাইল প্রসেসিংয়ের রিয়েল-টাইম অগ্রগতি ট্র্যাক করুন।',
-      icon: <Activity className="w-5 h-5 text-emerald-600" />,
-      badge: '২৪/৭ পোর্টাল',
+      title: 'সচেতন সিদ্ধান্ত',
+      desc: 'যাচাই করে সিদ্ধান্ত নেওয়া এবং বৈধ অভিবাসন প্রক্রিয়া অনুসরণের বিষয়ে গুরুত্ব।',
+      icon: <ShieldCheck className="w-5 h-5 text-[#24856A]" />,
+      badge: 'নিরাপদ অভিবাসন',
     },
     {
-      title: 'সঠিক ভিসা তথ্য ও গাইডলাইন',
-      titleEn: 'Visa Information',
-      desc: 'সংশ্লিষ্ট দেশের আইনসম্মত ক্যাটাগরি, প্রয়োজনীয় কাগজপত্র ও দূতাবাস নিয়মের নির্ভরযোগ্য হালনাগাদ তথ্য।',
-      icon: <Stamp className="w-5 h-5 text-navy-800" />,
-      badge: 'দূতাবাস নিয়মাবলী',
-    },
-    {
-      title: 'প্রার্থী ও অভিবাসী কল্যাণ সাপোর্ট',
-      titleEn: 'Applicant Support',
-      desc: 'প্রাক-যাত্রা ব্রিফিং থেকে শুরু করে গন্তব্যে পৌঁছানো পর্যন্ত যেকোনো প্রয়োজনে সার্বক্ষণিক যোগাযোগ সহায়তা।',
-      icon: <Headphones className="w-5 h-5 text-gold-600" />,
-      badge: 'সার্বক্ষণিক হেল্পডেস্ক',
+      title: 'ব্যক্তিকেন্দ্রিক দিকনির্দেশনা',
+      desc: 'প্রার্থীর দক্ষতা, অভিজ্ঞতা ও প্রয়োজন অনুযায়ী উপযুক্ত তথ্য দেওয়ার চেষ্টা।',
+      icon: <UserCheck className="w-5 h-5 text-[#102B50]" />,
+      badge: 'যোগ্যতা মূল্যায়ন',
     },
   ];
 
   return (
-    <section id="trust-section" className="py-16 sm:py-24 bg-white font-sans">
+    <section id="trust-section" className="py-16 sm:py-24 bg-white font-sans border-b border-[#E4EAF1]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16 space-y-3 font-bengali">
-          <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-3.5 py-1.5 rounded-full border border-emerald-200">
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>কেন আমাদের বেছে নেবেন</span>
+        <div className="text-center max-w-3xl mx-auto mb-14 space-y-3 font-bengali">
+          <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#24856A] bg-emerald-50 px-3.5 py-1.5 rounded-full border border-emerald-200">
+            <HelpCircle className="w-4 h-4 text-[#24856A]" />
+            <span>আমাদের বৈশিষ্ট্য ও অঙ্গীকার</span>
           </div>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-            নিরাপদ আন্তর্জাতিক ক্যারিয়ারে {BRAND.name}
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-[#172B45] tracking-tight">
+            কেন আমাদের সঙ্গে যোগাযোগ করবেন?
           </h2>
-          <p className="text-xs sm:text-base text-slate-600 leading-relaxed">
-            সরকারি অনুমোদন, আন্তর্জাতিক মানদণ্ড ও ডিজিটাল জবাবদিহিতায় আমরা প্রতিটি প্রার্থীর আস্থার ঠিকানা।
+          <p className="text-xs sm:text-base text-[#66758A] leading-relaxed">
+            ৭ বছরের অর্জিত অভিজ্ঞতায় নেত্রকোনার চাকরিপ্রত্যাশীদের জন্য সঠিক তথ্য, দায়িত্বশীল পরামর্শ ও সচেতন বিদেশযাত্রার বিশ্বস্ত উদ্যোগ।
           </p>
         </div>
 
-        {/* 6 Grid Cards */}
+        {/* 5 Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 font-bengali">
-          {trustPoints.map((item, idx) => (
+          {cards.map((item, idx) => (
             <Card
               key={idx}
-              className="p-6 rounded-2xl border border-slate-200/90 bg-white hover:border-emerald-500/30 hover:shadow-lg transition-all duration-300 flex flex-col justify-between group"
+              className="p-6 rounded-2xl border border-[#CBDDF0] bg-white hover:border-[#102B50] hover:shadow-lg transition-all duration-300 flex flex-col justify-between group"
             >
               <CardContent className="p-0 space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="w-11 h-11 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <div className="w-11 h-11 rounded-xl bg-[#F6F8FB] border border-[#E4EAF1] flex items-center justify-center group-hover:scale-105 transition-transform">
                     {item.icon}
                   </div>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">
+                  <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-[#102B50]">
                     {item.badge}
                   </span>
                 </div>
 
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 leading-snug">
+                  <h3 className="text-base font-bold text-[#102B50] leading-snug">
                     {item.title}
                   </h3>
-                  <span className="text-[11px] text-slate-400 font-sans block mb-1">
-                    {item.titleEn}
-                  </span>
-                  <p className="text-xs text-slate-600 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-[#475569] mt-2 leading-relaxed">
                     {item.desc}
                   </p>
                 </div>
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        {/* Responsible Disclaimer */}
+        <div className="mt-10 p-4 rounded-xl bg-slate-50 border border-slate-200 text-center font-bengali text-xs text-[#66758A] max-w-3xl mx-auto">
+          আমরা কোনো প্রকার নিশ্চিত চাকরি বা ভিসার নিশ্চয়তা প্রদান করি না। চাকরি পাওয়া নির্ভর করে সংশ্লিষ্ট নিয়োগকর্তার শর্ত, প্রার্থীর যোগ্যতা ও সংশ্লিষ্ট দেশের আইনসম্মত প্রক্রিয়ার ওপর।
         </div>
       </div>
     </section>

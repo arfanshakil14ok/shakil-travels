@@ -41,24 +41,23 @@ export const metadata: Metadata = {
     locale: 'bn_BD',
     url: '/',
     siteName: BRAND.name,
-    title: `${BRAND.name} — আন্তর্জাতিক জনশক্তি নিয়োগ`,
+    title: BRAND.seo.defaultTitle,
     description: BRAND.seo.descriptionBn,
   },
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <html lang="bn" className={`${inter.variable} ${notoSansBengali.variable}`}>
-      <body className="min-h-screen flex flex-col font-sans">
+      <body className="font-sans antialiased bg-slate-50 text-slate-900 min-h-screen flex flex-col">
         <LanguageProvider>
           <ToastProvider>{children}</ToastProvider>
         </LanguageProvider>
       </body>
-
     </html>
   );
 }

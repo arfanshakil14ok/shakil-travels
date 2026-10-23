@@ -2,12 +2,15 @@ import React from 'react';
 import prisma from '@/lib/prisma';
 import { BRAND } from '@/config/brand';
 import { HeroSection } from '@/components/public/hero-section';
+import { VerifiedTrustStrip } from '@/components/public/verified-trust-strip';
 import { HomeTrackingSection } from '@/components/public/home-tracking-section';
+import { ServicesSection } from '@/components/public/services-section';
 import { CountriesSection } from '@/components/public/countries-section';
-import { JobsPreviewSection } from '@/components/public/jobs-preview-section';
-import { EligibilityCheckerSection } from '@/components/public/eligibility-checker-section';
 import { HowItWorksSection } from '@/components/public/how-it-works-section';
 import { TrustSection } from '@/components/public/trust-section';
+import { JobsPreviewSection } from '@/components/public/jobs-preview-section';
+import { EligibilityCheckerSection } from '@/components/public/eligibility-checker-section';
+import { FaqSection } from '@/components/public/faq-section';
 import { ContactCtaSection } from '@/components/public/contact-cta-section';
 import { FALLBACK_COUNTRIES, FALLBACK_JOBS } from '@/lib/homepage-fallback';
 
@@ -16,8 +19,16 @@ export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
 export const metadata = {
-  title: `${BRAND.name} | সরকারি অনুমোদিত আন্তর্জাতিক নিয়োগ ও বৈদেশিক কর্মসংস্থান`,
-  description: 'সৌদি আরব, আমিরাত, কাতার, কুয়েত, ওমান, সিঙ্গাপুর, মালয়েশিয়া, জাপান ও ইউরোপে বৈধ কর্মসংস্থান, ভিসা তথ্য ও নিরাপদ অভিবাসন সেবা।',
+  title: BRAND.seo.defaultTitle,
+  description: BRAND.seo.descriptionBn,
+  keywords: BRAND.seo.keywords,
+  openGraph: {
+    title: BRAND.seo.defaultTitle,
+    description: BRAND.seo.descriptionBn,
+    type: 'website',
+    locale: 'bn_BD',
+    siteName: BRAND.name,
+  },
 };
 
 export default async function PublicHomePage() {
@@ -25,7 +36,7 @@ export default async function PublicHomePage() {
   let countries: any[] = [];
 
   try {
-    // Fetch real published jobs
+    // Fetch published jobs
     jobs = await prisma.job.findMany({
       where: { status: 'PUBLISHED' },
       include: {
@@ -43,7 +54,7 @@ export default async function PublicHomePage() {
       take: 6,
     });
 
-    // Fetch real destination countries with published jobs count
+    // Fetch destination countries
     countries = await prisma.country.findMany({
       where: { isActive: true },
       include: {
@@ -61,12 +72,11 @@ export default async function PublicHomePage() {
     console.error('Homepage database fetch warning:', err);
   }
 
-  // Gracefully fallback to high-quality default data if DB is empty or during cold start
+  // Fallback data
   if (!countries || countries.length === 0) {
     countries = FALLBACK_COUNTRIES;
   }
 
-  // Serialize decimals for client components
   let serializedJobs = jobs.map((job) => ({
     ...job,
     salaryMin: job.salaryMin ? Number(job.salaryMin) : null,
@@ -79,28 +89,37 @@ export default async function PublicHomePage() {
 
   return (
     <div className="space-y-0">
-      {/* 1. Professional Hero Section with Dual Search & File Tracking */}
+      {/* 1. Master Prompt Homepage Hero Section */}
       <HeroSection />
 
-      {/* 2. Interactive File & Visa Tracking Section */}
+      {/* 2. Brand Positioning Trust Strip (7 Years Experience & Netrokona Focus) */}
+      <VerifiedTrustStrip />
+
+      {/* 3. Interactive File & Slip Tracking Section */}
       <HomeTrackingSection />
 
-      {/* 3. Selected Featured Job Opportunities */}
-      <JobsPreviewSection jobs={serializedJobs} maxDisplay={6} />
+      {/* 4. Our Services (বিদেশে চাকরির তথ্য, আবেদন সহযোগিতা, ভিসা তথ্য, দক্ষতা ও প্রশিক্ষণ, নিরাপদ অভিবাসন, বিদেশযাত্রার প্রস্তুতি) */}
+      <ServicesSection />
 
-      {/* 4. Country and Category Exploration */}
-      <CountriesSection countries={countries} maxDisplay={12} />
+      {/* 5. Countries and Job Categories (বিদেশে কর্মসংস্থানের সম্ভাবনা) */}
+      <CountriesSection countries={countries} maxDisplay={8} />
 
-      {/* 5. Recruitment Process: Apply → Profile Review → Interview → Visa Processing → Pre-departure */}
+      {/* 6. How It Works (আমাদের সঙ্গে কাজের ধাপ - ৪টি ধাপ) */}
       <HowItWorksSection />
 
-      {/* 6. Interactive Eligibility Checker */}
-      <EligibilityCheckerSection />
-
-      {/* 7. Corporate Trust & Excellence (Cleaned from negative scam warnings) */}
+      {/* 7. Why Choose Us (কেন আমাদের সঙ্গে যোগাযোগ করবেন? - ৫টি কারণ) */}
       <TrustSection />
 
-      {/* 8. Clear Contact & Consultation Section */}
+      {/* 8. Available Verified Jobs Preview */}
+      <JobsPreviewSection jobs={serializedJobs} maxDisplay={6} />
+
+      {/* 9. Interactive Eligibility & Preparation Checker */}
+      <EligibilityCheckerSection />
+
+      {/* 10. Master Prompt FAQ Section (সাধারণ প্রশ্নোত্তর) */}
+      <FaqSection />
+
+      {/* 11. Contact Section (আপনার বিদেশে কর্মসংস্থানের প্রস্তুতি শুরু হোক আজই) */}
       <ContactCtaSection />
     </div>
   );

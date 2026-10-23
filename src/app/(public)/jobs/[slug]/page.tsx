@@ -26,6 +26,7 @@ import {
   UserPlus,
 } from 'lucide-react';
 import prisma from '@/lib/prisma';
+import { BRAND } from '@/config/brand';
 import { Button } from '@/components/ui/button';
 import { getJobCategoryImage, getCountryFlagUrl, getCountryImage } from '@/lib/image-constants';
 import { getCurrentApplicant } from '@/lib/portal-auth';
@@ -64,8 +65,8 @@ export async function generateMetadata({ params }: JobDetailPageProps) {
   }
 
   return {
-    title: `${job.title} in ${job.country.name} | SHAKIL TRAVELS (RL-2579)`,
-    description: `Official job vacancy for ${job.title} in ${job.country.name}. Vacancies: ${job.vacancyCount}. Verified overseas employment through licensed recruitment agency RL-2579.`,
+    title: `${job.title} in ${job.country.name} | ${BRAND.name}`,
+    description: `বিদেশে কর্মসংস্থানের তথ্য: ${job.title} in ${job.country.name}। নেত্রকোনায় ৭ বছরের অভিজ্ঞতায় সঠিক দিকনির্দেশনা ও প্রস্তুতি।`,
   };
 }
 
@@ -348,7 +349,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
               <div className="space-y-1">
                 <span className="font-extrabold block text-amber-900">সরকারি নীতিমালা ও প্রতারণা সতর্কতা:</span>
                 <p>
-                  SHAKIL TRAVELS (RL-2579) বাংলাদেশ সরকারের প্রবাসী কল্যাণ ও বৈদেশিক কর্মসংস্থান মন্ত্রণালয় এবং BMET এর পূর্ণাঙ্গ নীতি অনুসরণ করে। কোনো মধ্যস্বত্বভোগী বা দালালের সাথে আর্থিক লেনদেন করবেন না। সমস্ত ফি অফিসের অফিসিয়াল রসিদের মাধ্যমে প্রদেয়।
+                  {BRAND.name} বিদেশে কর্মসংস্থানসংক্রান্ত কাজে ৭ বছরের অভিজ্ঞতার ভিত্তিতে তথ্য ও দিকনির্দেশনা প্রদান করে। কোনো মধ্যস্বত্বভোগী বা দালালের সাথে আর্থিক লেনদেন করবেন না। সমস্ত ফি কেবল অফিসের অফিসিয়াল রসিদের মাধ্যমে প্রদেয়।
                 </p>
               </div>
             </div>

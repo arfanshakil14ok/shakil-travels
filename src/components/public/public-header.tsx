@@ -173,10 +173,10 @@ export const PublicHeader: React.FC = () => {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
             </span>
             <span className="font-bengali text-slate-200 font-medium hidden sm:inline">
-              গণপ্রজাতন্ত্রী বাংলাদেশ সরকার অনুমোদিত আন্তর্জাতিক রিক্রুটিং প্রতিষ্ঠান
+              ৭ বছরের অভিজ্ঞতায় বিদেশে কর্মসংস্থানের প্রস্তুতিতে আপনার পাশে
             </span>
             <span className="font-bengali text-slate-200 font-medium sm:hidden">
-              সরকারি অনুমোদিত রিক্রুটমেন্ট
+              ৭ বছরের অভিজ্ঞতায় আপনার পাশে
             </span>
           </div>
 
