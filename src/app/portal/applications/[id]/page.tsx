@@ -16,6 +16,8 @@ import {
   FileText,
   Stamp,
   ExternalLink,
+  Printer,
+  FileSearch,
 } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { LoadingState } from '@/components/ui/loading-state';
@@ -23,6 +25,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { RecruitmentProgressTracker } from '@/components/portal/recruitment-progress-tracker';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
+import { ApplicationSlipView, ApplicationSlipData } from '@/components/portal/application-slip-view';
 
 export default function PortalApplicationDetailPage() {
   const params = useParams();
@@ -36,6 +39,7 @@ export default function PortalApplicationDetailPage() {
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [withdrawReason, setWithdrawReason] = useState('');
   const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [showSlipModal, setShowSlipModal] = useState(false);
 
   const loadApp = useCallback(async () => {
     try {
@@ -143,15 +147,43 @@ export default function PortalApplicationDetailPage() {
           </div>
         </div>
 
-        {application.visaApplication && (
-          <Link
-            href="/portal/visa"
-            className="h-9 px-3.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shrink-0"
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowSlipModal(true)}
+            leftIcon={<Printer className="w-3.5 h-3.5 text-[#102B50]" />}
+            className="text-xs font-bold border-[#CBDDF0] text-[#102B50] hover:bg-[#F6F8FB]"
           >
-            <Stamp className="w-4 h-4" />
-            <span>{t('ভিসা ফাইল দেখুন', 'Track Visa Case')}</span>
+            {t('আবেদন স্লিপ (Print Slip)', 'Application Slip')}
+          </Button>
+
+          <Link
+            href={`/track?q=${encodeURIComponent(application.applicationCode || '')}`}
+            target="_blank"
+          >
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              leftIcon={<FileSearch className="w-3.5 h-3.5 text-[#24856A]" />}
+              className="text-xs font-bold border-[#CBDDF0] text-[#24856A] hover:bg-emerald-50"
+            >
+              {t('লাইভ ট্র্যাক', 'Live Track')}
+            </Button>
           </Link>
-        )}
+
+          {application.visaApplication && (
+            <Link
+              href="/portal/visa"
+              className="h-9 px-3.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shrink-0"
+            >
+              <Stamp className="w-4 h-4" />
+              <span>{t('ভিসা ফাইল দেখুন', 'Track Visa Case')}</span>
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Horizontal Milestone Tracker */}
@@ -380,6 +412,42 @@ export default function PortalApplicationDetailPage() {
           </div>
         </form>
       </Modal>
+
+      {/* Official Application Slip Modal */}
+      {showSlipModal && application && (
+        <ApplicationSlipView
+          isModal={true}
+          onClose={() => setShowSlipModal(false)}
+          data={{
+            id: application.id,
+            applicationCode: application.applicationCode || application.applicationNumber || application.id,
+            applicantNumber: application.applicant?.applicantNumber,
+            appliedAt: application.appliedAt || application.createdAt,
+            status: application.status,
+            applicant: {
+              fullName: application.applicant?.fullName || 'আবেদনকারী',
+              fatherName: application.applicant?.fatherName || null,
+              passportNumber: application.applicant?.passportNumber || null,
+              phone: application.applicant?.phone || '',
+              email: application.applicant?.email || null,
+              district: application.applicant?.district || null,
+              address: application.applicant?.address || null,
+              profilePhoto: application.applicant?.profilePhoto || null,
+              applicantNumber: application.applicant?.applicantNumber,
+            },
+            job: {
+              title: application.job?.title || 'আন্তর্জাতিক নিয়োগ পদ',
+              jobCode: application.job?.jobCode,
+              countryName: application.job?.country?.name,
+              countryFlag: application.job?.country?.flag,
+              employerName: application.job?.employer?.companyName,
+              salaryMin: application.job?.salaryMin,
+              salaryMax: application.job?.salaryMax,
+              currency: application.job?.currency,
+            },
+          }}
+        />
+      )}
     </div>
   );
 }

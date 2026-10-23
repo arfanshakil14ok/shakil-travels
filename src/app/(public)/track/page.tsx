@@ -28,15 +28,15 @@ export default async function TrackPublicPage({ searchParams }: TrackPageProps) 
         <div className="text-center space-y-3 max-w-2xl mx-auto">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-bold text-[#24856A]">
             <FileSearch className="w-4 h-4 text-[#24856A]" />
-            <span>সেন্ট্রাল ফাইল ট্র্যাকিং সিস্টেম</span>
+            <span>সেন্ট্রাল আবেদন স্লিপ ও ফাইল ট্র্যাকিং সিস্টেম</span>
           </div>
 
           <h1 className="text-3xl sm:text-4xl font-extrabold text-[#102B50] tracking-tight">
-            আপনার ফাইল ও ভিসা ট্র্যাকিং
+            আবেদন স্লিপ ও ফাইল ট্র্যাকিং
           </h1>
 
           <p className="text-xs sm:text-sm text-[#66758A] leading-relaxed">
-            আপনার আবেদন নম্বর, পাসপোর্ট নম্বর অথবা ফাইল কোড দিয়ে আবেদনের বর্তমান অগ্রগতি ও পরবর্তী পদক্ষেপের তথ্য জানুন।
+            আপনার আবেদন স্লিপ নম্বর (যেমন: <span className="font-mono font-bold text-[#102B50]">SGR-APP-2026-000001</span>), পাসপোর্ট নম্বর অথবা ফাইল কোড দিয়ে সরাসরি ভেরিফিকেশন ও প্রার্থীর ছবিসহ লাইভ প্রগ্রেস দেখুন।
           </p>
         </div>
 

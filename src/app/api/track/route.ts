@@ -114,7 +114,7 @@ function getStageInfo(status: string) {
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const rawQuery = (searchParams.get('q') || searchParams.get('trackingNumber') || '').trim();
+    const rawQuery = (searchParams.get('q') || searchParams.get('trackingNumber') || searchParams.get('slip') || '').trim();
 
     if (!rawQuery) {
       return NextResponse.json(
@@ -123,19 +123,31 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Flexible query variations
+    const queryVariants = [rawQuery];
+    if (/^SLIP-/i.test(rawQuery)) {
+      queryVariants.push(rawQuery.replace(/^SLIP-/i, 'SGR-APP-'));
+    }
+    if (/^APP-/i.test(rawQuery)) {
+      queryVariants.push(`SGR-${rawQuery.toUpperCase()}`);
+    }
+
     // Lookup application by multiple flexible identifiers
     const application = await prisma.application.findFirst({
       where: {
         OR: [
-          { applicationCode: { equals: rawQuery, mode: 'insensitive' } },
-          { applicationNumber: { equals: rawQuery, mode: 'insensitive' } },
-          { id: { equals: rawQuery, mode: 'insensitive' } },
+          ...queryVariants.map((q) => ({ applicationCode: { equals: q, mode: 'insensitive' as const } })),
+          ...queryVariants.map((q) => ({ applicationNumber: { equals: q, mode: 'insensitive' as const } })),
+          ...queryVariants.map((q) => ({ id: { equals: q, mode: 'insensitive' as const } })),
+          { applicationCode: { contains: rawQuery, mode: 'insensitive' } },
+          { applicationNumber: { contains: rawQuery, mode: 'insensitive' } },
           {
             applicant: {
               OR: [
                 { passportNumber: { equals: rawQuery, mode: 'insensitive' } },
                 { applicantNumber: { equals: rawQuery, mode: 'insensitive' } },
                 { phone: { equals: rawQuery } },
+                { phone: { contains: rawQuery } },
               ],
             },
           },
@@ -146,9 +158,13 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             fullName: true,
+            fatherName: true,
             applicantNumber: true,
             passportNumber: true,
             phone: true,
+            district: true,
+            address: true,
+            profilePhoto: true,
             status: true,
           },
         },
@@ -158,6 +174,9 @@ export async function GET(request: NextRequest) {
             title: true,
             titleLocal: true,
             jobCode: true,
+            salaryMin: true,
+            salaryMax: true,
+            currency: true,
             country: {
               select: {
                 id: true,
@@ -227,9 +246,16 @@ export async function GET(request: NextRequest) {
       found: true,
       data: {
         applicationCode: application.applicationCode || application.applicationNumber || application.id.slice(0, 8),
+        slipNumber: application.applicationCode || application.applicationNumber,
         applicantNumber: application.applicant.applicantNumber,
+        candidateName: application.applicant.fullName,
         candidateNameMasked: maskName(application.applicant.fullName),
+        candidatePhoto: application.applicant.profilePhoto || null,
+        fatherName: application.applicant.fatherName || null,
+        district: application.applicant.district || null,
+        passportNumber: application.applicant.passportNumber,
         passportMasked: maskPassport(application.applicant.passportNumber),
+        phone: application.applicant.phone,
         jobTitle: application.job?.titleLocal || application.job?.title || 'আন্তর্জাতিক নিয়োগ ফাইল',
         countryName: application.job?.country?.name || 'অনুমোদিত বৈদেশিক দেশ',
         countryFlag: application.job?.country?.flag || '🌐',
@@ -248,6 +274,33 @@ export async function GET(request: NextRequest) {
           notes: h.notes,
           date: h.createdAt,
         })),
+        slipData: {
+          id: application.id,
+          applicationCode: application.applicationCode || application.applicationNumber || application.id,
+          applicantNumber: application.applicant.applicantNumber,
+          appliedAt: application.appliedAt,
+          status: application.status,
+          applicant: {
+            fullName: application.applicant.fullName,
+            fatherName: application.applicant.fatherName,
+            passportNumber: application.applicant.passportNumber,
+            phone: application.applicant.phone,
+            district: application.applicant.district,
+            address: application.applicant.address,
+            profilePhoto: application.applicant.profilePhoto,
+            applicantNumber: application.applicant.applicantNumber,
+          },
+          job: {
+            title: application.job?.titleLocal || application.job?.title || 'আন্তর্জাতিক নিয়োগ ফাইল',
+            jobCode: application.job?.jobCode,
+            countryName: application.job?.country?.name,
+            countryFlag: application.job?.country?.flag,
+            employerName: application.job?.employer?.companyName,
+            salaryMin: application.job?.salaryMin,
+            salaryMax: application.job?.salaryMax,
+            currency: application.job?.currency,
+          },
+        },
       },
     });
   } catch (error: any) {

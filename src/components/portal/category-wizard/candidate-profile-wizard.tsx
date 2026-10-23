@@ -30,6 +30,7 @@ import { useLanguage } from '@/context/language-context';
 import { useToast } from '@/components/ui/toast';
 import { BRAND } from '@/config/brand';
 import { getCountryFlagUrl, getCountryImage } from '@/lib/image-constants';
+import { ApplicationSlipView, ApplicationSlipData } from '@/components/portal/application-slip-view';
 
 interface CandidateProfileWizardProps {
   jobId: string;
@@ -666,97 +667,106 @@ export const CandidateProfileWizard: React.FC<CandidateProfileWizardProps> = ({
   }
 
   // --------------------------------------------------------------------------
-  // Successful Final Submission Confirmation Screen
+  // Successful Final Submission Confirmation & Application Slip Screen
   // --------------------------------------------------------------------------
   if (submittedAppResult) {
+    const slipData: ApplicationSlipData = {
+      id: submittedAppResult.id,
+      applicationCode:
+        submittedAppResult.applicationCode || submittedAppResult.applicationNumber || 'SGR-APP-2026-PENDING',
+      applicantNumber: applicant?.applicantNumber,
+      appliedAt: submittedAppResult.appliedAt || new Date().toISOString(),
+      status: submittedAppResult.status || 'APPLIED',
+      applicant: {
+        fullName: applicant?.fullName || personalForm.fullName || 'আবেদনকারী',
+        fatherName: applicant?.fatherName || null,
+        passportNumber: applicant?.passportNumber || passportForm.passportNumber || null,
+        phone: applicant?.phone || personalForm.phone || '',
+        email: applicant?.email || personalForm.email || null,
+        district: applicant?.district || personalForm.district || null,
+        address: applicant?.address || personalForm.address || null,
+        profilePhoto: applicant?.profilePhoto || photoPreview || null,
+        applicantNumber: applicant?.applicantNumber,
+      },
+      job: {
+        title: job?.title || 'আন্তর্জাতিক নিয়োগ পদ',
+        jobCode: job?.jobCode,
+        countryName: job?.country?.name,
+        countryFlag: job?.country?.flag,
+        employerName: job?.employer?.companyName,
+        salaryMin: job?.salaryMin,
+        salaryMax: job?.salaryMax,
+        currency: job?.currency,
+      },
+    };
+
     return (
-      <div className="bg-white rounded-xl border border-[#E4EAF1] p-6 sm:p-8 space-y-6 font-bengali max-w-2xl mx-auto shadow-sm">
-        <div className="text-center space-y-2">
-          <div className="w-14 h-14 rounded-full bg-[#24856A]/10 text-[#24856A] flex items-center justify-center mx-auto">
-            <CheckCircle2 className="w-8 h-8" />
-          </div>
-          <span className="text-xs font-bold text-[#24856A] uppercase tracking-wider bg-[#24856A]/10 px-3 py-1 rounded-full inline-block">
-            {t('আবেদন সফলভাবে গৃহীত হয়েছে', 'Application Submitted Successfully')}
-          </span>
-          <h2 className="text-xl sm:text-2xl font-black text-[#172B45]">
-            {job?.title}
-          </h2>
-          <p className="text-xs text-[#66758A]">
-            {BRAND.name} • {BRAND.licenseNumber} (BMET অনুমোদিত)
-          </p>
-        </div>
-
-        {/* Application Reference Box */}
-        <div className="p-4 bg-[#F6F8FB] border border-[#E4EAF1] rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
-          <div>
-            <div className="text-[11px] text-[#66758A] font-semibold uppercase">অফিসিয়াল অ্যাপ্লিকেশন রেফারেন্স কোড</div>
-            <div className="text-lg font-black text-[#102B50] font-mono tracking-wider">
-              {submittedAppResult.applicationCode || 'SGR-APP-2026-PENDING'}
+      <div className="space-y-6 font-bengali max-w-4xl mx-auto py-2">
+        {/* Success Alert Banner */}
+        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left shadow-xs">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <CheckCircle2 className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold">
+                <Check className="w-3 h-3 text-emerald-700" />
+                <span>আবেদন শতভাগ সফল হয়েছে</span>
+              </div>
+              <h2 className="text-base sm:text-lg font-black text-[#102B50] mt-0.5">
+                আপনার অফিসিয়াল আবেদন স্লিপ তৈরি হয়েছে!
+              </h2>
+              <p className="text-xs text-[#66758A]">
+                স্লিপটি প্রিন্ট বা ডাউনলোড করে সংরক্ষণ করুন। স্লিপ কোড দিয়ে যেকোনো সময় স্ট্যাটাস ট্র্যাক করতে পারবেন।
+              </p>
             </div>
           </div>
-          <div className="text-xs text-[#66758A]">
-            জমার সময়: {new Date().toLocaleDateString('bn-BD', { year: 'numeric', month: 'short', day: 'numeric' })}
-          </div>
-        </div>
 
-        {/* 5-Stage Next Steps Roadmap */}
-        <div className="space-y-3 pt-2">
-          <h3 className="text-sm font-bold text-[#172B45]">পরবর্তী নিয়োগ ধাপসমূহ (What Happens Next):</h3>
-          <div className="space-y-2 text-xs">
-            <div className="p-3 rounded-lg border border-[#24856A]/30 bg-[#24856A]/5 flex items-center gap-3">
-              <CheckCircle2 className="w-5 h-5 text-[#24856A] shrink-0" />
-              <div>
-                <span className="font-bold text-[#172B45]">ধাপ ১: আবেদন গ্রহণ (Completed)</span>
-                <p className="text-[#66758A] text-[11px]">আপনার প্রোফাইল ও প্রাথমিক কাগজপত্র ডাটাবেজে সংরক্ষিত হয়েছে।</p>
-              </div>
-            </div>
-
-            <div className="p-3 rounded-lg border border-[#102B50]/30 bg-[#102B50]/5 flex items-center gap-3">
-              <Clock className="w-5 h-5 text-[#102B50] shrink-0" />
-              <div>
-                <span className="font-bold text-[#102B50]">ধাপ ২: প্রোফাইল ও ডকুমেন্ট স্ক্রিনিং (Current Stage)</span>
-                <p className="text-[#66758A] text-[11px]">আমাদের অভিজ্ঞ রিক্রুটমেন্ট অফিসার প্রার্থীর যোগ্যতা ও পাসপোর্ট যাচাই করবেন।</p>
-              </div>
-            </div>
-
-            <div className="p-3 rounded-lg border border-[#E4EAF1] bg-[#F6F8FB] flex items-center gap-3 opacity-80">
-              <User className="w-5 h-5 text-slate-400 shrink-0" />
-              <div>
-                <span className="font-bold text-[#172B45]">ধাপ ৩: ইন্টারভিউ ও প্রাথমিক সিলেকশন (Upcoming)</span>
-                <p className="text-[#66758A] text-[11px]">শর্টলিস্টেড হলে সরাসরি বা ভিডিও কনফারেন্সে ইন্টারভিউ শিডিউল জানানো হবে।</p>
-              </div>
-            </div>
-
-            <div className="p-3 rounded-lg border border-[#E4EAF1] bg-[#F6F8FB] flex items-center gap-3 opacity-80">
-              <Award className="w-5 h-5 text-slate-400 shrink-0" />
-              <div>
-                <span className="font-bold text-[#172B45]">ধাপ ৪: দূতাবাস ভিসা ও BMET স্মার্ট কার্ড (Upcoming)</span>
-                <p className="text-[#66758A] text-[11px]">সিলেকশনের পর মেডিকেল টেস্ট ও সরকারি ইমিগ্রেশন ছাড়পত্র প্রসেসিং।</p>
-              </div>
-            </div>
-
-            <div className="p-3 rounded-lg border border-[#E4EAF1] bg-[#F6F8FB] flex items-center gap-3 opacity-80">
-              <Briefcase className="w-5 h-5 text-slate-400 shrink-0" />
-              <div>
-                <span className="font-bold text-[#172B45]">ধাপ ৫: প্রাক-যাত্রা ব্রিফিং ও ফ্লাইট (Final Stage)</span>
-                <p className="text-[#66758A] text-[11px]">নিরাপদ বিদেশ গমন ও চুক্তিপত্রের শতভাগ বাস্তবায়ন।</p>
-              </div>
-            </div>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/track?q=${encodeURIComponent(submittedAppResult.applicationCode || '')}`}
+              target="_blank"
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs font-bold border-emerald-300 text-emerald-800 hover:bg-emerald-100"
+              >
+                স্লিপ দিয়ে লাইভ ট্র্যাক
+              </Button>
+            </Link>
           </div>
         </div>
 
-        {/* Action CTAs */}
-        <div className="pt-4 border-t border-[#E4EAF1] flex flex-col sm:flex-row gap-3">
-          <Link href={`/portal/applications/${submittedAppResult.id}`} className="flex-1">
-            <Button variant="primary" className="w-full bg-[#102B50] hover:bg-[#0B1D35] text-white py-2.5">
-              {t('আমার আবেদন বিস্তারিত দেখুন', 'View Application Details')}
-            </Button>
-          </Link>
-          <Link href="/portal" className="flex-1">
-            <Button variant="outline" className="w-full border-[#E4EAF1] text-[#172B45] hover:bg-[#F6F8FB] py-2.5">
-              {t('ড্যাশবোর্ডে ফিরুন', 'Go to Dashboard')}
-            </Button>
-          </Link>
+        {/* The Official A4 Printable Application Slip */}
+        <ApplicationSlipView data={slipData} />
+
+        {/* Post-submission Navigation Buttons */}
+        <div className="p-4 bg-white rounded-2xl border border-[#CBDDF0] flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+          <div className="text-xs text-[#66758A] text-center sm:text-left">
+            নিয়োগ সংক্রান্ত যেকোনো অনুসন্ধানে আমাদের হটলাইন: <span className="font-bold text-[#102B50]">01913-681771</span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <Link href={`/portal/applications/${submittedAppResult.id}`} className="flex-1 sm:flex-none">
+              <Button
+                variant="primary"
+                size="sm"
+                className="w-full bg-[#102B50] hover:bg-[#0B1D35] text-white text-xs font-bold py-2.5"
+              >
+                {t('আবেদন ফাইল ও অগ্রগতি দেখুন', 'View Full Application Details')}
+              </Button>
+            </Link>
+            <Link href="/portal" className="flex-1 sm:flex-none">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full border-[#CBDDF0] text-[#172B45] hover:bg-[#F6F8FB] text-xs font-semibold py-2.5"
+              >
+                {t('প্রার্থী ড্যাশবোর্ডে ফিরুন', 'Go to Dashboard')}
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     );
