@@ -5,15 +5,21 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {
   Printer,
-  Copy,
-  Check,
+  CheckCircle2,
+  ShieldCheck,
   FileSearch,
   X,
-  Scissors,
-  CheckCircle2,
+  Phone,
+  Briefcase,
+  User,
+  Copy,
+  Check,
+  Globe2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { BrandMark } from '@/components/brand/brand-logo';
 import { BRAND } from '@/config/brand';
+import { generateQrDataUrl } from '@/lib/qrcode';
 
 export interface ApplicationSlipData {
   id?: string;
@@ -24,7 +30,6 @@ export interface ApplicationSlipData {
   applicant: {
     fullName: string;
     fatherName?: string | null;
-    motherName?: string | null;
     passportNumber?: string | null;
     phone: string;
     email?: string | null;
@@ -32,14 +37,6 @@ export interface ApplicationSlipData {
     address?: string | null;
     profilePhoto?: string | null;
     applicantNumber?: string;
-    dateOfBirth?: string | Date | null;
-    gender?: string | null;
-    maritalStatus?: string | null;
-    nidNumber?: string | null;
-    emergencyContactName?: string | null;
-    emergencyContactRelation?: string | null;
-    emergencyContactPhone?: string | null;
-    emergencyContactAddress?: string | null;
   };
   job: {
     title: string;
@@ -50,12 +47,6 @@ export interface ApplicationSlipData {
     salaryMin?: number | null;
     salaryMax?: number | null;
     currency?: string | null;
-  };
-  payment?: {
-    challanNo?: string;
-    amount?: number;
-    status?: string;
-    bankName?: string;
   };
 }
 
@@ -70,205 +61,77 @@ export const ApplicationSlipView: React.FC<ApplicationSlipViewProps> = ({
   onClose,
   isModal = false,
 }) => {
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [copied, setCopied] = useState(false);
-  const slipContainerRef = useRef<HTMLDivElement>(null);
+  const printRef = useRef<HTMLDivElement>(null);
 
-  // Split Name into Surname and Given Name
-  const rawName = (data.applicant.fullName || 'MD SUMON MIA').trim();
-  const nameParts = rawName.split(/\s+/);
-  const surname = nameParts.length > 1 ? nameParts[nameParts.length - 1].toUpperCase() : 'MIA';
-  const givenName = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ').toUpperCase() : rawName.toUpperCase();
-  const fullNameUpper = rawName.toUpperCase();
+  const verificationUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/track?q=${encodeURIComponent(data.applicationCode)}`
+      : `https://shakiltravels.com/track?q=${encodeURIComponent(data.applicationCode)}`;
 
-  // Dates
-  const enrolmentDateObj = data.appliedAt ? new Date(data.appliedAt) : new Date();
-  const formatDdMmYyyy = (d: Date) => {
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = d.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
+  useEffect(() => {
+    generateQrDataUrl(verificationUrl, { width: 140, margin: 1 })
+      .then((url) => setQrCodeUrl(url))
+      .catch(() => {});
+  }, [verificationUrl]);
 
-  const enrolmentDateStr = formatDdMmYyyy(enrolmentDateObj);
-  const tentativeDateObj = new Date(enrolmentDateObj);
-  tentativeDateObj.setDate(tentativeDateObj.getDate() + 10);
-  const tentativeDateStr = formatDdMmYyyy(tentativeDateObj);
-
-  const dobStr = data.applicant.dateOfBirth
-    ? formatDdMmYyyy(new Date(data.applicant.dateOfBirth))
-    : '04/01/2006';
-
-  const slipCode = data.applicationCode || '4225-000123259';
-  const districtName = (data.applicant.district || 'NETROKONA').toUpperCase();
-  const professionName = (data.job?.title || 'LABOR').toUpperCase();
-  const genderUpper = (data.applicant.gender || 'MALE').toUpperCase();
-  const maritalUpper = (data.applicant.maritalStatus || 'SINGLE').toUpperCase();
-  const fatherNameUpper = (data.applicant.fatherName || 'MD NUR JAMAN MIA').toUpperCase();
-  const motherNameUpper = (data.applicant.motherName || 'JESMIN AKTER').toUpperCase();
-  const addressUpper = (
-    data.applicant.address || `RAJIBPUR, KENDUA, GOPALPUR - 2780, ${districtName}`
-  ).toUpperCase();
-  const emergencyRelation = (data.applicant.emergencyContactRelation || 'MOTHER').toUpperCase();
-  const emergencyName = (data.applicant.emergencyContactName || motherNameUpper).toUpperCase();
-  const emergencyAddress = (data.applicant.emergencyContactAddress || addressUpper).toUpperCase();
-  const emergencyPhone = data.applicant.emergencyContactPhone || data.applicant.phone || '+8801345827946';
-
-  // Personal Number / NID
-  const personalNo =
-    data.applicant.nidNumber ||
-    (slipCode.replace(/[^0-9]/g, '').slice(-10) || '6033137511');
-
-  // Challan
-  const challanNo = data.payment?.challanNo || '2627-0022068649';
-  const challanAmount = data.payment?.amount || 8050;
-
-  // Clean print handler guaranteeing EXACTLY 1 PAGE
   const handlePrint = () => {
-    const slipElement = document.getElementById('delivery-slip-content');
-    if (!slipElement) {
-      window.print();
-      return;
-    }
-
-    // Create an isolated hidden iframe for printing
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'fixed';
-    iframe.style.right = '0';
-    iframe.style.bottom = '0';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
-    iframe.style.border = '0';
-    document.body.appendChild(iframe);
-
-    const doc = iframe.contentWindow?.document;
-    if (!doc) {
-      window.print();
-      return;
-    }
-
-    doc.open();
-    doc.write(`
-      <!DOCTYPE html>
-      <html lang="bn">
-      <head>
-        <meta charset="utf-8" />
-        <title>Delivery Slip - ${slipCode}</title>
-        <style>
-          @page {
-            size: A4 portrait;
-            margin: 6mm 8mm;
-          }
-          * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-          }
-          html, body {
-            width: 100%;
-            height: 100%;
-            background: #ffffff;
-            color: #000000;
-            font-family: Arial, "Helvetica Neue", "SolaimanLipi", "Noto Sans Bengali", sans-serif;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          .delivery-slip-sheet {
-            width: 100%;
-            max-width: 194mm;
-            margin: 0 auto;
-            padding: 4mm 6mm;
-            page-break-inside: avoid !important;
-            page-break-after: avoid !important;
-            break-inside: avoid !important;
-            break-after: avoid !important;
-          }
-          .barcode-line {
-            display: inline-block;
-            height: 32px;
-            background: #000000;
-          }
-          table {
-            border-collapse: collapse;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="delivery-slip-sheet">
-          ${slipElement.innerHTML}
-        </div>
-        <script>
-          window.onload = function() {
-            setTimeout(function() {
-              window.focus();
-              window.print();
-              setTimeout(function() {
-                window.parent.document.body.removeChild(window.frameElement);
-              }, 1000);
-            }, 300);
-          };
-        </script>
-      </body>
-      </html>
-    `);
-    doc.close();
+    window.print();
   };
 
   const handleCopyCode = () => {
-    navigator.clipboard.writeText(slipCode);
+    navigator.clipboard.writeText(data.applicationCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   };
 
-  // Render Barcode Lines (Code 128 / Code 39 aesthetic matching the image)
-  const renderBarcode = () => {
-    const bars = [
-      3, 1, 2, 1, 3, 2, 1, 1, 2, 3, 1, 2, 1, 1, 3, 2, 1, 3, 1, 2, 2, 1, 3, 1,
-      1, 2, 3, 2, 1, 1, 2, 1, 3, 2, 1, 2, 1, 3, 1, 1, 2, 3, 1, 2, 1, 1, 3, 2,
-      1, 3, 1, 2, 2, 1, 3, 1, 1, 2, 3, 2, 1, 1, 2, 1, 3, 2, 1, 2, 1, 3, 1, 1,
-      2, 1, 3, 2, 1, 1, 2, 3, 1, 2, 1, 1, 3, 2, 1, 3, 1, 2, 2, 1, 3, 1, 1, 2,
-    ];
-
-    let currentX = 0;
-    return (
-      <svg viewBox="0 0 200 32" className="h-8 w-44 object-contain">
-        {bars.map((width, idx) => {
-          const x = currentX;
-          currentX += width * 1.8;
-          return idx % 2 === 0 ? (
-            <rect key={idx} x={x} y={0} width={width * 1.5} height={32} fill="#000" />
-          ) : null;
-        })}
-      </svg>
-    );
-  };
+  const formattedDate = data.appliedAt
+    ? new Date(data.appliedAt).toLocaleDateString('bn-BD', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    : new Date().toLocaleDateString('bn-BD', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
 
   const slipContent = (
     <div
-      ref={slipContainerRef}
-      className="bg-white text-black p-4 sm:p-6 rounded-xl border border-slate-300 shadow-2xl max-w-4xl w-full mx-auto font-sans relative delivery-slip-print-container"
+      ref={printRef}
+      className="bg-white text-[#172B45] p-5 sm:p-6 rounded-2xl border-2 border-[#CBDDF0] shadow-xl max-w-xl w-full mx-auto relative overflow-hidden font-bengali print-a5-slip"
     >
-      {/* Action Toolbar (Screen Only - Hidden during print) */}
-      <div className="no-print flex flex-wrap items-center justify-between pb-3 mb-4 border-b border-slate-200 gap-2">
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 text-white text-xs font-bold">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-            ডেলিভারি স্লিপ (Single 1-Page Delivery Slip)
-          </span>
-          <span className="text-[11px] text-slate-500 font-mono font-bold">
-            {slipCode}
+      {/* Background Watermark */}
+      <div
+        className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none select-none -rotate-12"
+        aria-hidden="true"
+      >
+        <span className="text-6xl font-black font-sans uppercase tracking-widest text-[#102B50]">
+          SHAKIL TRAVELS
+        </span>
+      </div>
+
+      {/* Action Toolbar (Hidden during print) */}
+      <div className="no-print flex flex-wrap items-center justify-between pb-3 mb-4 border-b border-[#E4EAF1] gap-2.5">
+        <div className="flex items-center gap-1.5">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-[#24856A] text-[11px] font-bold border border-emerald-200">
+            <CheckCircle2 className="w-3 h-3" />
+            A5 আবেদন স্লিপ (Application Slip)
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={handleCopyCode}
-            leftIcon={copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-            className="text-xs font-bold border-slate-300 h-8"
+            leftIcon={copied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+            className="text-[11px] font-semibold h-8 px-2.5"
           >
-            {copied ? 'কোড কপি হয়েছে' : 'কোড কপি'}
+            {copied ? 'কপি হয়েছে' : 'কোড কপি'}
           </Button>
 
           <Button
@@ -276,19 +139,19 @@ export const ApplicationSlipView: React.FC<ApplicationSlipViewProps> = ({
             variant="primary"
             size="sm"
             onClick={handlePrint}
-            leftIcon={<Printer className="w-3.5 h-3.5" />}
-            className="text-xs font-black bg-[#102B50] hover:bg-[#0B1D35] text-white h-8 px-4 shadow-sm"
+            leftIcon={<Printer className="w-3 h-3" />}
+            className="text-[11px] font-bold bg-[#102B50] hover:bg-[#0B1D35] text-white shadow-xs h-8 px-3"
           >
-            প্রিন্ট / ১-পেজ PDF ডাউনলোড
+            A5 সাইজ প্রিন্ট / ডাউনলোড
           </Button>
 
-          <Link href={`/track?q=${encodeURIComponent(slipCode)}`} target="_blank">
+          <Link href={`/track?q=${encodeURIComponent(data.applicationCode)}`} target="_blank">
             <Button
               type="button"
               variant="outline"
               size="sm"
-              leftIcon={<FileSearch className="w-3.5 h-3.5 text-[#24856A]" />}
-              className="text-xs font-bold border-slate-300 h-8"
+              leftIcon={<FileSearch className="w-3 h-3 text-[#24856A]" />}
+              className="text-[11px] font-semibold border-[#CBDDF0] h-8 px-2.5"
             >
               লাইভ ট্র্যাক
             </Button>
@@ -297,367 +160,265 @@ export const ApplicationSlipView: React.FC<ApplicationSlipViewProps> = ({
           {isModal && onClose && (
             <button
               onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors ml-1"
+              className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors ml-0.5"
               aria-label="Close"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           )}
         </div>
       </div>
 
-      {/* ================================================================ */}
-      {/* THE ACTUAL DELIVERY SLIP CONTENT (EXACT REPLICA OF UPLOADED IMAGE) */}
-      {/* ================================================================ */}
-      <div id="delivery-slip-content" className="bg-white text-black text-[12px] leading-tight select-text">
-        {/* Top Header Block */}
-        <div className="grid grid-cols-12 gap-2 items-start pb-2">
-          {/* Top Left Details */}
-          <div className="col-span-4 space-y-1 text-[11px] leading-snug">
-            <div className="text-sm font-black font-mono tracking-tight text-black mb-1">
-              {slipCode}
-            </div>
-            <div className="grid grid-cols-12 gap-1">
-              <span className="col-span-6 text-black font-semibold">Passport Office:</span>
-              <span className="col-span-6 font-bold">{districtName}</span>
-            </div>
-            <div className="grid grid-cols-12 gap-1">
-              <span className="col-span-6 text-black font-semibold">Enrolment Date:</span>
-              <span className="col-span-6 font-bold">{enrolmentDateStr}</span>
-            </div>
-            <div className="grid grid-cols-12 gap-1">
-              <span className="col-span-6 text-black font-semibold">Tentative Collection Date:</span>
-              <span className="col-span-6 font-bold">{tentativeDateStr}</span>
-            </div>
-            <div className="grid grid-cols-12 gap-1">
-              <span className="col-span-6 text-black font-semibold">Passport Type:</span>
-              <span className="col-span-6 font-bold">ORDINARY</span>
-            </div>
-            <div className="grid grid-cols-12 gap-1">
-              <span className="col-span-6 text-black font-semibold">Duration/Pages:</span>
-              <span className="col-span-6 font-bold">10y / 48p</span>
-            </div>
-            <div className="grid grid-cols-12 gap-1">
-              <span className="col-span-6 text-black font-semibold">Issuance Passport Office:</span>
-              <span className="col-span-6 font-bold">{districtName}</span>
-            </div>
-          </div>
-
-          {/* Center Title */}
-          <div className="col-span-4 text-center pt-1">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-black font-sans leading-none">
-              Delivery Slip
+      {/* Slip Header: Agency Branding & Contact Info (A5 Compact) */}
+      <div className="flex items-center justify-between pb-3 border-b-2 border-[#102B50] gap-2">
+        <div className="flex items-center gap-2.5 text-left">
+          <BrandMark size="md" className="rounded-xl border border-slate-300 shadow-2xs shrink-0" />
+          <div>
+            <h1 className="text-base sm:text-lg font-black text-[#102B50] tracking-tight uppercase font-sans leading-tight">
+              {BRAND.name}
             </h1>
-            <div className="text-base sm:text-lg font-black tracking-wider text-black mt-1">
-              EXPRESS
-            </div>
-          </div>
-
-          {/* Top Right Details & Barcode */}
-          <div className="col-span-4 space-y-1 text-[11px] text-right leading-snug">
-            {/* Barcode */}
-            <div className="flex flex-col items-end">
-              {renderBarcode()}
-              <div className="font-mono text-xs font-black tracking-widest text-black mt-0.5">
-                {slipCode}
-              </div>
-            </div>
-
-            <div className="space-y-0.5 pt-1 text-left inline-block w-full">
-              <div className="flex justify-between gap-1 text-[10.5px]">
-                <span className="font-semibold text-black">SB/DSB (Present Address):</span>
-                <span className="font-bold">Not required</span>
-              </div>
-              <div className="flex justify-between gap-1 text-[10.5px]">
-                <span className="font-semibold text-black">SB/DSB (Permanent Address):</span>
-                <span className="font-bold">Not required</span>
-              </div>
-              <div className="flex justify-between gap-1 text-[10.5px]">
-                <span className="font-semibold text-black">Enrolled by:</span>
-                <span className="font-bold">miahasan</span>
-              </div>
-              <div className="flex justify-between gap-1 text-[10.5px]">
-                <span className="font-semibold text-black">Marital Status:</span>
-                <span className="font-bold">{maritalUpper}</span>
-              </div>
-              <div className="flex justify-between gap-1 text-[10.5px]">
-                <span className="font-semibold text-black">Profession:</span>
-                <span className="font-bold">{professionName}</span>
-              </div>
-              <div className="flex justify-between gap-1 text-[10.5px]">
-                <span className="font-semibold text-black">Contact No.:</span>
-                <span className="font-bold font-mono">{data.applicant.phone || '+8801346951088'}</span>
-              </div>
-            </div>
+            <p className="text-[10px] font-bold text-[#24856A] leading-tight">
+              আন্তর্জাতিক জনশক্তি নিয়োগ ও বৈদেশিক কর্মসংস্থান কনসালটেন্সি
+            </p>
+            <p className="text-[9px] text-[#66758A] leading-tight">
+              গণপ্রজাতন্ত্রী বাংলাদেশ সরকার ও BMET অনুমোদিত রিক্রুটমেন্ট প্রতিষ্ঠান
+            </p>
           </div>
         </div>
 
-        {/* Thick Horizontal Divider Line */}
-        <div className="border-t-[1.5px] border-black my-1.5" />
-
-        {/* Subheaders in Bengali (Exact text from uploaded image) */}
-        <div className="grid grid-cols-12 gap-3 text-[10.5px] font-bold text-black font-bengali pb-1">
-          <div className="col-span-6">
-            নিজের অঙ্গুলিযুক্ত পাসপোর্ট মূল হিসাবে দেখা যাবে:
+        <div className="text-right text-[10px] text-[#66758A] space-y-0.5 font-sans shrink-0">
+          <div className="font-bold text-[#102B50] flex items-center justify-end gap-1">
+            <Phone className="w-3 h-3 text-[#24856A]" />
+            <span>01913-681771</span>
           </div>
-          <div className="col-span-6 pl-2">
-            নিজের অঙ্গুলিযুক্ত পাসপোর্ট অতিরিক্ত তথ্য হিসাবে দেখা যাবে:
-          </div>
-        </div>
-
-        {/* 2-Column Information Area */}
-        <div className="grid grid-cols-12 gap-3 text-[11px] leading-tight pb-2 border-b-[1.5px] border-black">
-          {/* Left Column (Photo & Particulars) */}
-          <div className="col-span-6 pr-2 border-r border-black/40">
-            {/* Top row of Left Column: Photo on left, Particulars on right */}
-            <div className="grid grid-cols-12 gap-2">
-              {/* Photo Box */}
-              <div className="col-span-4">
-                <div className="w-24 h-28 border border-black bg-slate-100 relative overflow-hidden flex items-center justify-center">
-                  {data.applicant.profilePhoto ? (
-                    <Image
-                      src={data.applicant.profilePhoto}
-                      alt={fullNameUpper}
-                      fill
-                      className="object-cover"
-                      unoptimized
-                    />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-center p-1 bg-slate-100 text-black">
-                      <div className="w-10 h-10 rounded-full border border-black flex items-center justify-center mb-1 text-xs font-bold">
-                        PHOTO
-                      </div>
-                      <span className="text-[9px] font-bold">প্রার্থীর ছবি</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Beside Photo Fields */}
-              <div className="col-span-8 space-y-1 text-[10.5px]">
-                <div>
-                  <span className="font-semibold">Type/ শ্রেণী: </span>
-                  <span className="font-bold">ORDINARY</span>
-                </div>
-                <div>
-                  <span className="font-semibold">Country Code/ দেশ কোড: </span>
-                  <span className="font-bold">BGD</span>
-                </div>
-                <div>
-                  <span className="font-semibold">Surname/ বংশগত নাম: </span>
-                  <span className="font-bold">{surname}</span>
-                </div>
-                <div>
-                  <span className="font-semibold">Personal Number/ ব্যক্তিগত নং: </span>
-                  <span className="font-bold font-mono">{personalNo}</span>
-                </div>
-                <div>
-                  <span className="font-semibold">Given Name/ প্রদত্ত নাম: </span>
-                  <span className="font-bold">{givenName}</span>
-                </div>
-                <div>
-                  <span className="font-semibold">Previous Passport No./ পূর্ববর্তী পাসপোর্ট নং: </span>
-                  <span className="font-bold">-</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Below Photo Fields (Exact format) */}
-            <div className="mt-2 space-y-1 text-[10.5px] border-t border-slate-200 pt-1.5">
-              <div className="grid grid-cols-12 gap-1">
-                <span className="col-span-5 font-semibold">Gender/ লিঙ্গ:</span>
-                <span className="col-span-7 font-bold">{genderUpper}</span>
-              </div>
-              <div className="grid grid-cols-12 gap-1">
-                <span className="col-span-5 font-semibold">Passport No./ পাসপোর্ট নং:</span>
-                <span className="col-span-7 font-bold font-mono">
-                  {data.applicant.passportNumber || 'XXXXXXXXX'}
-                </span>
-              </div>
-              <div className="grid grid-cols-12 gap-1">
-                <span className="col-span-5 font-semibold">Place of Birth/ জন্মস্থান:</span>
-                <span className="col-span-7 font-bold">{districtName}</span>
-              </div>
-              <div className="grid grid-cols-12 gap-1">
-                <span className="col-span-5 font-semibold">Date of Birth/ জন্ম তারিখ:</span>
-                <span className="col-span-7 font-bold font-mono">{dobStr}</span>
-              </div>
-              <div className="grid grid-cols-12 gap-1">
-                <span className="col-span-5 font-semibold">Date of Issue/ প্রদানের তারিখ:</span>
-                <span className="col-span-7 font-bold font-mono">##/##/####</span>
-              </div>
-              <div className="grid grid-cols-12 gap-1">
-                <span className="col-span-5 font-semibold">Issuing Authority/ প্রদানকারী কর্তৃপক্ষ:</span>
-                <span className="col-span-7 font-bold">DIP/Dhaka</span>
-              </div>
-              <div className="grid grid-cols-12 gap-1">
-                <span className="col-span-5 font-semibold">Nationality/ জাতীয়তা:</span>
-                <span className="col-span-7 font-bold">BANGLADESHI</span>
-              </div>
-              <div className="grid grid-cols-12 gap-1">
-                <span className="col-span-5 font-semibold">Date of Expiry/ মেয়াদোত্তীর্ণের তারিখ:</span>
-                <span className="col-span-7 font-bold font-mono">##/##/####</span>
-              </div>
-              <div className="grid grid-cols-12 gap-1 pt-1">
-                <span className="col-span-5 font-semibold">Holder Signature/ স্বাক্ষর:</span>
-                <span className="col-span-7 font-bengali font-bold text-sm tracking-wide border-b border-black/40 pb-0.5">
-                  {data.applicant.fullName || 'সুমন মিয়া'}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column (Family & Emergency Details) */}
-          <div className="col-span-6 pl-2 space-y-1.5 text-[10.5px]">
-            <div className="grid grid-cols-12 gap-1">
-              <span className="col-span-4 font-semibold">Name:</span>
-              <span className="col-span-8 font-bold">{fullNameUpper}</span>
-            </div>
-
-            <div className="grid grid-cols-12 gap-1">
-              <span className="col-span-4 font-semibold">Father:</span>
-              <span className="col-span-8 font-bold">{fatherNameUpper}</span>
-            </div>
-
-            <div className="grid grid-cols-12 gap-1">
-              <span className="col-span-4 font-semibold">Mother:</span>
-              <span className="col-span-8 font-bold">{motherNameUpper}</span>
-            </div>
-
-            <div className="grid grid-cols-12 gap-1">
-              <span className="col-span-4 font-semibold">Legal Guardian:</span>
-              <span className="col-span-8 font-bold">-</span>
-            </div>
-
-            <div className="grid grid-cols-12 gap-1">
-              <span className="col-span-4 font-semibold">Permanent address:</span>
-              <span className="col-span-8 font-bold leading-tight">{addressUpper}</span>
-            </div>
-
-            <div className="pt-3 border-t border-slate-200 space-y-1">
-              <div className="grid grid-cols-12 gap-1">
-                <span className="col-span-4 font-semibold">Emergency Contact:</span>
-                <span className="col-span-8 font-bold">{emergencyRelation}</span>
-              </div>
-
-              <div className="grid grid-cols-12 gap-1">
-                <span className="col-span-4 font-semibold">Name:</span>
-                <span className="col-span-8 font-bold">{emergencyName}</span>
-              </div>
-
-              <div className="grid grid-cols-12 gap-1">
-                <span className="col-span-4 font-semibold">Address:</span>
-                <span className="col-span-8 font-bold leading-tight">{emergencyAddress}</span>
-              </div>
-
-              <div className="grid grid-cols-12 gap-1 pt-1">
-                <span className="col-span-4 font-semibold">Contact No:</span>
-                <span className="col-span-8 font-bold font-mono">{emergencyPhone}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Payment Table and Signatures Block */}
-        <div className="grid grid-cols-12 gap-4 items-center py-2.5">
-          {/* Table on Left (Exact 5 columns) */}
-          <div className="col-span-7">
-            <table className="w-full text-[10px] border border-black text-center border-collapse">
-              <thead>
-                <tr className="border-b border-black bg-slate-50 font-bold">
-                  <th className="border-r border-black p-1 w-8">No</th>
-                  <th className="border-r border-black p-1">Bank Name</th>
-                  <th className="border-r border-black p-1">Reference Number</th>
-                  <th className="border-r border-black p-1">Paid Amount</th>
-                  <th className="p-1">Payment Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b border-black">
-                  <td className="border-r border-black p-1 font-bold">1.</td>
-                  <td className="border-r border-black p-1 font-bold">A-CHALLAN</td>
-                  <td className="border-r border-black p-1 font-mono font-bold">{challanNo}</td>
-                  <td className="border-r border-black p-1 font-bold">Tk {challanAmount}</td>
-                  <td className="p-1 font-bold text-emerald-800">Done</td>
-                </tr>
-                <tr className="border-b border-black">
-                  <td className="border-r border-black p-1 font-bold">2.</td>
-                  <td className="border-r border-black p-1">-</td>
-                  <td className="border-r border-black p-1"></td>
-                  <td className="border-r border-black p-1"></td>
-                  <td className="p-1"></td>
-                </tr>
-                <tr className="font-bold">
-                  <td colSpan={3} className="border-r border-black p-1 text-right pr-2">
-                    Total Amount Paid
-                  </td>
-                  <td className="border-r border-black p-1">Tk {challanAmount}</td>
-                  <td className="p-1"></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          {/* Signatures on Right */}
-          <div className="col-span-5 space-y-4 pl-3 text-[11px]">
-            <div>
-              <span className="font-semibold">Operator signature: </span>
-              <span className="inline-block border-b border-black w-36 ml-1" />
-            </div>
-            <div>
-              <span className="font-semibold">Received by: </span>
-              <span className="inline-block border-b border-black w-44 ml-1" />
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom SMS and Hotline Notice (Exact text from uploaded image) */}
-        <div className="pt-2 border-t border-black text-[10px] leading-snug font-bengali text-black">
-          <p>
-            পাসপোর্ট প্রস্তুত হলে এসএমএস/ই-মেইলে জানানো হবে। এছাড়া অনুসন্ধানের জন্য ১৬৪৪৫ নাম্বারে এসএমএস পাঠান এইভাবে: START EPP APPLICATION ID (যেমন: START EPP {slipCode} ) । পাসপোর্ট বাতায়ন হটলাইন (তথ্য সেবা কল সেন্টার): বাংলাদেশ থেকে ১৬৪৪৫ এবং বিদেশ থেকে ০০৯৮৮৭১৬৪৪৫
-          </p>
-        </div>
-
-        {/* Scissor Cut Line (Tear-off line at bottom) */}
-        <div className="pt-4 flex items-center gap-2 text-black select-none">
-          <Scissors className="w-4 h-4 transform -rotate-90 shrink-0" />
-          <div className="w-full border-b border-dashed border-black" />
+          <div className="text-[9px] text-[#24856A] font-semibold">shakiltravels.com/track</div>
         </div>
       </div>
 
-      {/* Embedded Print Styling */}
+      {/* Slip Title Banner (A5 Compact) */}
+      <div className="my-2.5 py-1.5 px-3 rounded-lg bg-gradient-to-r from-[#102B50] via-[#1E3A8A] to-[#102B50] text-white flex items-center justify-between gap-2 print:bg-[#102B50] print:text-white">
+        <div>
+          <span className="text-[8px] font-bold uppercase tracking-wider text-emerald-300 block leading-tight">
+            OFFICIAL APPLICATION & TRACKING SLIP (A5)
+          </span>
+          <h2 className="text-xs sm:text-sm font-black tracking-tight leading-tight">
+            নিয়োগ আবেদন স্বীকৃতি ও অফিসিয়াল ট্র্যাকিং স্লিপ
+          </h2>
+        </div>
+
+        <div className="text-right shrink-0">
+          <div className="text-[9px] uppercase text-slate-300 leading-tight">স্লিপ নম্বর (Slip No)</div>
+          <div className="text-xs sm:text-sm font-mono font-black tracking-wider text-emerald-300 leading-tight">
+            {data.applicationCode}
+          </div>
+        </div>
+      </div>
+
+      {/* Main Grid: Left (Candidate Photo + QR Code) & Right (Candidate Particulars) */}
+      <div className="grid grid-cols-12 gap-3 my-2.5">
+        {/* Left Column: Photo & QR Seal (A5 Compact) */}
+        <div className="col-span-4 flex flex-col items-center justify-start space-y-2 p-2 rounded-xl bg-[#F6F8FB] border border-[#CBDDF0]">
+          {/* Candidate Profile Photo with Verified Frame */}
+          <div className="relative w-20 h-24 rounded-lg overflow-hidden border-2 border-[#102B50] bg-white shadow-2xs flex items-center justify-center shrink-0">
+            {data.applicant.profilePhoto ? (
+              <Image
+                src={data.applicant.profilePhoto}
+                alt={data.applicant.fullName}
+                fill
+                className="object-cover"
+                unoptimized
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center p-1 text-center text-slate-400">
+                <User className="w-8 h-8 text-slate-300" />
+                <span className="text-[8px] font-bold text-slate-500">প্রার্থীর ছবি</span>
+              </div>
+            )}
+            <div className="absolute bottom-0 inset-x-0 bg-[#24856A] text-white text-[8px] font-bold text-center py-0.5 uppercase tracking-wider">
+              VERIFIED
+            </div>
+          </div>
+
+          {/* QR Code for Instant Verification */}
+          {qrCodeUrl && (
+            <div className="flex flex-col items-center text-center space-y-0.5">
+              <div className="w-16 h-16 relative p-1 bg-white border border-[#CBDDF0] rounded-lg shadow-2xs">
+                <Image src={qrCodeUrl} alt="Verification QR" fill className="object-contain p-0.5" />
+              </div>
+              <span className="text-[8px] text-[#66758A] font-sans">স্ক্যান করে ট্র্যাক করুন</span>
+            </div>
+          )}
+        </div>
+
+        {/* Right Column: Candidate Personal & Contact Data Table (A5 Compact) */}
+        <div className="col-span-8 space-y-2">
+          <div className="text-[11px] font-bold text-[#102B50] uppercase tracking-wider pb-0.5 border-b border-[#CBDDF0] flex items-center justify-between">
+            <span>প্রার্থীর বিবরণ (Candidate Particulars)</span>
+            <span className="text-[10px] font-mono text-[#24856A]">
+              আইডি: {data.applicant.applicantNumber || data.applicantNumber || 'N/A'}
+            </span>
+          </div>
+
+          <table className="w-full text-[11px] text-[#172B45] border-collapse leading-tight">
+            <tbody>
+              <tr className="border-b border-[#E4EAF1]">
+                <td className="py-1 pr-1.5 font-semibold text-[#66758A] w-24">প্রার্থীর নাম:</td>
+                <td className="py-1 font-bold text-xs text-[#102B50]">{data.applicant.fullName}</td>
+              </tr>
+              {data.applicant.fatherName && (
+                <tr className="border-b border-[#E4EAF1]">
+                  <td className="py-1 pr-1.5 font-semibold text-[#66758A]">পিতার নাম:</td>
+                  <td className="py-1 font-medium">{data.applicant.fatherName}</td>
+                </tr>
+              )}
+              <tr className="border-b border-[#E4EAF1]">
+                <td className="py-1 pr-1.5 font-semibold text-[#66758A]">পাসপোর্ট নম্বর:</td>
+                <td className="py-1 font-bold font-mono text-[#102B50]">
+                  {data.applicant.passportNumber || 'অপেক্ষমাণ / নথিপত্র সংযুক্ত'}
+                </td>
+              </tr>
+              <tr className="border-b border-[#E4EAF1]">
+                <td className="py-1 pr-1.5 font-semibold text-[#66758A]">মোবাইল নম্বর:</td>
+                <td className="py-1 font-mono font-semibold">{data.applicant.phone}</td>
+              </tr>
+              <tr className="border-b border-[#E4EAF1]">
+                <td className="py-1 pr-1.5 font-semibold text-[#66758A]">জেলা / ঠিকানা:</td>
+                <td className="py-1 font-medium">{data.applicant.district || data.applicant.address || 'বাংলাদেশ'}</td>
+              </tr>
+              <tr className="border-b border-[#E4EAF1]">
+                <td className="py-1 pr-1.5 font-semibold text-[#66758A]">আবেদনের তারিখ:</td>
+                <td className="py-1 font-medium">{formattedDate}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          {/* Job & Employment Section (A5 Compact) */}
+          <div className="pt-1">
+            <div className="text-[10px] font-bold text-[#102B50] uppercase tracking-wider pb-0.5 border-b border-[#CBDDF0] flex items-center gap-1">
+              <Briefcase className="w-3 h-3 text-[#102B50]" />
+              <span>নিয়োগ ও কর্মসংস্থানের তথ্য</span>
+            </div>
+
+            <div className="mt-1 p-2 rounded-lg bg-[#F6F8FB] border border-[#CBDDF0] grid grid-cols-2 gap-1.5 text-[10px] leading-tight">
+              <div>
+                <span className="text-[#66758A] block text-[9px]">আবেদনকৃত পদবী:</span>
+                <span className="font-bold text-[#102B50] text-[11px]">{data.job.title}</span>
+              </div>
+              <div>
+                <span className="text-[#66758A] block text-[9px]">গন্তব্য দেশ:</span>
+                <span className="font-bold text-[#102B50] flex items-center gap-1">
+                  <span>{data.job.countryFlag || '🌐'}</span>
+                  <span>{data.job.countryName || 'অনুমোদিত দেশ'}</span>
+                </span>
+              </div>
+              {data.job.employerName && (
+                <div className="col-span-2">
+                  <span className="text-[#66758A] block text-[9px]">নিয়োগকর্তা প্রতিষ্ঠান:</span>
+                  <span className="font-medium text-[#172B45]">{data.job.employerName}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Linear Roadmap Stage Pills (A5 Compact 7 Stages) */}
+      <div className="my-2 p-2 rounded-lg bg-white border border-[#CBDDF0]">
+        <div className="text-[9px] font-bold text-[#66758A] uppercase tracking-wider mb-1">
+          রিক্রুটমেন্ট ও ভিসা প্রসেসিং ধাপসমূহ:
+        </div>
+        <div className="grid grid-cols-7 gap-1 text-[8px] text-center leading-tight">
+          <div className="p-1 rounded bg-emerald-100 text-emerald-900 font-bold border border-emerald-300">
+            ১. আবেদন ✓
+          </div>
+          <div className="p-1 rounded bg-blue-50 text-blue-900 font-semibold border border-blue-200">
+            ২. শর্টলিস্ট
+          </div>
+          <div className="p-1 rounded bg-slate-50 text-slate-700 font-semibold border border-slate-200">
+            ৩. ইন্টারভিউ
+          </div>
+          <div className="p-1 rounded bg-slate-50 text-slate-700 font-semibold border border-slate-200">
+            ৪. মেডিকেল
+          </div>
+          <div className="p-1 rounded bg-slate-50 text-slate-700 font-semibold border border-slate-200">
+            ৫. ভিসা
+          </div>
+          <div className="p-1 rounded bg-slate-50 text-slate-700 font-semibold border border-slate-200">
+            ৬. BMET
+          </div>
+          <div className="p-1 rounded bg-slate-50 text-slate-700 font-semibold border border-slate-200">
+            ৭. ফ্লাইট
+          </div>
+        </div>
+      </div>
+
+      {/* Rules & General Notes (A5 Compact) */}
+      <div className="p-2 bg-amber-50/60 rounded-lg border border-amber-200 text-[9.5px] text-amber-950 space-y-0.5 leading-tight">
+        <div className="font-bold flex items-center gap-1 text-amber-900">
+          <ShieldCheck className="w-3 h-3 text-amber-700" />
+          <span>প্রার্থীর জন্য বিশেষ নির্দেশাবলী ও যাচাইকরণ নিয়মাবলী:</span>
+        </div>
+        <ul className="list-disc list-inside space-y-0.5 text-[8.5px] text-slate-700 leading-tight">
+          <li>এই আবেদন স্লিপটি আপনার নিয়োগ আবেদনের অফিসিয়াল স্বীকৃতি। এটি যত্নসহকারে সংরক্ষণ করুন।</li>
+          <li>স্লিপ নম্বর দিয়ে সরাসরি <span className="font-mono font-bold text-[#102B50]">www.shakiltravels.com/track</span> লিংকে অগ্রগতি ট্র্যাক করুন।</li>
+          <li>দালাল বা মধ্যস্বত্বভোগীর সাথে আর্থিক লেনদেন করবেন না। সমস্ত ফি কেবল অফিসের মূল রসিদের মাধ্যমে প্রদেয়।</li>
+        </ul>
+      </div>
+
+      {/* Verification Signatures & Stamp (A5 Compact) */}
+      <div className="mt-4 pt-3 border-t border-[#CBDDF0] grid grid-cols-3 gap-2 items-end text-center text-[10px]">
+        <div>
+          <div className="h-6 border-b border-dashed border-slate-400 mx-auto w-24 mb-1" />
+          <div className="font-semibold text-[#66758A]">প্রার্থীর স্বাক্ষর</div>
+          <div className="text-[8px] text-slate-400">(Candidate Signature)</div>
+        </div>
+
+        <div className="flex flex-col items-center">
+          <div className="w-12 h-12 rounded-full border-2 border-emerald-600/40 bg-emerald-50/60 flex flex-col items-center justify-center text-[7px] font-bold text-emerald-800 leading-tight select-none mb-0.5">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+            <span>CENTRAL</span>
+            <span>VERIFIED</span>
+          </div>
+          <div className="text-[8px] font-bold text-emerald-700">সেন্ট্রাল রেজিস্ট্রি ভেরিফাইড</div>
+        </div>
+
+        <div>
+          <div className="h-6 border-b border-dashed border-slate-400 mx-auto w-24 mb-1" />
+          <div className="font-bold text-[#102B50]">অনুমোদিত কর্মকর্তা স্বাক্ষর</div>
+          <div className="text-[8px] text-slate-400">SHAKIL TRAVELS</div>
+        </div>
+      </div>
+
+      {/* Global Embedded Styles for Accurate A5 Print */}
       <style jsx global>{`
         @page {
-          size: A4 portrait;
-          margin: 6mm 8mm;
+          size: A5 portrait;
+          margin: 6mm;
         }
         @media print {
-          html, body {
-            background: #ffffff !important;
-            height: 100% !important;
-            overflow: hidden !important;
-          }
           body * {
-            visibility: hidden !important;
+            visibility: hidden;
           }
-          .delivery-slip-print-container,
-          .delivery-slip-print-container * {
-            visibility: visible !important;
+          .print-a5-slip,
+          .print-a5-slip * {
+            visibility: visible;
           }
-          .delivery-slip-print-container {
-            position: fixed !important;
+          .print-a5-slip {
+            position: absolute !important;
             left: 0 !important;
             top: 0 !important;
-            width: 100% !important;
-            max-width: 194mm !important;
+            width: 136mm !important;
+            max-width: 136mm !important;
+            min-height: 196mm !important;
             margin: 0 auto !important;
-            padding: 4mm 6mm !important;
-            border: none !important;
-            box-shadow: none !important;
-            page-break-inside: avoid !important;
+            padding: 5mm 6mm !important;
+            border: 1px solid #102b50 !important;
+            border-radius: 8px !important;
+            background: #ffffff !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
             page-break-after: avoid !important;
-            break-inside: avoid !important;
-            break-after: avoid !important;
+            page-break-inside: avoid !important;
           }
           .no-print {
             display: none !important;
@@ -669,8 +430,8 @@ export const ApplicationSlipView: React.FC<ApplicationSlipViewProps> = ({
 
   if (isModal) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/70 backdrop-blur-xs overflow-y-auto">
-        <div className="my-6 max-w-4xl w-full">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto animate-fadeIn">
+        <div className="my-8 max-w-xl w-full">
           {slipContent}
         </div>
       </div>
