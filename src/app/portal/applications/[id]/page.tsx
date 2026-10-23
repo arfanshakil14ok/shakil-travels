@@ -156,7 +156,7 @@ export default function PortalApplicationDetailPage() {
             leftIcon={<Printer className="w-3.5 h-3.5 text-[#102B50]" />}
             className="text-xs font-bold border-[#CBDDF0] text-[#102B50] hover:bg-[#F6F8FB]"
           >
-            {t('আবেদন স্লিপ (Print Slip)', 'Application Slip')}
+            {t('A5 আবেদন স্লিপ (Print Slip)', 'A5 Application Slip')}
           </Button>
 
           <Link

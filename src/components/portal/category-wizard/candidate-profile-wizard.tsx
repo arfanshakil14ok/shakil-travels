@@ -701,7 +701,7 @@ export const CandidateProfileWizard: React.FC<CandidateProfileWizardProps> = ({
     };
 
     return (
-      <div className="space-y-6 font-bengali max-w-4xl mx-auto py-2">
+      <div className="space-y-5 font-bengali max-w-2xl mx-auto py-2">
         {/* Success Alert Banner */}
         <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left shadow-xs">
           <div className="flex items-center gap-3.5">
@@ -714,10 +714,10 @@ export const CandidateProfileWizard: React.FC<CandidateProfileWizardProps> = ({
                 <span>আবেদন শতভাগ সফল হয়েছে</span>
               </div>
               <h2 className="text-base sm:text-lg font-black text-[#102B50] mt-0.5">
-                আপনার অফিসিয়াল আবেদন স্লিপ তৈরি হয়েছে!
+                আপনার অফিসিয়াল A5 আবেদন স্লিপ তৈরি হয়েছে!
               </h2>
               <p className="text-xs text-[#66758A]">
-                স্লিপটি প্রিন্ট বা ডাউনলোড করে সংরক্ষণ করুন। স্লিপ কোড দিয়ে যেকোনো সময় স্ট্যাটাস ট্র্যাক করতে পারবেন।
+                A5 সাইজের স্লিপটি প্রিন্ট বা ডাউনলোড করে সংরক্ষণ করুন। স্লিপ কোড দিয়ে যেকোনো সময় স্ট্যাটাস ট্র্যাক করতে পারবেন।
               </p>
             </div>
           </div>
