@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   Search,
-  CheckCircle2,
   ShieldCheck,
   ArrowRight,
   MapPin,
@@ -193,29 +192,6 @@ export const HeroSection: React.FC = () => {
                 >
                   সকল দেশ <ArrowRight className="w-3 h-3" />
                 </Link>
-              </div>
-            </div>
-
-            {/* 6. Supporting Trust Points */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-4 border-t border-[#CBDDF0] text-xs font-bengali">
-              <div className="flex items-center gap-1.5 p-2 rounded-lg bg-white/80 border border-[#E2E8F0] shadow-2xs">
-                <CheckCircle2 className="w-4 h-4 text-[#24856A] flex-shrink-0" />
-                <span className="font-semibold text-[#102B50]">৭ বছরের অভিজ্ঞতা</span>
-              </div>
-
-              <div className="flex items-center gap-1.5 p-2 rounded-lg bg-white/80 border border-[#E2E8F0] shadow-2xs">
-                <CheckCircle2 className="w-4 h-4 text-[#24856A] flex-shrink-0" />
-                <span className="font-semibold text-[#102B50]">নেত্রকোনাকেন্দ্রিক সেবা</span>
-              </div>
-
-              <div className="flex items-center gap-1.5 p-2 rounded-lg bg-white/80 border border-[#E2E8F0] shadow-2xs">
-                <CheckCircle2 className="w-4 h-4 text-[#24856A] flex-shrink-0" />
-                <span className="font-semibold text-[#102B50]">স্বচ্ছ তথ্য ও দিকনির্দেশনা</span>
-              </div>
-
-              <div className="flex items-center gap-1.5 p-2 rounded-lg bg-white/80 border border-[#E2E8F0] shadow-2xs">
-                <CheckCircle2 className="w-4 h-4 text-[#24856A] flex-shrink-0" />
-                <span className="font-semibold text-[#102B50]">নিরাপদ ও বৈধ অভিবাসন</span>
               </div>
             </div>
           </div>
