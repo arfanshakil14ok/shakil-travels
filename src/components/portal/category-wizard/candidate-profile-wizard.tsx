@@ -714,10 +714,10 @@ export const CandidateProfileWizard: React.FC<CandidateProfileWizardProps> = ({
                 <span>আবেদন শতভাগ সফল হয়েছে</span>
               </div>
               <h2 className="text-base sm:text-lg font-black text-[#102B50] mt-0.5">
-                আপনার অফিসিয়াল A5 আবেদন স্লিপ তৈরি হয়েছে!
+                আপনার অফিসিয়াল আবেদন স্লিপ তৈরি হয়েছে!
               </h2>
               <p className="text-xs text-[#66758A]">
-                A5 সাইজের স্লিপটি প্রিন্ট বা ডাউনলোড করে সংরক্ষণ করুন। স্লিপ কোড দিয়ে যেকোনো সময় স্ট্যাটাস ট্র্যাক করতে পারবেন।
+                এক পাতার (Single Page) অফিসিয়াল স্লিপটি প্রিন্ট বা ডাউনলোড করে সংরক্ষণ করুন। স্লিপ কোড দিয়ে যেকোনো সময় স্ট্যাটাস ট্র্যাক করতে পারবেন।
               </p>
             </div>
           </div>

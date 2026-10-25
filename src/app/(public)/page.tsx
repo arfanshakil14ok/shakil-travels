@@ -3,12 +3,12 @@ import prisma from '@/lib/prisma';
 import { BRAND } from '@/config/brand';
 import { HeroSection } from '@/components/public/hero-section';
 import { VerifiedTrustStrip } from '@/components/public/verified-trust-strip';
-import { HomeTrackingSection } from '@/components/public/home-tracking-section';
-import { ServicesSection } from '@/components/public/services-section';
-import { CountriesSection } from '@/components/public/countries-section';
-import { HowItWorksSection } from '@/components/public/how-it-works-section';
-import { TrustSection } from '@/components/public/trust-section';
 import { JobsPreviewSection } from '@/components/public/jobs-preview-section';
+import { CountriesSection } from '@/components/public/countries-section';
+import { ServicesSection } from '@/components/public/services-section';
+import { TrustSection } from '@/components/public/trust-section';
+import { HowItWorksSection } from '@/components/public/how-it-works-section';
+import { HomeTrackingSection } from '@/components/public/home-tracking-section';
 import { EligibilityCheckerSection } from '@/components/public/eligibility-checker-section';
 import { FaqSection } from '@/components/public/faq-section';
 import { ContactCtaSection } from '@/components/public/contact-cta-section';
@@ -89,37 +89,31 @@ export default async function PublicHomePage() {
 
   return (
     <div className="space-y-0">
-      {/* 1. Master Prompt Homepage Hero Section */}
+      {/* 1. Hero Section (এনিমেটেড লাইভ টেক্সটসহ) */}
       <HeroSection />
 
-      {/* 2. Brand Positioning Trust Strip (7 Years Experience & Netrokona Focus) */}
+      {/* Trust Strip */}
       <VerifiedTrustStrip />
 
-      {/* 3. Interactive File & Slip Tracking Section */}
-      <HomeTrackingSection />
-
-      {/* 4. Our Services (বিদেশে চাকরির তথ্য, আবেদন সহযোগিতা, ভিসা তথ্য, দক্ষতা ও প্রশিক্ষণ, নিরাপদ অভিবাসন, বিদেশযাত্রার প্রস্তুতি) */}
-      <ServicesSection />
-
-      {/* 5. Countries and Job Categories (বিদেশে কর্মসংস্থানের সম্ভাবনা) */}
-      <CountriesSection countries={countries} maxDisplay={8} />
-
-      {/* 6. How It Works (আমাদের সঙ্গে কাজের ধাপ - ৪টি ধাপ) */}
-      <HowItWorksSection />
-
-      {/* 7. Why Choose Us (কেন আমাদের সঙ্গে যোগাযোগ করবেন? - ৫টি কারণ) */}
-      <TrustSection />
-
-      {/* 8. Available Verified Jobs Preview */}
+      {/* 2. জব সেকশন (হিরো সেকশন এর নিচে থাকবে জব সেকশন) */}
       <JobsPreviewSection jobs={serializedJobs} maxDisplay={6} />
 
-      {/* 9. Interactive Eligibility & Preparation Checker */}
+      {/* 3. গন্তব্য দেশ সমূহ (জব সেকশনের নিচে থাকবে গন্তব্য দেশ সমূহ) */}
+      <CountriesSection countries={countries} maxDisplay={8} />
+
+      {/* 4. আমাদের সেবাসমূহ ও আমাদের সম্পর্কে */}
+      <ServicesSection />
+      <TrustSection />
+      <HowItWorksSection />
+
+      {/* 5. ফাইল ট্র্যাকিং ও যোগ্যতা অনুসন্ধান */}
+      <HomeTrackingSection />
       <EligibilityCheckerSection />
 
-      {/* 10. Master Prompt FAQ Section (সাধারণ প্রশ্নোত্তর) */}
+      {/* 6. প্রশ্ন উত্তর (FAQ) */}
       <FaqSection />
 
-      {/* 11. Contact Section (আপনার বিদেশে কর্মসংস্থানের প্রস্তুতি শুরু হোক আজই) */}
+      {/* 7. যোগাযোগ ইত্যাদি (Contact CTA) */}
       <ContactCtaSection />
     </div>
   );

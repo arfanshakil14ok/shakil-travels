@@ -269,21 +269,21 @@ export default function PortalProcessingDetailPage() {
 
         <div className="divide-y divide-slate-100">
           {caseData.documentRequirements?.map((req: any) => (
-            <div key={req.id} className="py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs">
-              <div>
-                <div className="font-bold text-slate-800">
+            <div key={req.id} className="py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs min-w-0 max-w-full overflow-hidden">
+              <div className="min-w-0 max-w-full overflow-hidden">
+                <div className="font-bold text-slate-800 break-words break-all">
                   {language === 'bn' && req.titleLocal ? req.titleLocal : req.title}
                   {req.required && (
-                    <span className="text-[9px] ml-2 px-1.5 py-0.2 rounded bg-rose-100 text-rose-700 font-bold">
+                    <span className="text-[9px] ml-2 px-1.5 py-0.2 rounded bg-rose-100 text-rose-700 font-bold shrink-0">
                       {t('বাধ্যতামূলক', 'REQUIRED')}
                     </span>
                   )}
                 </div>
-                <div className="text-[11px] text-slate-400 font-mono mt-0.5">
+                <div className="text-[11px] text-slate-400 font-mono mt-0.5 truncate break-all">
                   Type: {req.documentType}
                 </div>
                 {req.rejectionReason && (
-                  <div className="text-[11px] text-rose-600 mt-1 font-semibold">
+                  <div className="text-[11px] text-rose-600 mt-1 font-semibold break-words break-all">
                     {t('প্রত্যাখ্যানের কারণ: ', 'Rejection Reason: ')} {req.rejectionReason}
                   </div>
                 )}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -25,11 +25,34 @@ import { BRAND } from '@/config/brand';
 import { FileTrackingWidget } from './file-tracking-widget';
 import { cn } from '@/lib/utils';
 
+const ANIMATED_PHRASES = [
+  'বিদেশে নিশ্চিত ক্যারিয়ার',
+  'উচ্চ বেতন সম্মানজনক পেশা',
+  'স্মার্ট ভবিষ্যৎ ও অভিবাসী সুরক্ষা',
+  '১০০% বৈধ ও নিরাপদ অভিবাসন',
+];
+
 export const HeroSection: React.FC = () => {
   const router = useRouter();
   const [keyword, setKeyword] = useState('');
   const [selectedCountry, setSelectedCountry] = useState('');
   const [activeTab, setActiveTab] = useState<'jobs' | 'track'>('jobs');
+
+  // Animated live text rotator state
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [fadeState, setFadeState] = useState<'in' | 'out'>('in');
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setFadeState('out');
+      setTimeout(() => {
+        setPhraseIndex((prev) => (prev + 1) % ANIMATED_PHRASES.length);
+        setFadeState('in');
+      }, 350);
+    }, 3200);
+
+    return () => clearInterval(timer);
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,7 +90,7 @@ export const HeroSection: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-          {/* Left Column: Master Prompt Hero Content */}
+          {/* Left Column: Headlines & Live Animated Phrases */}
           <div className="lg:col-span-7 space-y-5">
             {/* 1. Trust Pill Badge */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/95 backdrop-blur-md border border-[#C8DCF0] shadow-xs text-xs text-[#172B45] font-medium font-bengali">
@@ -81,12 +104,36 @@ export const HeroSection: React.FC = () => {
               <span>৭ বছরের অভিজ্ঞতায় নেত্রকোনার মানুষের পাশে</span>
             </div>
 
-            {/* 2. Headline & Subheadline */}
-            <div className="space-y-2.5">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-[#102B50] leading-[1.22] font-bengali">
+            {/* 2. Headline & Animated Live Text */}
+            <div className="space-y-3 font-bengali">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#102B50] leading-[1.2]">
                 বিদেশে কর্মসংস্থানের বিশ্বস্ত সহযোগী
               </h1>
-              <p className="text-lg sm:text-xl font-bold text-[#24856A] font-bengali leading-snug">
+
+              {/* Dynamic Animated Live Text Box */}
+              <div className="inline-flex items-center gap-2.5 py-2 px-4 rounded-xl bg-white/95 backdrop-blur-md border border-emerald-300 shadow-sm max-w-full">
+                <span className="flex h-2.5 w-2.5 relative shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600" />
+                </span>
+                <span className="text-xs uppercase font-extrabold tracking-wider text-emerald-800 shrink-0">
+                  নিশ্চয়তা:
+                </span>
+                <div className="overflow-hidden min-h-[28px] flex items-center">
+                  <span
+                    className={cn(
+                      'text-base sm:text-lg lg:text-xl font-black text-[#24856A] transition-all duration-300 transform',
+                      fadeState === 'in'
+                        ? 'opacity-100 translate-y-0 scale-100'
+                        : 'opacity-0 -translate-y-2 scale-95'
+                    )}
+                  >
+                    {ANIMATED_PHRASES[phraseIndex]}
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-base sm:text-lg font-bold text-[#102B50] leading-snug">
                 ৭ বছরের অভিজ্ঞতায় আপনার বিদেশযাত্রার প্রস্তুতিতে পাশে।
               </p>
             </div>
@@ -149,7 +196,7 @@ export const HeroSection: React.FC = () => {
               </div>
             </div>
 
-            {/* 6. Supporting Trust Points (as specified in Master Prompt) */}
+            {/* 6. Supporting Trust Points */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-4 border-t border-[#CBDDF0] text-xs font-bengali">
               <div className="flex items-center gap-1.5 p-2 rounded-lg bg-white/80 border border-[#E2E8F0] shadow-2xs">
                 <CheckCircle2 className="w-4 h-4 text-[#24856A] flex-shrink-0" />

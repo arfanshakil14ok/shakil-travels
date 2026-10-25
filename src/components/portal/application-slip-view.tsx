@@ -77,7 +77,142 @@ export const ApplicationSlipView: React.FC<ApplicationSlipViewProps> = ({
   }, [verificationUrl]);
 
   const handlePrint = () => {
-    window.print();
+    const container = printRef.current;
+    if (!container) {
+      window.print();
+      return;
+    }
+
+    // Create a hidden isolated iframe to guarantee strictly 1 single page without DOM bleed
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    iframe.style.visibility = 'hidden';
+    document.body.appendChild(iframe);
+
+    const iframeDoc = iframe.contentWindow?.document;
+    if (!iframeDoc) {
+      window.print();
+      return;
+    }
+
+    // Collect all active style and link tags from current document
+    const styleTags = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+      .map((el) => el.outerHTML)
+      .join('\n');
+
+    // Clone the slip element and remove no-print toolbars
+    const slipClone = container.cloneNode(true) as HTMLElement;
+    slipClone.querySelectorAll('.no-print').forEach((el) => el.remove());
+
+    iframeDoc.open();
+    iframeDoc.write(`
+      <!DOCTYPE html>
+      <html lang="bn">
+      <head>
+        <meta charset="utf-8" />
+        <title>Application-Slip-${data.applicationCode}</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+        ${styleTags}
+        <style>
+          @page {
+            size: A4 portrait;
+            margin: 8mm 10mm;
+          }
+          @page :first {
+            margin: 8mm 10mm;
+          }
+          * {
+            box-sizing: border-box !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+            color: #172B45 !important;
+            font-family: 'Hind Siliguri', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+            width: 100% !important;
+            height: auto !important;
+            overflow: visible !important;
+          }
+          .isolated-print-wrapper {
+            width: 100% !important;
+            max-width: 185mm !important;
+            margin: 0 auto !important;
+            padding: 0 !important;
+            page-break-inside: avoid !important;
+            page-break-after: avoid !important;
+            break-inside: avoid !important;
+            break-after: avoid !important;
+          }
+          .application-slip-card {
+            position: relative !important;
+            left: auto !important;
+            top: auto !important;
+            width: 100% !important;
+            max-width: 185mm !important;
+            min-height: auto !important;
+            max-height: 275mm !important;
+            margin: 0 auto !important;
+            padding: 14px 18px !important;
+            border: 2px solid #102B50 !important;
+            border-radius: 12px !important;
+            box-shadow: none !important;
+            page-break-inside: avoid !important;
+            page-break-after: avoid !important;
+            break-inside: avoid !important;
+            break-after: avoid !important;
+            overflow: hidden !important;
+          }
+          .no-print {
+            display: none !important;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="isolated-print-wrapper">
+          ${slipClone.outerHTML}
+        </div>
+      </body>
+      </html>
+    `);
+    iframeDoc.close();
+
+    // Ensure all images are fully loaded before triggering print
+    const images = Array.from(iframeDoc.images);
+    const imagePromises = images.map((img) => {
+      if (img.complete) return Promise.resolve();
+      return new Promise((resolve) => {
+        img.onload = resolve;
+        img.onerror = resolve;
+      });
+    });
+
+    Promise.all(imagePromises).then(() => {
+      setTimeout(() => {
+        try {
+          iframe.contentWindow?.focus();
+          iframe.contentWindow?.print();
+        } catch (e) {
+          console.error('Print iframe error:', e);
+          window.print();
+        } finally {
+          setTimeout(() => {
+            if (document.body.contains(iframe)) {
+              document.body.removeChild(iframe);
+            }
+          }, 3000);
+        }
+      }, 250);
+    });
   };
 
   const handleCopyCode = () => {
@@ -101,7 +236,7 @@ export const ApplicationSlipView: React.FC<ApplicationSlipViewProps> = ({
   const slipContent = (
     <div
       ref={printRef}
-      className="bg-white text-[#172B45] p-5 sm:p-6 rounded-2xl border-2 border-[#CBDDF0] shadow-xl max-w-xl w-full mx-auto relative overflow-hidden font-bengali print-a5-slip"
+      className="bg-white text-[#172B45] p-4 sm:p-5 rounded-2xl border-2 border-[#CBDDF0] shadow-xl max-w-xl w-full mx-auto relative overflow-hidden font-bengali application-slip-card print-a5-slip"
     >
       {/* Background Watermark */}
       <div
@@ -118,7 +253,7 @@ export const ApplicationSlipView: React.FC<ApplicationSlipViewProps> = ({
         <div className="flex items-center gap-1.5">
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-[#24856A] text-[11px] font-bold border border-emerald-200">
             <CheckCircle2 className="w-3 h-3" />
-            A5 আবেদন স্লিপ (Application Slip)
+            আবেদন স্লিপ (Single Page Slip)
           </span>
         </div>
 
@@ -142,7 +277,7 @@ export const ApplicationSlipView: React.FC<ApplicationSlipViewProps> = ({
             leftIcon={<Printer className="w-3 h-3" />}
             className="text-[11px] font-bold bg-[#102B50] hover:bg-[#0B1D35] text-white shadow-xs h-8 px-3"
           >
-            A5 সাইজ প্রিন্ট / ডাউনলোড
+            প্রিন্ট স্লিপ (১ পাতা)
           </Button>
 
           <Link href={`/track?q=${encodeURIComponent(data.applicationCode)}`} target="_blank">
@@ -181,7 +316,7 @@ export const ApplicationSlipView: React.FC<ApplicationSlipViewProps> = ({
               আন্তর্জাতিক জনশক্তি নিয়োগ ও বৈদেশিক কর্মসংস্থান কনসালটেন্সি
             </p>
             <p className="text-[9px] text-[#66758A] leading-tight">
-              গণপ্রজাতন্ত্রী বাংলাদেশ সরকার ও BMET অনুমোদিত রিক্রুটমেন্ট প্রতিষ্ঠান
+              বৈধ ও নিরাপদ অভিবাসন সহায়তায় আপনার বিশ্বস্ত প্রতিষ্ঠান
             </p>
           </div>
         </div>
@@ -196,10 +331,10 @@ export const ApplicationSlipView: React.FC<ApplicationSlipViewProps> = ({
       </div>
 
       {/* Slip Title Banner (A5 Compact) */}
-      <div className="my-2.5 py-1.5 px-3 rounded-lg bg-gradient-to-r from-[#102B50] via-[#1E3A8A] to-[#102B50] text-white flex items-center justify-between gap-2 print:bg-[#102B50] print:text-white">
+      <div className="my-2 py-1.5 px-3 rounded-lg bg-gradient-to-r from-[#102B50] via-[#1E3A8A] to-[#102B50] text-white flex items-center justify-between gap-2 print:bg-[#102B50] print:text-white">
         <div>
           <span className="text-[8px] font-bold uppercase tracking-wider text-emerald-300 block leading-tight">
-            OFFICIAL APPLICATION & TRACKING SLIP (A5)
+            OFFICIAL APPLICATION & TRACKING SLIP
           </span>
           <h2 className="text-xs sm:text-sm font-black tracking-tight leading-tight">
             নিয়োগ আবেদন স্বীকৃতি ও অফিসিয়াল ট্র্যাকিং স্লিপ
@@ -389,36 +524,49 @@ export const ApplicationSlipView: React.FC<ApplicationSlipViewProps> = ({
         </div>
       </div>
 
-      {/* Global Embedded Styles for Accurate A5 Print */}
+      {/* Global Embedded Styles for Single Page Print */}
       <style jsx global>{`
         @page {
-          size: A5 portrait;
-          margin: 6mm;
+          size: A4 portrait;
+          margin: 8mm 10mm;
         }
         @media print {
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            height: auto !important;
+            overflow: visible !important;
+            background: #ffffff !important;
+          }
           body * {
             visibility: hidden;
           }
-          .print-a5-slip,
-          .print-a5-slip * {
+          .application-slip-card,
+          .application-slip-card * {
             visibility: visible;
           }
-          .print-a5-slip {
-            position: absolute !important;
+          .application-slip-card {
+            position: fixed !important;
             left: 0 !important;
+            right: 0 !important;
             top: 0 !important;
-            width: 136mm !important;
-            max-width: 136mm !important;
-            min-height: 196mm !important;
+            width: 100% !important;
+            max-width: 185mm !important;
+            min-height: auto !important;
+            max-height: 275mm !important;
             margin: 0 auto !important;
-            padding: 5mm 6mm !important;
-            border: 1px solid #102b50 !important;
-            border-radius: 8px !important;
+            padding: 14px 18px !important;
+            border: 2px solid #102B50 !important;
+            border-radius: 12px !important;
             background: #ffffff !important;
+            box-shadow: none !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
             page-break-after: avoid !important;
             page-break-inside: avoid !important;
+            break-after: avoid !important;
+            break-inside: avoid !important;
+            overflow: hidden !important;
           }
           .no-print {
             display: none !important;
