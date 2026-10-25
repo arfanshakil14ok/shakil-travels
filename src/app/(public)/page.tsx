@@ -2,7 +2,6 @@ import React from 'react';
 import prisma from '@/lib/prisma';
 import { BRAND } from '@/config/brand';
 import { HeroSection } from '@/components/public/hero-section';
-import { VerifiedTrustStrip } from '@/components/public/verified-trust-strip';
 import { JobsPreviewSection } from '@/components/public/jobs-preview-section';
 import { CountriesSection } from '@/components/public/countries-section';
 import { ServicesSection } from '@/components/public/services-section';
@@ -91,9 +90,6 @@ export default async function PublicHomePage() {
     <div className="space-y-0">
       {/* 1. Hero Section (এনিমেটেড লাইভ টেক্সটসহ) */}
       <HeroSection />
-
-      {/* Trust Strip */}
-      <VerifiedTrustStrip />
 
       {/* 2. জব সেকশন (হিরো সেকশন এর নিচে থাকবে জব সেকশন) */}
       <JobsPreviewSection jobs={serializedJobs} maxDisplay={6} />
