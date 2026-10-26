@@ -12,7 +12,8 @@ void main() {
         'publicField': 'Allowed Information',
       };
 
-      final sanitized = SafeLogger.sanitize(sensitivePayload) as Map<String, dynamic>;
+      final sanitized =
+          SafeLogger.sanitize(sensitivePayload) as Map<String, dynamic>;
 
       expect(sanitized['password'], equals('[REDACTED]'));
       expect(sanitized['token'], equals('[REDACTED]'));
@@ -23,10 +24,7 @@ void main() {
 
     test('Redacts nested maps and lists', () {
       final nestedData = {
-        'user': {
-          'name': 'Md. Shakil',
-          'secret': 'nested_secret',
-        },
+        'user': {'name': 'Md. Shakil', 'secret': 'nested_secret'},
         'items': [
           {'otp': '123456'},
           {'status': 'ACTIVE'},

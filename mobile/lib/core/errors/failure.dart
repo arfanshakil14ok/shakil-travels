@@ -30,8 +30,5 @@ class ServerFailure extends Failure {
 }
 
 class ValidationFailure extends Failure {
-  const ValidationFailure({
-    required super.message,
-    super.code = 400,
-  });
+  const ValidationFailure({required super.message, super.code = 400});
 }

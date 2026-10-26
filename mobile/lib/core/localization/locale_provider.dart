@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 class LocaleProvider extends ChangeNotifier {
-  Locale _locale = const Locale('bn', 'BD'); // Default to Bangla for Bangladeshi workforce
+  Locale _locale = const Locale(
+    'bn',
+    'BD',
+  ); // Default to Bangla for Bangladeshi workforce
 
   Locale get locale => _locale;
 

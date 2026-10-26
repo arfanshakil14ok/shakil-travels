@@ -1,5 +1,5 @@
 /// Verified catalog of SHAKILWORK ERP backend endpoints.
-/// Strictly mapped to actual Next.js route handlers verified in Phase 0 audit.
+/// Strictly mapped to actual Next.js route handlers verified in Phase 0-4 audits.
 class ApiEndpoints {
   // Public & System Endpoints
   static const String health = '/api/health';
@@ -30,11 +30,25 @@ class ApiEndpoints {
   static const String candidateInterviews = '/api/portal/interviews';
   static const String candidateNotifications = '/api/portal/notifications';
 
-  // Staff & Field Operations
+  // Staff & Admin Operational Endpoints
+  static const String dashboardStats = '/api/dashboard/stats';
   static const String staffProcessing = '/api/staff/processing';
   static const String staffApplicants = '/api/applicants';
+  static const String interviews = '/api/interviews';
+  static const String calendarEvents = '/api/admin/calendar';
+  static const String auditLogs = '/api/audit-logs';
   static const String supportTickets = '/api/support/tickets';
 
-  // Document Streaming
-  static String documentDownload(String documentId) => '/api/documents/$documentId/download';
+  // Dynamic parameterized endpoints
+  static String documentDownload(String documentId) =>
+      '/api/documents/$documentId/download';
+  static String verifyDocument(String documentId) =>
+      '/api/documents/$documentId/verify';
+  static String applicantDetails(String applicantId) =>
+      '/api/applicants/$applicantId';
+  static String applicantNotes(String applicantId) =>
+      '/api/applicants/$applicantId/notes';
+  static String caseDetails(String caseId) => '/api/staff/processing/$caseId';
+  static String transitionCase(String caseId) =>
+      '/api/staff/processing/$caseId/transition';
 }

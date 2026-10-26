@@ -143,6 +143,7 @@ export async function POST(request: NextRequest) {
 
     const response = NextResponse.json({
       success: true,
+      token,
       message: 'Logged in successfully',
       data: {
         applicant: {

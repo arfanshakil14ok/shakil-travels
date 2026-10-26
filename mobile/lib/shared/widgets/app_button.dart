@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../app/theme/app_colors.dart';
 
 enum AppButtonVariant { primary, secondary, outline }
@@ -36,10 +37,7 @@ class AppButton extends StatelessWidget {
         : AppColors.deepNavy;
 
     return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: bg,
-        foregroundColor: fg,
-      ),
+      style: ElevatedButton.styleFrom(backgroundColor: bg, foregroundColor: fg),
       onPressed: isLoading ? null : onPressed,
       child: _buildChild(fg),
     );
@@ -61,11 +59,7 @@ class AppButton extends StatelessWidget {
       return Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 18),
-          const SizedBox(width: 8),
-          Text(text),
-        ],
+        children: [Icon(icon, size: 18), const SizedBox(width: 8), Text(text)],
       );
     }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../app/theme/app_colors.dart';
 
 class StatusBadge extends StatelessWidget {
@@ -48,6 +49,24 @@ class StatusBadge extends StatelessWidget {
       backgroundColor: AppColors.lightPink,
       textColor: AppColors.deepNavy,
       icon: Icons.sync_rounded,
+    );
+  }
+
+  factory StatusBadge.underReview([String label = 'Under Review']) {
+    return StatusBadge(
+      label: label,
+      backgroundColor: AppColors.goldLight,
+      textColor: AppColors.gold,
+      icon: Icons.rate_review_rounded,
+    );
+  }
+
+  factory StatusBadge.uploaded([String label = 'Uploaded']) {
+    return StatusBadge(
+      label: label,
+      backgroundColor: AppColors.lightPink,
+      textColor: AppColors.corporateNavy,
+      icon: Icons.upload_file_rounded,
     );
   }
 

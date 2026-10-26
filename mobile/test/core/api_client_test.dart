@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shakil_travels/core/config/app_config.dart';
 import 'package:shakil_travels/core/errors/api_exception.dart';
@@ -28,14 +30,12 @@ void main() {
     late MockHttpAdapter mockAdapter;
 
     setUp(() {
+      FlutterSecureStorage.setMockInitialValues({});
       mockAdapter = MockHttpAdapter();
       final dio = Dio(BaseOptions(baseUrl: 'http://test.local'));
       dio.httpClientAdapter = mockAdapter;
 
-      apiClient = ApiClient(
-        customDio: dio,
-        config: const AppConfig(),
-      );
+      apiClient = ApiClient(customDio: dio, config: const AppConfig());
     });
 
     test('Successful GET parses response correctly', () async {
@@ -133,10 +133,7 @@ void main() {
         );
       };
 
-      expect(
-        () => apiClient.get('/api/jobs'),
-        throwsA(isA<ServerException>()),
-      );
+      expect(() => apiClient.get('/api/jobs'), throwsA(isA<ServerException>()));
     });
   });
 }

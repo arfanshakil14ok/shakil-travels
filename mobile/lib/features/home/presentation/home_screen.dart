@@ -1,24 +1,19 @@
 import 'package:flutter/material.dart';
+
 import '../../../app/theme/app_colors.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/localization/app_localizations.dart';
-import '../../../core/localization/locale_provider.dart';
 import '../../../core/network/api_client.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_card.dart';
-import '../../../shared/widgets/app_logo.dart';
 import '../../../shared/widgets/status_badge.dart';
-import '../../auth/presentation/role_selection_screen.dart';
+import 'package:shakil_travels/features/auth/presentation/role_selection_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool hasActiveSession;
   final ApiClient? apiClient;
 
-  const HomeScreen({
-    super.key,
-    this.hasActiveSession = false,
-    this.apiClient,
-  });
+  const HomeScreen({super.key, this.hasActiveSession = false, this.apiClient});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -66,16 +61,16 @@ class _HomeScreenState extends State<HomeScreen> {
             Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: AppColors.surfaceWhite.withOpacity(0.15),
+                color: AppColors.surfaceWhite.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: const Icon(Icons.flight_takeoff_rounded, size: 20),
             ),
             const SizedBox(width: 10),
-            Column(
+            const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
-              children: const [
+              children: [
                 Text(
                   AppConfig.appName,
                   style: TextStyle(
@@ -85,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 Text(
-                  'Govt. Approved RL-1892',
+                  'Govt. Approved RL-2579',
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w400,
@@ -145,7 +140,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         StatusBadge(
                           label: 'RECRUITING AGENCY',
-                          backgroundColor: AppColors.surfaceWhite.withOpacity(0.15),
+                          backgroundColor: AppColors.surfaceWhite.withValues(
+                            alpha: 0.15,
+                          ),
                           textColor: AppColors.corporatePink,
                         ),
                         const Icon(
@@ -157,7 +154,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      l10n?.translate('welcome_title') ?? 'Welcome to SHAKIL TRAVELS',
+                      l10n?.translate('welcome_title') ??
+                          'Welcome to SHAKIL TRAVELS',
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
@@ -171,7 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           'Trusted Overseas Recruitment & Government Approved Manpower Agency',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.surfaceWhite.withOpacity(0.85),
+                        color: AppColors.surfaceWhite.withValues(alpha: 0.85),
                         height: 1.4,
                       ),
                     ),
@@ -209,9 +207,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: const [
-                        Icon(Icons.search_rounded, color: AppColors.corporateNavy, size: 22),
+                    const Row(
+                      children: [
+                        Icon(
+                          Icons.search_rounded,
+                          color: AppColors.corporateNavy,
+                          size: 22,
+                        ),
                         SizedBox(width: 8),
                         Text(
                           'Quick Application Tracking',
@@ -248,7 +250,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         if (query.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Please enter a passport number or application ID'),
+                              content: Text(
+                                'Please enter a passport number or application ID',
+                              ),
                             ),
                           );
                         } else {
@@ -282,7 +286,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const RoleSelectionScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const RoleSelectionScreen(),
+                          ),
                         );
                       },
                     ),
@@ -297,7 +303,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const RoleSelectionScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const RoleSelectionScreen(),
+                          ),
                         );
                       },
                     ),
@@ -309,11 +317,19 @@ class _HomeScreenState extends State<HomeScreen> {
               // 5. Official Helpline & Regulatory Footnote
               AppCard(
                 backgroundColor: AppColors.goldLight,
-                border: Border.all(color: AppColors.gold.withOpacity(0.3)),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Row(
-                  children: const [
-                    Icon(Icons.phone_in_talk_rounded, color: AppColors.warning, size: 22),
+                border:
+                    Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: const Row(
+                  children: [
+                    Icon(
+                      Icons.phone_in_talk_rounded,
+                      color: AppColors.warning,
+                      size: 22,
+                    ),
                     SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -342,10 +358,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              Center(
+              const Center(
                 child: Text(
-                  '© 2026 SHAKIL TRAVELS • RL-1892 • App v1.0.0',
-                  style: const TextStyle(
+                  '© 2026 SHAKIL TRAVELS • RL-2579 • App v1.0.0',
+                  style: TextStyle(
                     fontSize: 11,
                     color: AppColors.textMuted,
                   ),
@@ -368,8 +384,8 @@ class _HomeScreenState extends State<HomeScreen> {
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: AppColors.cardBorder),
         ),
-        child: Row(
-          children: const [
+        child: const Row(
+          children: [
             SizedBox(
               width: 14,
               height: 14,
@@ -388,7 +404,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final isHealthy = _isBackendHealthy ?? false;
     final bg = isHealthy ? AppColors.successLight : AppColors.warningLight;
     final fg = isHealthy ? AppColors.success : AppColors.warning;
-    final icon = isHealthy ? Icons.cloud_done_rounded : Icons.cloud_queue_rounded;
+    final icon =
+        isHealthy ? Icons.cloud_done_rounded : Icons.cloud_queue_rounded;
     final text = isHealthy
         ? 'Connected to SHAKILWORK ERP'
         : 'Backend server unreachable. Tap to retry.';
@@ -416,8 +433,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            if (!isHealthy)
-              Icon(Icons.refresh_rounded, size: 16, color: fg),
+            if (!isHealthy) Icon(Icons.refresh_rounded, size: 16, color: fg),
           ],
         ),
       ),
@@ -514,7 +530,7 @@ class _QuickActionCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
+              color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: color, size: 24),

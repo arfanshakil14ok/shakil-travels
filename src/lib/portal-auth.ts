@@ -1,10 +1,10 @@
 import bcrypt from 'bcryptjs';
 import { SignJWT, jwtVerify } from 'jose';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import prisma from './prisma';
 
 const PORTAL_JWT_SECRET = new TextEncoder().encode(
-  process.env.PORTAL_JWT_SECRET || process.env.JWT_SECRET || 'sgr_portal_secure_jwt_secret_applicant_2026'
+  process.env.PORTAL_JWT_SECRET || 'sgr_portal_secure_jwt_secret_applicant_2026'
 );
 const PORTAL_COOKIE_NAME = 'sgr_portal_session';
 const PORTAL_SESSION_DURATION = 60 * 60 * 24 * 7; // 7 days
@@ -87,8 +87,25 @@ export function clearPortalCookieOnResponse(response: NextResponse): NextRespons
 
 export async function getCurrentApplicant(): Promise<any | null> {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get(PORTAL_COOKIE_NAME)?.value;
+    let token: string | undefined;
+
+    // 1. Support Authorization: Bearer <token> for mobile and API clients
+    try {
+      const headersList = await headers();
+      const authHeader = headersList.get('authorization');
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7).trim();
+      }
+    } catch (_) {
+      // In contexts where headers() is unavailable, fall through
+    }
+
+    // 2. Fall back to HTTP-only cookie for web browsers
+    if (!token) {
+      const cookieStore = await cookies();
+      token = cookieStore.get(PORTAL_COOKIE_NAME)?.value;
+    }
+
     if (!token) return null;
 
     const payload = await verifyPortalToken(token);

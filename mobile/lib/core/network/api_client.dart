@@ -1,5 +1,7 @@
 import 'dart:io';
+
 import 'package:dio/dio.dart';
+
 import '../config/app_config.dart';
 import '../errors/api_exception.dart';
 import '../security/secure_storage.dart';
@@ -18,17 +20,20 @@ class ApiClient {
     AppConfig? config,
     SecureStorageService? secureStorage,
     Dio? customDio,
+    Dio? dio,
     void Function()? onUnauthorized,
   })  : config = config ?? AppConfig.current,
         secureStorage = secureStorage ?? SecureStorageService() {
-    _dio = customDio ??
+    _dio = dio ??
+        customDio ??
         Dio(
           BaseOptions(
             baseUrl: this.config.apiBaseUrl,
             connectTimeout: AppConfig.connectTimeout,
             receiveTimeout: AppConfig.receiveTimeout,
             sendTimeout: AppConfig.sendTimeout,
-            validateStatus: (status) => status != null && status >= 200 && status < 300,
+            validateStatus: (status) =>
+                status != null && status >= 200 && status < 300,
           ),
         );
 
@@ -103,7 +108,11 @@ class ApiClient {
     } on DioException catch (e) {
       throw _handleDioError(e);
     } catch (e) {
-      throw _handleDioError(e is DioException ? e : DioException(requestOptions: RequestOptions(path: path)));
+      throw _handleDioError(
+        e is DioException
+            ? e
+            : DioException(requestOptions: RequestOptions(path: path)),
+      );
     }
   }
 
@@ -131,7 +140,9 @@ class ApiClient {
     try {
       final data = await get(ApiEndpoints.health);
       if (data is Map && data['status'] == 'healthy') {
-        SafeLogger.info('Backend health check verified successfully: ${data['service']}');
+        SafeLogger.info(
+          'Backend health check verified successfully: ${data['service']}',
+        );
         return true;
       }
       return false;
@@ -150,6 +161,10 @@ class ApiClient {
 
     if (data is Map && data.containsKey('error')) {
       errorMessage = data['error'].toString();
+      final blockers = data['blockers'];
+      if (blockers is List && blockers.isNotEmpty) {
+        errorMessage = '$errorMessage: ${blockers.join(", ")}';
+      }
     } else if (error.message != null && error.message!.isNotEmpty) {
       errorMessage = error.message!;
     }

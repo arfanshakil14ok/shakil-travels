@@ -8,7 +8,7 @@ void main() {
       expect(AppConfig.appName, equals('SHAKIL TRAVELS'));
       expect(AppConfig.appDisplayName, equals('SHAKIL TRAVELS'));
       expect(AppConfig.packageName, equals('com.shakiltravels.app'));
-      expect(AppConfig.recruitingLicense, equals('RL-1892'));
+      expect(AppConfig.recruitingLicense, equals('RL-2579'));
       expect(AppConfig.helplinePhone, equals('+8801913681771'));
     });
 

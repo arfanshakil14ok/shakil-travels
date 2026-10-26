@@ -1,9 +1,5 @@
 /// Supported application environments
-enum EnvironmentType {
-  development,
-  staging,
-  production,
-}
+enum EnvironmentType { development, staging, production }
 
 /// Target platform host network context for development
 enum DevHostMode {

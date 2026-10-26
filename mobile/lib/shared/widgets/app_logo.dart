@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../app/theme/app_colors.dart';
 import '../../core/config/app_config.dart';
 
@@ -16,8 +17,10 @@ class AppLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final titleColor = lightVariant ? AppColors.surfaceWhite : AppColors.corporateNavy;
-    final subColor = lightVariant ? AppColors.corporatePink : AppColors.textSecondary;
+    final titleColor =
+        lightVariant ? AppColors.surfaceWhite : AppColors.corporateNavy;
+    final subColor =
+        lightVariant ? AppColors.corporatePink : AppColors.textSecondary;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -28,10 +31,14 @@ class AppLogo extends StatelessWidget {
           width: size,
           height: size,
           decoration: BoxDecoration(
-            color: lightVariant ? AppColors.surfaceWhite.withOpacity(0.12) : AppColors.corporateNavy,
+            color: lightVariant
+                ? AppColors.surfaceWhite.withValues(alpha: 0.12)
+                : AppColors.corporateNavy,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: lightVariant ? AppColors.corporatePink.withOpacity(0.4) : AppColors.corporatePink,
+              color: lightVariant
+                  ? AppColors.corporatePink.withValues(alpha: 0.4)
+                  : AppColors.corporatePink,
               width: 1.5,
             ),
           ),
@@ -42,7 +49,9 @@ class AppLogo extends StatelessWidget {
               height: size * 0.7,
               errorBuilder: (_, __, ___) => Icon(
                 Icons.flight_takeoff_rounded,
-                color: lightVariant ? AppColors.surfaceWhite : AppColors.corporatePink,
+                color: lightVariant
+                    ? AppColors.surfaceWhite
+                    : AppColors.corporatePink,
                 size: size * 0.55,
               ),
             ),
@@ -63,7 +72,7 @@ class AppLogo extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: AppColors.corporatePink.withOpacity(0.2),
+              color: AppColors.corporatePink.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(

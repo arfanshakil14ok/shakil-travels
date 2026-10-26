@@ -9,7 +9,7 @@ const JWT_SECRET = new TextEncoder().encode(
 
 const PORTAL_COOKIE_NAME = 'sgr_portal_session';
 const PORTAL_JWT_SECRET = new TextEncoder().encode(
-  process.env.PORTAL_JWT_SECRET || process.env.JWT_SECRET || 'sgr_portal_secure_jwt_secret_applicant_2026'
+  process.env.PORTAL_JWT_SECRET || 'sgr_portal_secure_jwt_secret_applicant_2026'
 );
 
 export async function middleware(request: NextRequest) {

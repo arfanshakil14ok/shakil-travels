@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
+
 import '../../../app/theme/app_colors.dart';
 
 class ProfilePlaceholderScreen extends StatelessWidget {
   final String title;
 
-  const ProfilePlaceholderScreen({
-    super.key,
-    this.title = 'User Profile',
-  });
+  const ProfilePlaceholderScreen({super.key, this.title = 'User Profile'});
 
   @override
   Widget build(BuildContext context) {
@@ -19,10 +17,7 @@ class ProfilePlaceholderScreen extends StatelessWidget {
           child: Text(
             'Candidate dossier and staff profile features will be integrated in Phase 2.',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-            ),
+            style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
           ),
         ),
       ),

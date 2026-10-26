@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { SignJWT, jwtVerify } from 'jose';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import prisma from './prisma';
 import type { AuthUser, SessionPayload } from '@/types';
 
@@ -53,8 +53,25 @@ export async function clearSessionCookie() {
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get(COOKIE_NAME)?.value;
+    let token: string | undefined;
+
+    // 1. Support Authorization: Bearer <token> for mobile and API clients
+    try {
+      const headersList = await headers();
+      const authHeader = headersList.get('authorization');
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7).trim();
+      }
+    } catch (_) {
+      // In contexts where headers() is unavailable, fall through
+    }
+
+    // 2. Fall back to HTTP-only cookie for web browsers
+    if (!token) {
+      const cookieStore = await cookies();
+      token = cookieStore.get(COOKIE_NAME)?.value;
+    }
+
     if (!token) return null;
 
     const payload = await verifySessionToken(token);

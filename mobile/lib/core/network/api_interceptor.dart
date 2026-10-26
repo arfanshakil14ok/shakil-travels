@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+
 import '../security/secure_storage.dart';
 import 'safe_logger.dart';
 
@@ -29,7 +30,8 @@ class ApiInterceptor extends Interceptor {
       options.headers['Authorization'] = 'Bearer $token';
 
       // 2. Cookie compatibility bridge for existing Next.js backend
-      final cookieName = (role == 'CANDIDATE') ? 'sgr_portal_session' : 'sgr_session';
+      final cookieName =
+          (role == 'CANDIDATE') ? 'sgr_portal_session' : 'sgr_session';
       options.headers['Cookie'] = '$cookieName=$token';
     }
 
@@ -61,7 +63,7 @@ class ApiInterceptor extends Interceptor {
 
     if (err.response?.statusCode == 401) {
       SafeLogger.warn('401 Unauthorized detected. Triggering session cleanup.');
-      _secureStorage.clearSession();
+      _secureStorage.clearActiveSession();
       _onUnauthorized?.call();
     }
 

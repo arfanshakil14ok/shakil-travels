@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+
 import '../core/config/app_config.dart';
 import '../core/localization/app_localizations.dart';
 import 'app_router.dart';
