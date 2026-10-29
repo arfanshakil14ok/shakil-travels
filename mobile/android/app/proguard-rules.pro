@@ -9,9 +9,16 @@
 # Flutter Secure Storage
 -keep class com.it_nomads.fluttersecurestorage.** { *; }
 
+# Shared Preferences
+-keep class io.flutter.plugins.sharedpreferences.** { *; }
+
+# URL Launcher
+-keep class io.flutter.plugins.urllauncher.** { *; }
+
 # Gson / JSON models if needed
 -keepattributes *Annotation*
 -keepattributes Signature
 -keepattributes InnerClasses
 -dontwarn java.lang.invoke.**
 -dontwarn javax.annotation.**
+-dontwarn okio.**

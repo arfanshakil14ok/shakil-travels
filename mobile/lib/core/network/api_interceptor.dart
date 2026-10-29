@@ -1,12 +1,14 @@
 import 'package:dio/dio.dart';
 
+import '../config/app_config.dart';
 import '../security/secure_storage.dart';
 import 'safe_logger.dart';
 
 /// Request and Response interceptor that:
-/// 1. Injects Bearer token and Cookie session automatically
-/// 2. Sanitizes debug logs to prevent credential leakage
-/// 3. Intercepts 401 responses for session invalidation
+/// 1. Dynamically syncs baseUrl with active AppConfig
+/// 2. Injects Bearer token and Cookie session automatically
+/// 3. Sanitizes debug logs to prevent credential leakage
+/// 4. Intercepts 401 responses for session invalidation
 class ApiInterceptor extends Interceptor {
   final SecureStorageService _secureStorage;
   final void Function()? _onUnauthorized;
@@ -22,6 +24,11 @@ class ApiInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
+    // Keep test.local for mock testing, otherwise sync with active AppConfig
+    if (!options.baseUrl.startsWith('http://test.local')) {
+      options.baseUrl = AppConfig.baseUrl;
+    }
+
     final token = await _secureStorage.getAuthToken();
     final role = await _secureStorage.getUserRole();
 

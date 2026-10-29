@@ -1,11 +1,32 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
+import '../../../../core/utils/support_launcher.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/status_badge.dart';
 import 'package:shakil_travels/features/candidate/data/candidate_models.dart';
 import 'package:shakil_travels/features/candidate/data/candidate_repository.dart';
+
+Widget _buildFlag(String? flagStr, {double size = 18}) {
+  if (flagStr == null || flagStr.isEmpty) {
+    return Text('🌐', style: TextStyle(fontSize: size));
+  }
+  if (flagStr.startsWith('http://') || flagStr.startsWith('https://')) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(3),
+      child: Image.network(
+        flagStr,
+        width: size * 1.35,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) =>
+            Text('🌐', style: TextStyle(fontSize: size)),
+      ),
+    );
+  }
+  return Text(flagStr, style: TextStyle(fontSize: size));
+}
 
 class JobDetailsScreen extends StatefulWidget {
   final JobCircularModel job;
@@ -155,7 +176,27 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
-      appBar: AppBar(title: Text(j.title)),
+      appBar: AppBar(
+        title: Text(j.title),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share_outlined),
+            tooltip: 'সার্কুলার শেয়ার করুন',
+            onPressed: () {
+              SupportLauncher.shareJob(
+                context: context,
+                title: j.title,
+                countryName: j.countryName,
+                jobCode: j.jobCode,
+                salary: j.salaryMin != null
+                    ? '${j.currency} ${j.salaryMin!.toStringAsFixed(0)}'
+                    : null,
+                employer: j.employerName,
+              );
+            },
+          ),
+        ],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
@@ -191,15 +232,13 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    Row(
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 6,
+                      runSpacing: 4,
                       children: [
-                        if (j.countryFlag != null) ...[
-                          Text(
-                            j.countryFlag!,
-                            style: const TextStyle(fontSize: 18),
-                          ),
-                          const SizedBox(width: 6),
-                        ],
+                        if (j.countryFlag != null)
+                          _buildFlag(j.countryFlag, size: 16),
                         Text(
                           j.countryName,
                           style: const TextStyle(
@@ -210,17 +249,14 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                         ),
                         if (j.employerName != null) ...[
                           const Text(
-                            ' • ',
+                            '•',
                             style: TextStyle(color: AppColors.textSecondary),
                           ),
-                          Flexible(
-                            child: Text(
-                              j.employerName!,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: AppColors.textSecondary,
-                              ),
-                              overflow: TextOverflow.ellipsis,
+                          Text(
+                            j.employerName!,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         ],
@@ -231,30 +267,34 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                     // Salary Highlight
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'আনুমানিক মাসিক বেতন (Salary)',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: AppColors.textSecondary,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'আনুমানিক মাসিক বেতন (Salary)',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.textSecondary,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              j.salaryMin != null
-                                  ? '${j.currency} ${j.salaryMin!.toStringAsFixed(0)} ${j.salaryMax != null ? "- ${j.salaryMax!.toStringAsFixed(0)}" : ""}'
-                                  : 'আলোচনা সাপেক্ষে (Negotiable)',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.success,
+                              const SizedBox(height: 2),
+                              Text(
+                                j.salaryMin != null
+                                    ? '${j.currency} ${j.salaryMin!.toStringAsFixed(0)} ${j.salaryMax != null ? "- ${j.salaryMax!.toStringAsFixed(0)}" : ""}'
+                                    : 'আলোচনা সাপেক্ষে (Negotiable)',
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.success,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
@@ -382,6 +422,63 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                 icon: Icons.send_rounded,
                 isLoading: _isApplying,
                 onPressed: j.isOpen && !_isApplying ? _handleApply : null,
+              ),
+              const SizedBox(height: 12),
+
+              // WhatsApp & Hotline Consultation Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.chat_bubble_outline_rounded,
+                          color: AppColors.success, size: 18),
+                      label: const Text(
+                        'WhatsApp-এ পরামর্শ',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.success,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.success),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onPressed: () {
+                        SupportLauncher.openWhatsApp(
+                          context: context,
+                          message:
+                              'আসসালামু আলাইকুম, আমি শাকিল ট্রাভেলস অ্যাপ থেকে ${j.title} (কোড: ${j.jobCode}, দেশ: ${j.countryName}) সার্কুলার সম্পর্কে জানতে চাই।',
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.phone_in_talk_rounded,
+                          color: AppColors.corporateNavy, size: 18),
+                      label: const Text(
+                        'অফিসে কল দিন',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.corporateNavy,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.corporateNavy),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onPressed: () =>
+                          SupportLauncher.callHelpline(context: context),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
             ],

@@ -307,6 +307,15 @@ class CountryFilterModel {
       flag: json['flag']?.toString() ?? json['flagEmoji']?.toString(),
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'code': code,
+      'flag': flag,
+    };
+  }
 }
 
 class JobCategoryFilterModel {
@@ -384,8 +393,22 @@ class JobCircularModel {
 
   factory JobCircularModel.fromJson(Map<String, dynamic> json) {
     final country = json['country'] as Map<String, dynamic>? ?? {};
-    final category = json['category'] as Map<String, dynamic>? ?? {};
+    final category = (json['category'] ?? json['jobCategory']) as Map<String, dynamic>? ?? {};
     final employer = json['employer'] as Map<String, dynamic>? ?? {};
+
+    double? parseDouble(dynamic val) {
+      if (val == null) return null;
+      if (val is num) return val.toDouble();
+      if (val is String) return double.tryParse(val);
+      return null;
+    }
+
+    int parseInt(dynamic val, [int fallback = 1]) {
+      if (val == null) return fallback;
+      if (val is num) return val.toInt();
+      if (val is String) return int.tryParse(val) ?? fallback;
+      return fallback;
+    }
 
     return JobCircularModel(
       id: json['id']?.toString() ?? '',
@@ -397,26 +420,52 @@ class JobCircularModel {
           country['flag']?.toString() ?? country['flagEmoji']?.toString(),
       categoryName: category['name']?.toString() ?? 'General',
       employerName: employer['companyName']?.toString(),
-      vacancies: (json['vacancies'] as num?)?.toInt() ??
-          (json['openings'] as num?)?.toInt() ??
-          1,
-      salaryMin: (json['salaryMin'] as num?)?.toDouble(),
-      salaryMax: (json['salaryMax'] as num?)?.toDouble(),
+      vacancies: parseInt(json['vacancyCount'] ?? json['vacancies'] ?? json['openings']),
+      salaryMin: parseDouble(json['salaryMin']),
+      salaryMax: parseDouble(json['salaryMax']),
       currency: json['currency']?.toString() ?? 'BDT',
       skillsRequired: json['skillsRequired']?.toString(),
       experienceYearsRequired:
-          (json['experienceYearsRequired'] as num?)?.toInt() ?? 0,
+          parseInt(json['experienceRequired'] ?? json['experienceYearsRequired'], 0),
       dutyHours:
           json['dutyHours']?.toString() ?? json['workingHours']?.toString(),
-      contractPeriod: json['contractPeriod']?.toString() ?? '2 Years',
-      foodProvided: json['foodProvided'] == true,
-      accommodationProvided: json['accommodationProvided'] == true,
-      medicalProvided: json['medicalProvided'] == true,
-      transportProvided: json['transportProvided'] == true,
-      deadline: json['deadline']?.toString(),
+      contractPeriod: json['contractPeriod']?.toString() ?? json['contractDuration']?.toString() ?? '2 Years',
+      foodProvided: json['foodProvided'] == true || json['food'] == true,
+      accommodationProvided: json['accommodationProvided'] == true || json['accommodation'] == true,
+      medicalProvided: json['medicalProvided'] == true || json['medical'] == true,
+      transportProvided: json['transportProvided'] == true || json['transportation'] == true,
+      deadline: json['deadline']?.toString() ?? json['applicationDeadline']?.toString(),
       status: json['status']?.toString() ?? 'PUBLISHED',
       isFeatured: json['isFeatured'] == true || json['featured'] == true,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'jobCode': jobCode,
+      'title': title,
+      if (description != null) 'description': description,
+      'countryName': countryName,
+      if (countryFlag != null) 'countryFlag': countryFlag,
+      'categoryName': categoryName,
+      if (employerName != null) 'employerName': employerName,
+      'vacancies': vacancies,
+      if (salaryMin != null) 'salaryMin': salaryMin,
+      if (salaryMax != null) 'salaryMax': salaryMax,
+      'currency': currency,
+      if (skillsRequired != null) 'skillsRequired': skillsRequired,
+      'experienceYearsRequired': experienceYearsRequired,
+      if (dutyHours != null) 'dutyHours': dutyHours,
+      if (contractPeriod != null) 'contractPeriod': contractPeriod,
+      'foodProvided': foodProvided,
+      'accommodationProvided': accommodationProvided,
+      'medicalProvided': medicalProvided,
+      'transportProvided': transportProvided,
+      if (deadline != null) 'deadline': deadline,
+      'status': status,
+      'isFeatured': isFeatured,
+    };
   }
 }
 

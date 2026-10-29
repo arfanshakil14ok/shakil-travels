@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/utils/support_launcher.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../../../../shared/widgets/loading_indicator.dart';
@@ -10,10 +11,36 @@ import 'package:shakil_travels/features/candidate/data/candidate_models.dart';
 import 'package:shakil_travels/features/candidate/data/candidate_repository.dart';
 import 'job_details_screen.dart';
 
+Widget _buildFlag(String? flagStr, {double size = 16}) {
+  if (flagStr == null || flagStr.isEmpty) {
+    return Text('🌐', style: TextStyle(fontSize: size));
+  }
+  if (flagStr.startsWith('http://') || flagStr.startsWith('https://')) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(3),
+      child: Image.network(
+        flagStr,
+        width: size * 1.35,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Text('🌐', style: TextStyle(fontSize: size)),
+      ),
+    );
+  }
+  return Text(flagStr, style: TextStyle(fontSize: size));
+}
+
 class CandidateJobsScreen extends StatefulWidget {
   final CandidateRepository? repository;
+  final String? initialSearch;
+  final String? initialCountryId;
 
-  const CandidateJobsScreen({super.key, this.repository});
+  const CandidateJobsScreen({
+    super.key,
+    this.repository,
+    this.initialSearch,
+    this.initialCountryId,
+  });
 
   @override
   State<CandidateJobsScreen> createState() => _CandidateJobsScreenState();
@@ -35,6 +62,10 @@ class _CandidateJobsScreenState extends State<CandidateJobsScreen> {
     super.initState();
     _repository =
         widget.repository ?? CandidateRepository(apiClient: ApiClient());
+    if (widget.initialSearch != null && widget.initialSearch!.isNotEmpty) {
+      _searchController.text = widget.initialSearch!;
+    }
+    _selectedCountryId = widget.initialCountryId;
     _loadInitialData();
   }
 
@@ -176,7 +207,7 @@ class _CandidateJobsScreenState extends State<CandidateJobsScreen> {
                       return Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 4.0),
                         child: FilterChip(
-                          avatar: c.flag != null ? Text(c.flag!) : null,
+                          avatar: c.flag != null ? _buildFlag(c.flag, size: 14) : null,
                           label: Text(c.name),
                           selected: isSel,
                           selectedColor: AppColors.corporateNavy,
@@ -201,6 +232,30 @@ class _CandidateJobsScreenState extends State<CandidateJobsScreen> {
               ),
 
             const Divider(height: 1, color: AppColors.cardBorder),
+
+            // Offline Indicator Banner
+            if (_repository.isOfflineDataUsed)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                color: const Color(0xFFFFFBEB),
+                child: const Row(
+                  children: [
+                    Icon(Icons.cloud_off_rounded, size: 15, color: Color(0xFFD97706)),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'অফলাইন মোড: পূর্বে সংরক্ষিত সার্কুলার প্রদর্শিত হচ্ছে',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF92400E),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
             // 3. Jobs List
             Expanded(
@@ -315,25 +370,29 @@ class _JobCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    if (job.countryFlag != null) ...[
-                      Text(
-                        job.countryFlag!,
-                        style: const TextStyle(fontSize: 16),
+                Expanded(
+                  child: Row(
+                    children: [
+                      if (job.countryFlag != null) ...[
+                        _buildFlag(job.countryFlag, size: 14),
+                        const SizedBox(width: 6),
+                      ],
+                      Expanded(
+                        child: Text(
+                          job.countryName,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.corporateNavy,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                      const SizedBox(width: 6),
                     ],
-                    Text(
-                      job.countryName,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.corporateNavy,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
+                const SizedBox(width: 8),
                 StatusBadge.verified(job.categoryName),
               ],
             ),
@@ -360,30 +419,79 @@ class _JobCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  job.salaryMin != null
-                      ? '${job.currency} ${job.salaryMin!.toStringAsFixed(0)}'
-                      : 'আলোচনা সাপেক্ষে',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.success,
+                Expanded(
+                  child: Text(
+                    job.salaryMin != null
+                        ? '${job.currency} ${job.salaryMin!.toStringAsFixed(0)}'
+                        : 'আলোচনা সাপেক্ষে',
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.success,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const Row(
+                Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      'বিস্তারিত দেখুন',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.corporateNavy,
-                      ),
+                    // WhatsApp Quick Consultation
+                    IconButton(
+                      icon: const Icon(Icons.chat_bubble_outline_rounded,
+                          size: 18, color: AppColors.success),
+                      tooltip: 'WhatsApp-এ পরামর্শ',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: () {
+                        SupportLauncher.openWhatsApp(
+                          context: context,
+                          message:
+                              'আসসালামু আলাইকুম, আমি শাকিল ট্রাভেলস অ্যাপ থেকে ${job.title} (কোড: ${job.jobCode}, দেশ: ${job.countryName}) সার্কুলার সম্পর্কে জানতে চাই।',
+                        );
+                      },
                     ),
-                    Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 12,
-                      color: AppColors.corporateNavy,
+                    const SizedBox(width: 8),
+
+                    // Quick Share
+                    IconButton(
+                      icon: const Icon(Icons.share_outlined,
+                          size: 18, color: AppColors.corporateNavy),
+                      tooltip: 'শেয়ার করুন',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: () {
+                        SupportLauncher.shareJob(
+                          context: context,
+                          title: job.title,
+                          countryName: job.countryName,
+                          jobCode: job.jobCode,
+                          salary: job.salaryMin != null
+                              ? '${job.currency} ${job.salaryMin!.toStringAsFixed(0)}'
+                              : null,
+                          employer: job.employerName,
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 10),
+
+                    const Row(
+                      children: [
+                        Text(
+                          'বিস্তারিত',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.corporateNavy,
+                          ),
+                        ),
+                        SizedBox(width: 2),
+                        Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 11,
+                          color: AppColors.corporateNavy,
+                        ),
+                      ],
                     ),
                   ],
                 ),

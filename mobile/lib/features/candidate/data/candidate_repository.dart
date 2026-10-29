@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/errors/api_exception.dart';
 import '../../../core/network/api_client.dart';
@@ -180,8 +182,14 @@ class CandidateRepository {
   ];
 
   // ==============================================================================
-  // 3. OVERSEAS JOBS & CIRCULARS
+  // 3. OVERSEAS JOBS & CIRCULARS (WITH OFFLINE CACHE)
   // ==============================================================================
+
+  static const String jobsCacheKey = 'cached_overseas_jobs';
+  static const String countriesCacheKey = 'cached_countries';
+
+  bool _isOfflineDataUsed = false;
+  bool get isOfflineDataUsed => _isOfflineDataUsed;
 
   Future<List<JobCircularModel>> getJobs({
     String? search,
@@ -198,26 +206,92 @@ class CandidateRepository {
       if (categoryId != null && categoryId != 'ALL') 'categoryId': categoryId,
     };
 
-    final response = await _apiClient.get(
-      ApiEndpoints.jobs,
-      queryParameters: queryParams,
-    );
+    try {
+      final response = await _apiClient.get(
+        ApiEndpoints.jobs,
+        queryParameters: queryParams,
+      );
 
-    if (response is Map<String, dynamic> && response['success'] == true) {
-      final list = (response['data'] as List<dynamic>?) ?? [];
-      return list
-          .map(
-            (item) => JobCircularModel.fromJson(item as Map<String, dynamic>),
-          )
-          .toList();
+      if (response is Map<String, dynamic> && response['success'] == true) {
+        final dynamic rawData = response['data'];
+        final List<dynamic> list;
+        if (rawData is List) {
+          list = rawData;
+        } else if (rawData is Map && rawData['items'] is List) {
+          list = rawData['items'] as List<dynamic>;
+        } else {
+          list = [];
+        }
+        final jobs = list
+            .map(
+              (item) => JobCircularModel.fromJson(item as Map<String, dynamic>),
+            )
+            .toList();
+
+        if ((search == null || search.isEmpty) &&
+            (countryId == null || countryId == 'ALL') &&
+            page == 1) {
+          _saveJobsToCache(jobs);
+        }
+        _isOfflineDataUsed = false;
+        return jobs;
+      }
+    } catch (_) {
+      // Offline fallback: load cached jobs from local disk
+      final cached = await _loadJobsFromCache();
+      if (cached.isNotEmpty) {
+        _isOfflineDataUsed = true;
+        return cached.where((j) {
+          if (countryId != null &&
+              countryId != 'ALL' &&
+              j.countryName.toLowerCase() != countryId.toLowerCase()) {
+            return false;
+          }
+          if (search != null && search.trim().isNotEmpty) {
+            final s = search.trim().toLowerCase();
+            return j.title.toLowerCase().contains(s) ||
+                j.countryName.toLowerCase().contains(s) ||
+                (j.employerName != null &&
+                    j.employerName!.toLowerCase().contains(s));
+          }
+          return true;
+        }).toList();
+      }
+      rethrow;
     }
+    return [];
+  }
+
+  Future<void> _saveJobsToCache(List<JobCircularModel> jobs) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final encoded = jsonEncode(jobs.map((j) => j.toJson()).toList());
+      await prefs.setString(jobsCacheKey, encoded);
+    } catch (_) {}
+  }
+
+  Future<List<JobCircularModel>> _loadJobsFromCache() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonStr = prefs.getString(jobsCacheKey);
+      if (jsonStr != null && jsonStr.isNotEmpty) {
+        final decoded = jsonDecode(jsonStr) as List<dynamic>;
+        return decoded
+            .map((item) =>
+                JobCircularModel.fromJson(item as Map<String, dynamic>))
+            .toList();
+      }
+    } catch (_) {}
     return [];
   }
 
   Future<JobCircularModel> getJobDetails(String id) async {
     final response = await _apiClient.get('${ApiEndpoints.jobs}/$id');
     if (response is Map<String, dynamic> && response['success'] == true) {
-      final data = (response['data'] as Map<String, dynamic>?) ?? {};
+      final dynamic raw = response['data'];
+      final Map<String, dynamic> data = (raw is Map<String, dynamic>)
+          ? raw
+          : ((raw is Map) ? raw.cast<String, dynamic>() : {});
       return JobCircularModel.fromJson(data);
     }
     throw const ApiException(message: 'Failed to fetch job details');
@@ -228,11 +302,38 @@ class CandidateRepository {
       final response = await _apiClient.get(ApiEndpoints.countries);
       if (response is Map<String, dynamic> && response['success'] == true) {
         final list = (response['data'] as List<dynamic>?) ?? [];
-        return list
+        final countries = list
             .map(
               (item) =>
                   CountryFilterModel.fromJson(item as Map<String, dynamic>),
             )
+            .toList();
+        if (countries.isNotEmpty) {
+          _saveCountriesToCache(countries);
+        }
+        return countries;
+      }
+    } catch (_) {}
+    return _loadCountriesFromCache();
+  }
+
+  Future<void> _saveCountriesToCache(List<CountryFilterModel> countries) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final encoded = jsonEncode(countries.map((c) => c.toJson()).toList());
+      await prefs.setString(countriesCacheKey, encoded);
+    } catch (_) {}
+  }
+
+  Future<List<CountryFilterModel>> _loadCountriesFromCache() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonStr = prefs.getString(countriesCacheKey);
+      if (jsonStr != null && jsonStr.isNotEmpty) {
+        final decoded = jsonDecode(jsonStr) as List<dynamic>;
+        return decoded
+            .map((item) =>
+                CountryFilterModel.fromJson(item as Map<String, dynamic>))
             .toList();
       }
     } catch (_) {}

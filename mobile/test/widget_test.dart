@@ -43,7 +43,8 @@ void main() {
           home: HomeScreen(hasActiveSession: false, apiClient: apiClient)),
     );
 
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
     // Verify Official Branding
     expect(find.text(AppConfig.appName), findsOneWidget);

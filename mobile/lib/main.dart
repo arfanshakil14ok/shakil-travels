@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -16,6 +18,22 @@ void main() async {
     savedUrl = prefs.getString('custom_server_url');
   } catch (e) {
     SafeLogger.warn('Could not read SharedPreferences: $e');
+  }
+
+  // Auto-detect Android Emulator loopback if no custom URL was explicitly configured
+  if (savedUrl == null || savedUrl.isEmpty) {
+    try {
+      final socket = await Socket.connect(
+        '10.0.2.2',
+        3000,
+        timeout: const Duration(milliseconds: 350),
+      );
+      await socket.close();
+      savedUrl = 'http://10.0.2.2:3000';
+      SafeLogger.info('Detected Android Emulator: Auto-routed API to $savedUrl');
+    } catch (_) {
+      // Physical device will fallback to LAN IP
+    }
   }
 
   // Configure environment:
