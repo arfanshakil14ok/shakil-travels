@@ -1,24 +1,14 @@
-# Flutter wrapper Proguard rules
--keep class io.flutter.app.** { *; }
--keep class io.flutter.plugin.**  { *; }
--keep class io.flutter.util.**  { *; }
--keep class io.flutter.view.**  { *; }
--keep class io.flutter.**  { *; }
--keep class io.flutter.plugins.**  { *; }
+# Add project specific ProGuard rules here.
+# By default, the flags in this file are appended to flags specified
+# in /usr/local/Cellar/android-sdk/24.3.3/tools/proguard/proguard-android.txt
+# You can edit the include path and order by changing the proguardFiles
+# directive in build.gradle.
+#
+# For more details, see
+#   http://developer.android.com/guide/developing/tools/proguard.html
 
-# Flutter Secure Storage
--keep class com.it_nomads.fluttersecurestorage.** { *; }
+# react-native-reanimated
+-keep class com.swmansion.reanimated.** { *; }
+-keep class com.facebook.react.turbomodule.** { *; }
 
-# Shared Preferences
--keep class io.flutter.plugins.sharedpreferences.** { *; }
-
-# URL Launcher
--keep class io.flutter.plugins.urllauncher.** { *; }
-
-# Gson / JSON models if needed
--keepattributes *Annotation*
--keepattributes Signature
--keepattributes InnerClasses
--dontwarn java.lang.invoke.**
--dontwarn javax.annotation.**
--dontwarn okio.**
+# Add any project specific keep options here:

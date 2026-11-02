@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter, Noto_Sans_Bengali } from 'next/font/google';
 import './globals.css';
 import { ToastProvider } from '@/components/ui/toast';
@@ -44,6 +44,13 @@ export const metadata: Metadata = {
     title: BRAND.seo.defaultTitle,
     description: BRAND.seo.descriptionBn,
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: '#002B49',
 };
 
 export default function RootLayout({

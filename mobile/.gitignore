@@ -1,49 +1,43 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
-.DS_Store
-.atom/
-.buildlog/
-.history
-.svn/
-migrate_working_dir/
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
-.idea/
+# dependencies
+node_modules/
 
-# Visual Studio Code related
-.vscode/
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
 
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.packages
-.pub-cache/
-.pub/
-/build/
-.widget_preview/
-
-# Android related
-**/android/**/gradle-wrapper.jar
-**/android/.gradle
-**/android/captures/
-**/android/gradlew
-**/android/gradlew.bat
-**/android/local.properties
-**/android/**/GeneratedPluginRegistrant.java
-
-# Release signing secrets
-*.keystore
+# Native
+.kotlin/
+*.orig.*
 *.jks
-**/android/key.properties
+*.keystore
+keystore.properties
+*.p8
+*.p12
+*.key
+*.mobileprovision
 
-# Symbol processing
-**/android/app/src/main/kotlin/com/shakiltravels/app/GeneratedPluginRegistrant.kt
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+# generated native folders
+/ios
+/android

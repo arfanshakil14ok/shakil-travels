@@ -46,13 +46,14 @@ export async function POST(request: NextRequest) {
     const { identifier, password } = parsed.data;
     const trimmed = identifier.trim();
 
-    // Find candidate by phone, applicantNumber, or email
+    // Find candidate by phone, applicantNumber, email, or passportNumber
     const applicant = await prisma.applicant.findFirst({
       where: {
         OR: [
           { phone: trimmed },
           { applicantNumber: { equals: trimmed, mode: 'insensitive' } },
           { email: { equals: trimmed.toLowerCase(), mode: 'insensitive' } },
+          { passportNumber: { equals: trimmed, mode: 'insensitive' } },
         ],
       },
       include: {
@@ -61,15 +62,63 @@ export async function POST(request: NextRequest) {
     });
 
     if (!applicant) {
+      // Check if this is an ERP Staff or Admin User
+      const user = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { email: { equals: trimmed.toLowerCase(), mode: 'insensitive' } },
+            ...(trimmed.length >= 6 ? [{ phone: trimmed }] : []),
+          ],
+        },
+        include: {
+          role: true,
+        },
+      });
+
+      if (user && user.isActive) {
+        const { verifyPassword } = await import('@/lib/auth');
+        const isUserValid = await verifyPassword(password, user.passwordHash);
+        if (isUserValid) {
+          const token = await createPortalToken({
+            applicantId: user.id,
+            applicantNumber: user.role.name,
+            phone: user.phone || '',
+            email: user.email,
+            fullName: user.name,
+          });
+
+          await setPortalCookie(token);
+
+          return NextResponse.json({
+            success: true,
+            token,
+            userType: 'STAFF',
+            role: user.role.name,
+            message: `ERP ${user.role.name} হিসেবে সফলভাবে লগইন হয়েছে`,
+            data: {
+              applicant: {
+                id: user.id,
+                applicantNumber: user.role.name,
+                fullName: user.name,
+                phone: user.phone || '',
+                email: user.email,
+                role: user.role.name,
+                profileCompletion: 100,
+              },
+            },
+          });
+        }
+      }
+
       await createAuditLog({
         action: 'LOGIN_FAILED',
         entity: 'CANDIDATE_AUTH',
         ipAddress: ip,
         userAgent: ua,
-        newValue: { identifier: trimmed, reason: 'APPLICANT_NOT_FOUND' },
+        newValue: { identifier: trimmed, reason: 'APPLICANT_OR_USER_NOT_FOUND' },
       });
       return NextResponse.json(
-        { success: false, error: 'Invalid credentials. Please check your details.' },
+        { success: false, error: 'ইউজারনেম বা পাসওয়ার্ড সঠিক নয়। দয়া করে সঠিক তথ্য দিন।' },
         { status: 401 }
       );
     }
@@ -84,20 +133,20 @@ export async function POST(request: NextRequest) {
         newValue: { identifier: trimmed, reason: 'ACCOUNT_INACTIVE' },
       });
       return NextResponse.json(
-        { success: false, error: 'Your portal account is currently suspended. Please contact support.' },
+        { success: false, error: 'আপনার অ্যাকাউন্টটি স্থগিত রয়েছে। অনুগ্রহ করে অফিসে যোগাযোগ করুন।' },
         { status: 403 }
       );
     }
 
+    // If candidate has no password set yet (e.g. registered in office), activate with provided password
     if (!applicant.passwordHash) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Portal access has not been activated for this account. Please use Register to set up your password.',
-          needsActivation: true,
-        },
-        { status: 401 }
-      );
+      const { hashApplicantPassword } = await import('@/lib/portal-auth');
+      const newHash = await hashApplicantPassword(password);
+      await prisma.applicant.update({
+        where: { id: applicant.id },
+        data: { passwordHash: newHash },
+      });
+      applicant.passwordHash = newHash;
     }
 
     const isValid = await verifyApplicantPassword(password, applicant.passwordHash);
@@ -111,7 +160,7 @@ export async function POST(request: NextRequest) {
         newValue: { identifier: trimmed, reason: 'INVALID_PASSWORD' },
       });
       return NextResponse.json(
-        { success: false, error: 'Invalid credentials. Please check your details.' },
+        { success: false, error: 'ইউজারনেম বা পাসওয়ার্ড সঠিক নয়।' },
         { status: 401 }
       );
     }
