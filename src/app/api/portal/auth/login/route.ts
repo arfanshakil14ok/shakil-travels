@@ -71,23 +71,43 @@ export async function POST(request: NextRequest) {
           ],
         },
         include: {
-          role: true,
+          role: {
+            include: {
+              rolePermissions: {
+                include: {
+                  permission: true,
+                },
+              },
+            },
+          },
         },
       });
 
       if (user && user.isActive) {
-        const { verifyPassword } = await import('@/lib/auth');
+        const { verifyPassword, createSessionToken, setSessionCookie } = await import('@/lib/auth');
         const isUserValid = await verifyPassword(password, user.passwordHash);
         if (isUserValid) {
-          const token = await createPortalToken({
-            applicantId: user.id,
-            applicantNumber: user.role.name,
-            phone: user.phone || '',
+          const token = await createSessionToken({
+            userId: user.id,
             email: user.email,
-            fullName: user.name,
+            role: user.role.name,
           });
 
-          await setPortalCookie(token);
+          await setSessionCookie(token);
+
+          const permissions = user.role.rolePermissions?.map(
+            (rp: any) => rp.permission?.code || rp.permissionCode
+          ) || [];
+
+          await createAuditLog({
+            userId: user.id,
+            action: 'LOGIN_SUCCESS',
+            entity: 'AUTH',
+            entityId: user.id,
+            ipAddress: ip,
+            userAgent: ua,
+            newValue: { email: user.email, role: user.role.name },
+          });
 
           return NextResponse.json({
             success: true,
@@ -96,6 +116,14 @@ export async function POST(request: NextRequest) {
             role: user.role.name,
             message: `ERP ${user.role.name} হিসেবে সফলভাবে লগইন হয়েছে`,
             data: {
+              user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                phone: user.phone || '',
+                role: user.role.name,
+                permissions,
+              },
               applicant: {
                 id: user.id,
                 applicantNumber: user.role.name,
@@ -193,6 +221,8 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json({
       success: true,
       token,
+      userType: 'CANDIDATE',
+      role: 'CANDIDATE',
       message: 'Logged in successfully',
       data: {
         applicant: {
@@ -201,6 +231,7 @@ export async function POST(request: NextRequest) {
           fullName: applicant.fullName,
           phone: applicant.phone,
           email: applicant.email,
+          role: 'CANDIDATE',
           profileCompletion: completion.percentage,
         },
       },

@@ -89,3 +89,15 @@
   animation: spin-slow 12s linear infinite;
 }
 
+/* Optimized Mobile App Shell: hides duplicate web navbar & footer inside the Android app */
+body.in-mobile-app .web-only-header,
+body.in-mobile-app .web-only-footer,
+body.in-mobile-app header,
+body.in-mobile-app footer {
+  display: none !important;
+}
+
+body.in-mobile-app {
+  padding-bottom: 8px;
+}
+

@@ -82,3 +82,12 @@ next-env.d.ts
 .turbo/
 .eslintcache
 .neon
+
+# Mobile Builds & Signing Keys (Never commit heavy binaries or secrets)
+release/
+*.apk
+*.aab
+*.keystore
+.keystore_backup/
+.appdata/
+
