@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/theme/app_colors.dart';
 
+/// SHAKIL TRAVELS Standard Loading Indicator
 class LoadingIndicator extends StatelessWidget {
   final String? message;
   final Color color;
@@ -38,3 +39,6 @@ class LoadingIndicator extends StatelessWidget {
     );
   }
 }
+
+/// Design system alias
+typedef AppLoading = LoadingIndicator;

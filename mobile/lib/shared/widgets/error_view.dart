@@ -70,3 +70,6 @@ class ErrorView extends StatelessWidget {
     );
   }
 }
+
+/// Design system alias
+typedef AppErrorState = ErrorView;

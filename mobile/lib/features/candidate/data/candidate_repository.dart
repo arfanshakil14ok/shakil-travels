@@ -455,4 +455,30 @@ class CandidateRepository {
     }
     throw const ApiException(message: 'Failed to fetch financial statement');
   }
+
+  // 6. CANDIDATE INTERVIEWS & NOTIFICATIONS
+  // ==============================================================================
+
+  Future<List<Map<String, dynamic>>> getCandidateInterviews() async {
+    try {
+      final response = await _apiClient.get(ApiEndpoints.candidateInterviews);
+      if (response is Map<String, dynamic> && response['success'] == true) {
+        final list = (response['data'] as List<dynamic>?) ?? [];
+        return list.map((e) => e as Map<String, dynamic>).toList();
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  Future<List<Map<String, dynamic>>> getCandidateNotifications() async {
+    try {
+      final response = await _apiClient.get(ApiEndpoints.candidateNotifications);
+      if (response is Map<String, dynamic> && response['success'] == true) {
+        final list = (response['data'] as List<dynamic>?) ?? [];
+        return list.map((e) => e as Map<String, dynamic>).toList();
+      }
+    } catch (_) {}
+    return [];
+  }
+
 }

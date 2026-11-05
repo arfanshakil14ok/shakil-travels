@@ -67,3 +67,7 @@ class AppTextField extends StatelessWidget {
     );
   }
 }
+
+
+/// Design system alias
+typedef AppTextFields = AppTextField;

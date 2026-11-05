@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/errors/api_exception.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/notifications/notifications_sheet.dart';
+import '../../../../shared/widgets/app_app_bar.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../../../../shared/widgets/loading_indicator.dart';
@@ -10,6 +13,7 @@ import '../../../../shared/widgets/status_badge.dart';
 import 'package:shakil_travels/features/auth/data/session_model.dart';
 import 'package:shakil_travels/features/staff/data/staff_models.dart';
 import 'package:shakil_travels/features/staff/data/staff_repository.dart';
+import 'package:shakil_travels/features/staff/presentation/screens/qr_verification_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   final SessionModel session;
@@ -82,12 +86,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
-      appBar: AppBar(
-        title: const Text('এডমিন এক্সিকিউটিভ ড্যাশবোর্ড'),
-        centerTitle: false,
+      appBar: AppAppBar(
+        title: 'এডমিন এক্সিকিউটিভ ড্যাশবোর্ড',
+        subtitle: '${widget.session.role} • RL-2579',
+        showBackButton: false,
         actions: [
           IconButton(
+            icon: const Icon(Icons.notifications_none_rounded),
+            color: AppColors.surfaceWhite,
+            tooltip: 'বিজ্ঞপ্তি (Notifications)',
+            onPressed: () => NotificationsSheet.show(context),
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh_rounded),
+            color: AppColors.surfaceWhite,
             onPressed: _isLoading ? null : () => _loadStats(refresh: true),
             tooltip: 'রিফ্রেশ করুন',
           ),
@@ -109,7 +121,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     if (_errorMessage != null) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.xxl),
           child: ErrorView(
             message: _errorMessage!,
             onRetry: () => _loadStats(refresh: true),
@@ -127,24 +139,26 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       onRefresh: () => _loadStats(refresh: true),
       color: AppColors.corporateNavy,
       child: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
           _buildAdminHeaderCard(),
-          const SizedBox(height: 14),
+          const SizedBox(height: AppSpacing.md),
+          _buildQuickActionShortcuts(),
+          const SizedBox(height: AppSpacing.lg),
           _buildStaffWorkforceCard(stats.staff),
-          const SizedBox(height: 14),
+          const SizedBox(height: AppSpacing.md),
           _buildBusinessMetricsGrid(stats.business),
           if (_canViewFinance) ...[
-            const SizedBox(height: 14),
+            const SizedBox(height: AppSpacing.md),
             _buildFinancialOverviewCard(stats.business),
           ],
-          const SizedBox(height: 18),
+          const SizedBox(height: AppSpacing.lg),
           _buildSecurityPolicyCard(),
-          const SizedBox(height: 18),
+          const SizedBox(height: AppSpacing.lg),
           _buildAuditStreamHeader(),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppSpacing.sm),
           _buildAuditStreamList(stats.recentActivity),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.xxl),
         ],
       ),
     );
@@ -154,7 +168,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final s = widget.session;
     return AppCard(
       backgroundColor: AppColors.deepNavy,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Row(
         children: [
           CircleAvatar(
@@ -166,7 +180,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               size: 32,
             ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -186,7 +200,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       ),
                     ),
                     StatusBadge(
-                      label: s.role,
+                      label:
+                          s.isSuperAdmin ? 'SUPER ADMIN' : s.role,
                       backgroundColor:
                           AppColors.corporatePink.withValues(alpha: 0.2),
                       textColor: AppColors.corporatePink,
@@ -219,23 +234,73 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
+  Widget _buildQuickActionShortcuts() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'প্রশাসনিক একশন হাব (Admin Command Center)',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: AppColors.deepNavy,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Row(
+          children: [
+            Expanded(
+              child: _AdminShortcutCard(
+                title: 'চাকরির সার্কুলার',
+                subtitle: 'ডিমান্ড ও নিয়োগপত্র',
+                icon: Icons.work_rounded,
+                color: AppColors.corporateNavy,
+                onTap: () => widget.onNavigateTab?.call(1),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: _AdminShortcutCard(
+                title: 'কেস প্রসেসিং',
+                subtitle: '১৩-ধাপ পাইপলাইন',
+                icon: Icons.folder_shared_rounded,
+                color: AppColors.corporatePinkHover,
+                onTap: () => widget.onNavigateTab?.call(2),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: _AdminShortcutCard(
+                title: 'কিউআর ভেরিফাই',
+                subtitle: 'প্রার্থী স্ক্যানার',
+                icon: Icons.qr_code_scanner_rounded,
+                color: AppColors.success,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const QrVerificationScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _buildStaffWorkforceCard(DashboardStaffStats staff) {
     return AppCard(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'স্টাফ ও কর্মকর্তা ওভারভিউ (Staff Workforce)',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.deepNavy,
-                ),
-              ),
+              const Expanded(child: Text('স্টাফ ও কর্মকর্তা ওভারভিউ (Staff Workforce)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.deepNavy), overflow: TextOverflow.ellipsis)), const SizedBox(width: AppSpacing.sm),
               Text(
                 'মোট: ${staff.total} জন',
                 style: const TextStyle(
@@ -284,7 +349,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 color: AppColors.corporateNavy,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: _MetricCard(
                 title: 'চাকরির সার্কুলার',
@@ -296,7 +361,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md),
         Row(
           children: [
             Expanded(
@@ -308,7 +373,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 color: AppColors.warning,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: _MetricCard(
                 title: 'সফল প্রবাস গমন',
@@ -327,7 +392,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget _buildFinancialOverviewCard(DashboardBusinessStats b) {
     return AppCard(
       backgroundColor: AppColors.corporateNavy,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -350,21 +415,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ],
           ),
           const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildFinanceColumn(
-                'মোট গৃহীত জমা (Payments)',
-                b.payments,
-                AppColors.success,
-              ),
-              _buildFinanceColumn(
-                'মোট বকেয়া পাওনা (Dues)',
-                b.dues,
-                AppColors.surfaceWhite,
-              ),
-            ],
-          ),
+          Row(children: [Expanded(child: _buildFinanceColumn('মোট গৃহীত জমা (Payments)', b.payments, AppColors.success)), const SizedBox(width: AppSpacing.md), Expanded(child: _buildFinanceColumn('মোট বকেয়া পাওনা (Dues)', b.dues, AppColors.surfaceWhite))]),
         ],
       ),
     );
@@ -398,7 +449,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return AppCard(
       backgroundColor: AppColors.goldLight,
       border: Border.all(color: AppColors.gold.withValues(alpha: 0.5)),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: const Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -457,7 +508,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget _buildAuditStreamList(List<StaffAuditLogModel> activity) {
     if (activity.isEmpty) {
       return const AppCard(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(AppSpacing.lg),
         child: Center(
           child: Text(
             'কোনো অডিট রেকর্ড নেই।',
@@ -468,7 +519,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     }
 
     return AppCard(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
       child: Column(
         children: List.generate(activity.length.clamp(0, 5), (index) {
           final act = activity[index];
@@ -598,7 +649,7 @@ class _MetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppCard(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -629,6 +680,63 @@ class _MetricCard extends StatelessWidget {
           Text(
             subtitle,
             style: const TextStyle(fontSize: 10, color: AppColors.textDisabled),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AdminShortcutCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _AdminShortcutCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      onTap: onTap,
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Icon(icon, color: color, size: 18),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: AppColors.deepNavy,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text(
+            subtitle,
+            style: const TextStyle(
+              fontSize: 9,
+              color: AppColors.textSecondary,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

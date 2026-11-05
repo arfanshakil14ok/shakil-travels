@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/theme/app_colors.dart';
+import '../../../../shared/widgets/app_bottom_navigation.dart';
 import '../../../../core/network/api_client.dart';
 import 'package:shakil_travels/features/auth/data/auth_repository.dart';
 import 'package:shakil_travels/features/auth/data/session_model.dart';
@@ -78,72 +78,36 @@ class _CandidateMainNavigationScreenState
           ),
         ],
       ),
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surfaceWhite,
-          boxShadow: [
-            BoxShadow(
-              color: Color(0x0F000000),
-              offset: Offset(0, -2),
-              blurRadius: 8,
-            ),
-          ],
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: _onTabSelected,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: AppColors.surfaceWhite,
-          selectedItemColor: AppColors.corporateNavy,
-          unselectedItemColor: AppColors.textDisabled,
-          selectedFontSize: 11,
-          unselectedFontSize: 11,
-          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700),
-          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
-          elevation: 0,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard_rounded),
-              activeIcon: Icon(
-                Icons.dashboard_rounded,
-                color: AppColors.corporateNavy,
-              ),
-              label: 'হোম',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.travel_explore_rounded),
-              activeIcon: Icon(
-                Icons.travel_explore_rounded,
-                color: AppColors.corporateNavy,
-              ),
-              label: 'সার্কুলার',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.assignment_rounded),
-              activeIcon: Icon(
-                Icons.assignment_rounded,
-                color: AppColors.corporateNavy,
-              ),
-              label: 'আবেদন',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.folder_shared_rounded),
-              activeIcon: Icon(
-                Icons.folder_shared_rounded,
-                color: AppColors.corporateNavy,
-              ),
-              label: 'ডকুমেন্টস',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_rounded),
-              activeIcon: Icon(
-                Icons.person_rounded,
-                color: AppColors.corporateNavy,
-              ),
-              label: 'প্রোফাইল',
-            ),
-          ],
-        ),
+      bottomNavigationBar: AppBottomNavigation(
+        currentIndex: _currentIndex,
+        onTap: _onTabSelected,
+        items: const [
+          AppBottomNavItem(
+            icon: Icons.dashboard_rounded,
+            label: 'হোম',
+            tooltip: 'ক্যান্ডিডেট ড্যাশবোর্ড',
+          ),
+          AppBottomNavItem(
+            icon: Icons.travel_explore_rounded,
+            label: 'সার্কুলার',
+            tooltip: 'চাকরির সার্কুলার',
+          ),
+          AppBottomNavItem(
+            icon: Icons.assignment_rounded,
+            label: 'আবেদন',
+            tooltip: 'আমার আবেদনসমূহ',
+          ),
+          AppBottomNavItem(
+            icon: Icons.folder_shared_rounded,
+            label: 'ডকুমেন্টস',
+            tooltip: 'কাগজপত্র ও পাসপোর্ট',
+          ),
+          AppBottomNavItem(
+            icon: Icons.person_rounded,
+            label: 'প্রোফাইল',
+            tooltip: 'প্রোফাইল সেটিংস',
+          ),
+        ],
       ),
     );
   }

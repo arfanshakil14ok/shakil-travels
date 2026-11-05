@@ -75,3 +75,7 @@ class AppButton extends StatelessWidget {
     return Text(text);
   }
 }
+
+
+/// Design system alias
+typedef AppButtons = AppButton;

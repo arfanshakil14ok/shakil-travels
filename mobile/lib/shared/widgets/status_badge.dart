@@ -98,3 +98,6 @@ class StatusBadge extends StatelessWidget {
     );
   }
 }
+
+/// Design system alias
+typedef AppStatusBadge = StatusBadge;

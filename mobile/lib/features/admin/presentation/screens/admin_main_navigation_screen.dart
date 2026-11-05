@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../shared/widgets/app_app_bar.dart';
+import '../../../../shared/widgets/app_bottom_navigation.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/status_badge.dart';
+import 'package:shakil_travels/features/admin/presentation/screens/admin_audit_logs_screen.dart';
+import 'package:shakil_travels/features/admin/presentation/screens/admin_dashboard_screen.dart';
+import 'package:shakil_travels/features/admin/presentation/screens/admin_job_demands_screen.dart';
 import 'package:shakil_travels/features/auth/data/auth_repository.dart';
 import 'package:shakil_travels/features/auth/data/session_model.dart';
-import 'package:shakil_travels/features/auth/presentation/role_selection_screen.dart';
+import 'package:shakil_travels/features/auth/presentation/unified_login_screen.dart';
 import 'package:shakil_travels/features/staff/data/staff_repository.dart';
 import 'package:shakil_travels/features/staff/presentation/screens/staff_processing_cases_screen.dart';
-import 'admin_audit_logs_screen.dart';
-import 'admin_dashboard_screen.dart';
-import 'admin_job_demands_screen.dart';
 
 class AdminMainNavigationScreen extends StatefulWidget {
   final SessionModel session;
@@ -63,8 +66,8 @@ class _AdminMainNavigationScreenState extends State<AdminMainNavigationScreen> {
             repository: _repository,
             onNavigateTab: _onTabSelected,
           ),
-          StaffProcessingCasesScreen(repository: _repository),
           AdminJobDemandsScreen(repository: _repository),
+          StaffProcessingCasesScreen(repository: _repository),
           AdminAuditLogsScreen(repository: _repository),
           _AdminProfileTab(
             session: widget.session,
@@ -72,72 +75,37 @@ class _AdminMainNavigationScreenState extends State<AdminMainNavigationScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surfaceWhite,
-          boxShadow: [
-            BoxShadow(
-              color: Color(0x0F000000),
-              offset: Offset(0, -2),
-              blurRadius: 8,
-            ),
-          ],
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: _onTabSelected,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: AppColors.surfaceWhite,
-          selectedItemColor: AppColors.corporateNavy,
-          unselectedItemColor: AppColors.textDisabled,
-          selectedFontSize: 11,
-          unselectedFontSize: 11,
-          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700),
-          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
-          elevation: 0,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.analytics_rounded),
-              activeIcon: Icon(
-                Icons.analytics_rounded,
-                color: AppColors.corporateNavy,
-              ),
-              label: 'ওভারসাইট',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.folder_shared_rounded),
-              activeIcon: Icon(
-                Icons.folder_shared_rounded,
-                color: AppColors.corporateNavy,
-              ),
-              label: 'ফাইলসমূহ',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.work_rounded),
-              activeIcon: Icon(
-                Icons.work_rounded,
-                color: AppColors.corporateNavy,
-              ),
-              label: 'সার্কুলার',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.history_rounded),
-              activeIcon: Icon(
-                Icons.history_rounded,
-                color: AppColors.corporateNavy,
-              ),
-              label: 'অডিট লগ',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.admin_panel_settings_rounded),
-              activeIcon: Icon(
-                Icons.admin_panel_settings_rounded,
-                color: AppColors.corporateNavy,
-              ),
-              label: 'এডমিন',
-            ),
-          ],
-        ),
+      bottomNavigationBar: AppBottomNavigation(
+        currentIndex: _currentIndex,
+        onTap: _onTabSelected,
+        items: const [
+          AppBottomNavItem(
+            icon: Icons.dashboard_rounded,
+            label: 'ওভারভিউ',
+            tooltip: 'এডমিন ড্যাশবোর্ড',
+          ),
+          AppBottomNavItem(
+            icon: Icons.work_outline_rounded,
+            activeIcon: Icons.work_rounded,
+            label: 'সার্কুলার',
+            tooltip: 'চাকরির চাহিদাপত্র',
+          ),
+          AppBottomNavItem(
+            icon: Icons.folder_shared_rounded,
+            label: 'প্রসেসিং',
+            tooltip: '১৩-ধাপ কেস প্রসেসিং',
+          ),
+          AppBottomNavItem(
+            icon: Icons.history_edu_rounded,
+            label: 'অডিট লগ',
+            tooltip: 'সিস্টেম অডিট ট্রেইল',
+          ),
+          AppBottomNavItem(
+            icon: Icons.admin_panel_settings_rounded,
+            label: 'প্রোফাইল',
+            tooltip: 'এডমিন প্রোফাইল ও সেশন',
+          ),
+        ],
       ),
     );
   }
@@ -176,7 +144,7 @@ class _AdminProfileTab extends StatelessWidget {
       if (context.mounted) {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const RoleSelectionScreen()),
+          MaterialPageRoute(builder: (_) => const UnifiedLoginScreen()),
           (route) => false,
         );
       }
@@ -187,16 +155,17 @@ class _AdminProfileTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
-      appBar: AppBar(
-        title: const Text('এডমিন প্রোফাইল ও সেশন'),
-        centerTitle: false,
+      appBar: const AppAppBar(
+        title: 'এডমিন প্রোফাইল ও সেশন',
+        subtitle: 'শাকিল ট্রাভেলস • RL-2579',
+        showBackButton: false,
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
           AppCard(
             backgroundColor: AppColors.deepNavy,
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Row(
               children: [
                 CircleAvatar(
@@ -209,7 +178,7 @@ class _AdminProfileTab extends StatelessWidget {
                     size: 36,
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -246,9 +215,9 @@ class _AdminProfileTab extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: AppSpacing.md),
           AppCard(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -274,7 +243,7 @@ class _AdminProfileTab extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: AppSpacing.md),
           const AppCard(
             padding: EdgeInsets.all(14),
             child: Row(
@@ -298,14 +267,14 @@ class _AdminProfileTab extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.xxl),
           Center(
             child: TextButton.icon(
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.error,
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
+                  horizontal: AppSpacing.xl,
+                  vertical: AppSpacing.md,
                 ),
               ),
               icon: const Icon(Icons.logout_rounded, size: 20),
@@ -316,7 +285,7 @@ class _AdminProfileTab extends StatelessWidget {
               onPressed: () => _handleLogout(context),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.xl),
         ],
       ),
     );

@@ -41,3 +41,7 @@ class AppCard extends StatelessWidget {
     return content;
   }
 }
+
+
+/// Design system alias
+typedef AppCards = AppCard;

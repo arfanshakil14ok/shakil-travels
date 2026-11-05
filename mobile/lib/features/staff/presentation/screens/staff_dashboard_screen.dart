@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/errors/api_exception.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/notifications/notifications_sheet.dart';
+import '../../../../shared/widgets/app_app_bar.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../../../../shared/widgets/loading_indicator.dart';
@@ -77,12 +80,20 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
-      appBar: AppBar(
-        title: const Text('স্টাফ অপারেশনাল হাব (Staff Workspace)'),
-        centerTitle: false,
+      appBar: AppAppBar(
+        title: 'স্টাফ অপারেশনাল হাব (Staff Workspace)',
+        subtitle: '${widget.session.role} • RL-2579',
+        showBackButton: false,
         actions: [
           IconButton(
+            icon: const Icon(Icons.notifications_none_rounded),
+            color: AppColors.surfaceWhite,
+            tooltip: 'বিজ্ঞপ্তি (Notifications)',
+            onPressed: () => NotificationsSheet.show(context),
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh_rounded),
+            color: AppColors.surfaceWhite,
             onPressed:
                 _isLoading ? null : () => _loadDashboardData(refresh: true),
             tooltip: 'রিফ্রেশ করুন',
@@ -103,7 +114,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
     if (_errorMessage != null) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.xxl),
           child: ErrorView(
             message: _errorMessage!,
             onRetry: () => _loadDashboardData(refresh: true),
@@ -121,28 +132,28 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
       onRefresh: () => _loadDashboardData(refresh: true),
       color: AppColors.corporateNavy,
       child: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
           _buildStaffHeaderCard(),
-          const SizedBox(height: 14),
+          const SizedBox(height: AppSpacing.md),
           _buildMetricsGrid(stats.business),
-          const SizedBox(height: 18),
+          const SizedBox(height: AppSpacing.lg),
           _buildSectionHeader(
             'রিক্রুটমেন্ট প্রসেসিং কিউ (Work Queues)',
             Icons.tune_rounded,
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppSpacing.sm),
           _buildWorkQueuesGrid(),
-          const SizedBox(height: 18),
+          const SizedBox(height: AppSpacing.lg),
           _buildSectionHeader(
             'সাম্প্রতিক সিস্টেম এক্টিভিটি (Live Audit Feed)',
             Icons.history_rounded,
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppSpacing.sm),
           _buildRecentActivityList(stats.recentActivity),
-          const SizedBox(height: 14),
+          const SizedBox(height: AppSpacing.md),
           _buildOfficialHelplineCard(),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.xxl),
         ],
       ),
     );
@@ -152,7 +163,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
     final s = widget.session;
     return AppCard(
       backgroundColor: AppColors.corporateNavy,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Row(
         children: [
           CircleAvatar(
@@ -164,7 +175,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
               size: 32,
             ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -232,7 +243,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                 onTap: () => widget.onNavigateTab?.call(2), // Applicants
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: _MetricCard(
                 title: 'চলমান ফাইল',
@@ -245,7 +256,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md),
         Row(
           children: [
             Expanded(
@@ -258,7 +269,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                 onTap: () => widget.onNavigateTab?.call(1),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: _MetricCard(
                 title: 'সফল প্রবাসযাত্রা',
@@ -279,7 +290,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
     return Row(
       children: [
         Icon(icon, color: AppColors.corporateNavy, size: 20),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppSpacing.sm),
         Text(
           title,
           style: const TextStyle(
@@ -293,6 +304,30 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
   }
 
   Widget _buildWorkQueuesGrid() {
+    final s = widget.session;
+    final canReviewDocs = s.isSuperAdmin ||
+        s.hasPermission('DOCUMENT_VIEW') ||
+        s.hasPermission('DOCUMENT_VERIFY') ||
+        s.role.contains('DOCUMENT') ||
+        s.isAdmin;
+
+    final canInterviews = s.isSuperAdmin ||
+        s.hasPermission('INTERVIEW_VIEW') ||
+        s.hasPermission('INTERVIEW_SCHEDULE') ||
+        s.role.contains('RECRUIT') ||
+        s.isAdmin;
+
+    final canVisaCases = s.isSuperAdmin ||
+        s.hasPermission('VISA_VIEW') ||
+        s.hasPermission('VISA_MANAGE') ||
+        s.role.contains('VISA') ||
+        s.isAdmin;
+
+    final canMedicalCases = s.isSuperAdmin ||
+        s.hasPermission('MEDICAL_VIEW') ||
+        s.hasPermission('MEDICAL_MANAGE') ||
+        s.isAdmin;
+
     return Column(
       children: [
         Row(
@@ -300,52 +335,85 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
             Expanded(
               child: _QueueCard(
                 title: 'ডকুমেন্ট ভেরিফিকেশন কিউ',
-                subtitle: 'কাগজপত্র নিরীক্ষা ও অনুমোদন',
+                subtitle: canReviewDocs
+                    ? 'কাগজপত্র নিরীক্ষা ও অনুমোদন'
+                    : 'অনুমতি সংরক্ষিত (Restricted)',
                 icon: Icons.fact_check_rounded,
                 color: AppColors.corporateNavy,
-                onTap: () =>
-                    widget.onNavigateTab?.call(3), // Document review tab
+                isRestricted: !canReviewDocs,
+                onTap: () {
+                  if (canReviewDocs) {
+                    widget.onNavigateTab?.call(3); // Document review tab
+                  } else {
+                    _showRestrictedMessage('ডকুমেন্ট নিরীক্ষা');
+                  }
+                },
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: _QueueCard(
                 title: 'মেডিকেল ফিটনেস কিউ',
-                subtitle: 'গামকা অ্যাপয়েন্টমেন্ট ও রিপোর্ট',
+                subtitle: canMedicalCases
+                    ? 'গামকা অ্যাপয়েন্টমেন্ট ও রিপোর্ট'
+                    : 'অনুমতি সংরক্ষিত (Restricted)',
                 icon: Icons.medical_services_rounded,
                 color: AppColors.warning,
-                onTap: () => widget.onNavigateTab?.call(1),
+                isRestricted: !canMedicalCases,
+                onTap: () {
+                  if (canMedicalCases) {
+                    widget.onNavigateTab?.call(1);
+                  } else {
+                    _showRestrictedMessage('মেডিকেল প্রসেসিং');
+                  }
+                },
               ),
             ),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: AppSpacing.md),
         Row(
           children: [
             Expanded(
               child: _QueueCard(
                 title: 'দূতাবাস ভিসা কিউ',
-                subtitle: 'ভিসা সাবমিশন ও স্ট্যাম্পিং',
+                subtitle: canVisaCases
+                    ? 'ভিসা সাবমিশন ও স্ট্যাম্পিং'
+                    : 'অনুমতি সংরক্ষিত (Restricted)',
                 icon: Icons.assignment_turned_in_rounded,
                 color: AppColors.corporatePinkHover,
-                onTap: () => widget.onNavigateTab?.call(1),
+                isRestricted: !canVisaCases,
+                onTap: () {
+                  if (canVisaCases) {
+                    widget.onNavigateTab?.call(1);
+                  } else {
+                    _showRestrictedMessage('ভিসা প্রসেসিং');
+                  }
+                },
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: _QueueCard(
                 title: 'ইন্টারভিউ শিডিউল',
-                subtitle: 'প্রার্থী বাছাই ও সাক্ষাৎকার',
+                subtitle: canInterviews
+                    ? 'প্রার্থী বাছাই ও সাক্ষাৎকার'
+                    : 'অনুমতি সংরক্ষিত (Restricted)',
                 icon: Icons.event_available_rounded,
                 color: AppColors.success,
+                isRestricted: !canInterviews,
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          StaffInterviewsScreen(repository: _repository),
-                    ),
-                  );
+                  if (canInterviews) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            StaffInterviewsScreen(repository: _repository),
+                      ),
+                    );
+                  } else {
+                    _showRestrictedMessage('ইন্টারভিউ ব্যবস্থাপনা');
+                  }
                 },
               ),
             ),
@@ -355,10 +423,19 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
     );
   }
 
+  void _showRestrictedMessage(String feature) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$feature মডিউলে প্রবেশের প্রশাসনিক অনুমতি আপনার অ্যাকাউন্টে নেই।'),
+        backgroundColor: AppColors.warning,
+      ),
+    );
+  }
+
   Widget _buildRecentActivityList(List<StaffAuditLogModel> activity) {
     if (activity.isEmpty) {
       return const AppCard(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(AppSpacing.lg),
         child: Center(
           child: Text(
             'কোনো সাম্প্রতিক অডিট এক্টিভিটি নেই।',
@@ -369,7 +446,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
     }
 
     return AppCard(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
       child: Column(
         children: List.generate(activity.length.clamp(0, 4), (index) {
           final act = activity[index];
@@ -431,7 +508,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                           if (act.userName != null) ...[
                             const SizedBox(height: 2),
                             Text(
-                              'কর্মকর্তা: ${act.userName}',
+                              'ইউজার: ${act.userName}',
                               style: const TextStyle(
                                 fontSize: 10,
                                 color: AppColors.corporatePinkHover,
@@ -460,16 +537,32 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: const Row(
         children: [
-          Icon(Icons.security_rounded, color: AppColors.warning, size: 24),
-          SizedBox(width: 10),
+          Icon(
+            Icons.headset_mic_rounded,
+            color: AppColors.warning,
+            size: 26,
+          ),
+          SizedBox(width: 12),
           Expanded(
-            child: Text(
-              'শাকিল ট্রাভেলস ইআরপি ব্যাকএন্ড সরাসরি সরকারি বিএমইটি ও সিকিউর আরব্যাক দ্বারা সুরক্ষিত।',
-              style: TextStyle(
-                fontSize: 11,
-                color: AppColors.textPrimary,
-                height: 1.3,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'স্টাফ সাপোর্ট ও সিস্টেম ওভারসাইট',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.warning,
+                  ),
+                ),
+                Text(
+                  'যেকোনো জরুরি ডাটা বা পারমিশন সংশোধনে এডমিনের সাথে যোগাযোগ করুন।',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: AppColors.deepNavy,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -499,7 +592,7 @@ class _MetricCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppCard(
       onTap: onTap,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -542,6 +635,7 @@ class _QueueCard extends StatelessWidget {
   final String subtitle;
   final IconData icon;
   final Color color;
+  final bool isRestricted;
   final VoidCallback onTap;
 
   const _QueueCard({
@@ -549,40 +643,54 @@ class _QueueCard extends StatelessWidget {
     required this.subtitle,
     required this.icon,
     required this.color,
+    this.isRestricted = false,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveColor = isRestricted ? AppColors.textDisabled : color;
     return AppCard(
       onTap: onTap,
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Icon(icon, color: color, size: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: effectiveColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(icon, color: effectiveColor, size: 20),
+              ),
+              if (isRestricted)
+                const Icon(
+                  Icons.lock_outline_rounded,
+                  size: 16,
+                  color: AppColors.textDisabled,
+                ),
+            ],
           ),
           const SizedBox(height: 8),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: AppColors.deepNavy,
+              color: isRestricted ? AppColors.textSecondary : AppColors.deepNavy,
             ),
           ),
           const SizedBox(height: 2),
           Text(
             subtitle,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 10,
-              color: AppColors.textSecondary,
+              color: isRestricted ? AppColors.warning : AppColors.textSecondary,
+              fontWeight: isRestricted ? FontWeight.w600 : FontWeight.normal,
             ),
           ),
         ],

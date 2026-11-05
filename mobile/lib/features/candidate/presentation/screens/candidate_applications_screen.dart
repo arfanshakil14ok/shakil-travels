@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/errors/api_exception.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../shared/widgets/app_app_bar.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_card.dart';
+import '../../../../shared/widgets/app_empty_state.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../../../../shared/widgets/loading_indicator.dart';
 import '../../../../shared/widgets/status_badge.dart';
@@ -97,12 +100,14 @@ class _CandidateApplicationsScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
-      appBar: AppBar(
-        title: const Text('আমার আবেদনসমূহ (My Applications)'),
-        centerTitle: false,
+      appBar: AppAppBar(
+        title: 'আমার আবেদনসমূহ (My Applications)',
+        subtitle: 'শাকিল ট্রাভেলস • RL-2579',
+        showBackButton: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
+            color: AppColors.surfaceWhite,
             onPressed: _isLoading ? null : _loadApplications,
             tooltip: 'রিফ্রেশ করুন',
           ),
@@ -122,7 +127,7 @@ class _CandidateApplicationsScreenState
     if (_errorMessage != null) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.xxl),
           child: ErrorView(message: _errorMessage!, onRetry: _loadApplications),
         ),
       );
@@ -138,9 +143,9 @@ class _CandidateApplicationsScreenState
             child: _filteredApplications.isEmpty
                 ? _buildEmptyState()
                 : ListView.separated(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppSpacing.lg),
                     itemCount: _filteredApplications.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.md),
                     itemBuilder: (context, index) {
                       final app = _filteredApplications[index];
                       return _buildApplicationCard(app);
@@ -155,32 +160,30 @@ class _CandidateApplicationsScreenState
   Widget _buildFilterTabs() {
     return Container(
       color: AppColors.surfaceWhite,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 10),
       child: Row(
         children: [
           _buildFilterChip('সবগুলো (${_applications.length})', 'ALL'),
-          const SizedBox(width: 8),
-          _buildFilterChip('চলমান', 'ACTIVE'),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.sm),
+          _buildFilterChip('চলমান ফাইল', 'ACTIVE'),
+          const SizedBox(width: AppSpacing.sm),
           _buildFilterChip('সম্পন্ন', 'COMPLETED'),
         ],
       ),
     );
   }
 
-  Widget _buildFilterChip(String label, String filterKey) {
-    final isSelected = _activeFilter == filterKey;
-    return GestureDetector(
+  Widget _buildFilterChip(String label, String value) {
+    final isSelected = _activeFilter == value;
+    return InkWell(
       onTap: () {
-        setState(() {
-          _activeFilter = filterKey;
-        });
+        setState(() => _activeFilter = value);
       },
+      borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color:
-              isSelected ? AppColors.corporateNavy : AppColors.pageBackground,
+          color: isSelected ? AppColors.corporateNavy : AppColors.pageBackground,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? AppColors.corporateNavy : AppColors.cardBorder,
@@ -191,8 +194,7 @@ class _CandidateApplicationsScreenState
           style: TextStyle(
             fontSize: 12,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color:
-                isSelected ? AppColors.surfaceWhite : AppColors.textSecondary,
+            color: isSelected ? AppColors.surfaceWhite : AppColors.textSecondary,
           ),
         ),
       ),
@@ -201,41 +203,34 @@ class _CandidateApplicationsScreenState
 
   Widget _buildApplicationCard(CandidateApplicationModel app) {
     return AppCard(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.pageBackground,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  'কোড: ${app.applicationCode}',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.corporateNavy,
-                  ),
+              Text(
+                'ট্র্যাকিং কোড: ${app.applicationCode}',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.corporateNavy,
                 ),
               ),
               StatusBadge.processing(app.effectiveStage),
             ],
           ),
-          const SizedBox(height: 10),
+          const Divider(height: 18, color: AppColors.cardBorder),
           Text(
-            app.jobTitle ?? 'Overseas Position',
+            app.jobTitle ?? 'Overseas Job Assignment',
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: AppColors.deepNavy,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Row(
             children: [
               if (app.countryFlag != null) ...[
@@ -299,49 +294,15 @@ class _CandidateApplicationsScreenState
   }
 
   Widget _buildEmptyState() {
-    return ListView(
-      padding: const EdgeInsets.all(24),
-      children: [
-        const SizedBox(height: 40),
-        Center(
-          child: Column(
-            children: [
-              const Icon(
-                Icons.assignment_late_outlined,
-                size: 56,
-                color: AppColors.corporatePink,
-              ),
-              const SizedBox(height: 14),
-              const Text(
-                'কোনো আবেদন পাওয়া যায়নি',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.deepNavy,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'আপনি এখনও কোনো চাকরির বিজ্ঞপ্তিতে আবেদন করেননি। শাকিল ট্রাভেলস এর সার্কুলার তালিকা থেকে আপনার পছন্দের পেশা বেছে নিয়ে আবেদন করুন।',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: AppColors.textSecondary,
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 20),
-              AppButton(
-                text: 'চাকরির সার্কুলার দেখুন',
-                icon: Icons.travel_explore_rounded,
-                onPressed: () {
-                  widget.onNavigateTab?.call(1);
-                },
-              ),
-            ],
-          ),
-        ),
-      ],
+    return AppEmptyState(
+      icon: Icons.assignment_late_outlined,
+      title: 'কোনো আবেদন পাওয়া যায়নি',
+      message: 'আপনি এখনও কোনো চাকরির বিজ্ঞপ্তিতে আবেদন করেননি। শাকিল ট্রাভেলস এর সার্কুলার তালিকা থেকে আপনার পছন্দের পেশা বেছে নিয়ে আবেদন করুন।',
+      actionText: 'চাকরির সার্কুলার দেখুন',
+      actionIcon: Icons.travel_explore_rounded,
+      onAction: () {
+        widget.onNavigateTab?.call(1);
+      },
     );
   }
 }

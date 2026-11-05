@@ -216,12 +216,11 @@ class CandidateApplicationModel {
           'APPLIED',
       createdAt: json['createdAt']?.toString() ?? '',
       updatedAt: json['updatedAt']?.toString(),
-      jobTitle: job['title']?.toString(),
+      jobTitle: job['title']?.toString() ?? json['jobTitle']?.toString(),
       jobCode: job['jobCode']?.toString(),
-      countryName: country['name']?.toString(),
-      countryFlag:
-          country['flag']?.toString() ?? country['flagEmoji']?.toString(),
-      employerName: employer['companyName']?.toString(),
+      countryName: country['name']?.toString() ?? job['countryName']?.toString() ?? json['countryName']?.toString(),
+      countryFlag: country['flag']?.toString() ?? country['flagEmoji']?.toString() ?? json['countryFlag']?.toString(),
+      employerName: employer['companyName']?.toString() ?? employer['name']?.toString() ?? json['employerName']?.toString(),
       salaryMin: (job['salaryMin'] as num?)?.toDouble(),
       salaryMax: (job['salaryMax'] as num?)?.toDouble(),
       currency: job['currency']?.toString() ??

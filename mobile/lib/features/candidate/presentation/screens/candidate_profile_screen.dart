@@ -10,7 +10,7 @@ import '../../../../shared/widgets/loading_indicator.dart';
 import '../../../../shared/widgets/status_badge.dart';
 import 'package:shakil_travels/features/auth/data/auth_repository.dart';
 import 'package:shakil_travels/features/auth/data/session_model.dart';
-import 'package:shakil_travels/features/auth/presentation/role_selection_screen.dart';
+import 'package:shakil_travels/features/auth/presentation/unified_login_screen.dart';
 import 'package:shakil_travels/features/candidate/data/candidate_models.dart';
 import 'package:shakil_travels/features/candidate/data/candidate_repository.dart';
 import 'candidate_payments_screen.dart';
@@ -261,7 +261,7 @@ class _CandidateProfileScreenState extends State<CandidateProfileScreen> {
       if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const RoleSelectionScreen()),
+          MaterialPageRoute(builder: (_) => const UnifiedLoginScreen()),
           (route) => false,
         );
       }

@@ -15,7 +15,7 @@ class NotificationsSheet extends StatelessWidget {
 
   static void show(
     BuildContext context, {
-    required NotificationService service,
+    NotificationService? service,
     ValueChanged<String>? onTrackingTap,
   }) {
     showModalBottomSheet(
@@ -23,7 +23,7 @@ class NotificationsSheet extends StatelessWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => NotificationsSheet(
-        notificationService: service,
+        notificationService: service ?? NotificationService(),
         onTrackingTap: onTrackingTap,
       ),
     );

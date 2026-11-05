@@ -132,7 +132,7 @@ class _CandidateJobsScreenState extends State<CandidateJobsScreen> {
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
       appBar: AppBar(
-        title: const Text('Overseas Jobs / বৈদেশিক চাকরির সার্কুলার'),
+        title: const Text('বৈদেশিক চাকরির সার্কুলার (Overseas Jobs)'),
       ),
       body: SafeArea(
         child: Column(
