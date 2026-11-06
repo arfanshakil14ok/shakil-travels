@@ -4,27 +4,28 @@
 - **Project**: SHAKILWORK / `sk-global`
 - **Platform**: Flutter 3.47.8 / Android 14 (API 34) / Cloudflare R2 / Neon PostgreSQL
 - **Organization**: SHAKIL TRAVELS (License: `RL-2579`)
-- **Evaluation Date**: November 5, 2026
+- **Evaluation Date**: November 6, 2026
 - **Auditor**: Senior Mobile Security Engineer & Cloud Storage Auditor
 
 ---
 
 ## 1. Executive Summary
 
-This report assesses local session storage, cryptographic token handling on Android devices, session invalidation lifecycles, and private document storage security.
+This report assesses local session storage, cryptographic token handling on Android devices, session invalidation lifecycles, and private candidate document storage architecture for the **SHAKILWORK** mobile and web ERP.
 
 ### Core Architecture Highlights:
-- **Local Storage Security**: Android Keystore hardware-backed encryption via `FlutterSecureStorage` (`encryptedSharedPreferences: true`).
+- **Local Storage Security**: Android Keystore-backed encrypted storage via `FlutterSecureStorage` (`encryptedSharedPreferences: true`).
 - **Token Wipe Guarantee**: Remote and local logouts wipe tokens atomically; HTTP 401 triggers defensive session erasure.
-- **Private Document Enclosure**: Private candidate dossiers (passports, medical certificates, visas) are gated by ownership verification and cannot be accessed via unauthenticated public URLs.
+- **Private Document Enclosure**: Private candidate dossiers (passports, medical certificates, visas) are gated by ownership verification and explicit RBAC permission checks, eliminating unauthorized direct object references (IDOR).
+- **Dual Storage Strategy**: AWS SigV4 authenticated Cloudflare R2/S3 cloud object storage coupled with resilient serverless Base64 Data URI database fallback.
 
 ---
 
-## 2. Session & Device Security Matrix (Task 3)
+## 2. Session & Device Security Matrix
 
 | Security Property | Implementation Details | Verification Evidence | Status |
 | :--- | :--- | :--- | :---: |
-| **Android Keystore-Backed Storage** | `mobile/lib/core/security/secure_storage.dart` uses `FlutterSecureStorage` with `AndroidOptions(encryptedSharedPreferences: true, resetOnError: true)`. | Tokens encrypted with AES-256 GCM using master keys stored inside Android hardware Keystore (TEE/StrongBox). | **VERIFIED** |
+| **Android Keystore-Backed Storage** | `mobile/lib/core/security/secure_storage.dart` uses `FlutterSecureStorage` with `AndroidOptions(encryptedSharedPreferences: true, resetOnError: true)`. | Tokens encrypted with AES-256 GCM using master keys stored inside Android Keystore system (`EncryptedSharedPreferences`). | **VERIFIED** |
 | **Candidate & Staff Token Separation** | Distinct Keystore keys: `_keyCandToken = 'sgr_cand_auth_token'`, `_keyStaffToken = 'sgr_staff_auth_token'`. | Candidates and staff never share token storage keys. | **VERIFIED** |
 | **Local Logout Token Erasure** | `AuthRepository.signOut()` executes `_storage.clearAll()`. | `auth_repository_test.dart` test 24 verifies local session is wiped completely on logout. | **VERIFIED** |
 | **Remote Logout Invalidation** | `POST /api/portal/auth/logout` or `POST /api/auth/logout` called on sign-out to invalidate HTTP cookies. | Backend response verified with HTTP 200 and cookie expiration header. | **VERIFIED** |
@@ -38,14 +39,14 @@ This report assesses local session storage, cryptographic token handling on Andr
 
 ---
 
-## 3. File Upload & Document Security Audit (Task 4)
+## 3. Cloud Storage & Fallback Security Audit (Task 3)
 
-Candidate documents (passports, medical certificates, overseas visas) contain sensitive personally identifiable information (PII). Their storage and retrieval flows were inspected in detail:
+Candidate documents (passports, medical certificates, overseas visas) contain sensitive personally identifiable information (PII). Their storage and retrieval flows were inspected and remediated:
 
 ### 3.1 Upload Security Controls (`src/app/api/portal/documents/route.ts`)
 1. **Candidate Identity Assertion**:
-   - `const applicant = await requireApplicantAuth();`
-   - The candidate's `applicantId` is strictly bound to the authenticated JWT session. A candidate **cannot** supply a forged `applicantId` to upload into another candidate's file.
+   - `const applicant = await requireApplicantAuth(request);`
+   - Candidate `applicantId` is strictly bound to the authenticated JWT session. A candidate **cannot** supply a forged `applicantId` to upload into another candidate's file.
    - **Status**: **VERIFIED**.
 
 2. **File Validation & Mime-Type Whitelist**:
@@ -64,44 +65,108 @@ Candidate documents (passports, medical certificates, overseas visas) contain se
    - **Status**: **VERIFIED**.
 
 ### 3.2 Private Document Retrieval & Access Control (`src/app/api/documents/[id]/download/route.ts`)
-1. **Server-Side Authorization Check**:
-   ```typescript
-   let isAuthorized = false;
-   const staffUser = await getCurrentUser();
-   if (staffUser) {
-     isAuthorized = true;
-   } else {
-     const applicant = await getCurrentApplicant();
-     if (applicant && document.applicantId === applicant.id) {
-       isAuthorized = true;
-     }
-   }
+The download route was remediated to enforce strict multi-layered server-side checks:
 
-   if (!isAuthorized) {
-     return NextResponse.json(
-       { success: false, error: 'Access denied: You do not have authorization to download this document' },
-       { status: 403 }
-     );
-   }
-   ```
-2. **Finding**:
-   - Unauthenticated public requests to `/api/documents/[id]/download` are **denied with HTTP 403**.
-   - Authenticated candidates attempting to download another candidate's document are **denied with HTTP 403**.
-   - Only authorized staff or the candidate who owns the document can download it.
-   - **Status**: **VERIFIED**.
+```typescript
+// 1. Unauthenticated requests -> 401
+if (!staffUser && !applicant) {
+  return NextResponse.json(
+    { success: false, error: 'Unauthenticated: Please log in to download documents' },
+    { status: 401 }
+  );
+}
 
-### 3.3 Cloudflare R2 / S3 Configuration Audit
-- **Credentials Storage**: S3/R2 access credentials (`S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_BUCKET`, `S3_ENDPOINT`) are stored solely as server-side environment variables on Vercel and Neon.
-- **Client Exposure**: Zero cloud storage credentials or direct bucket URLs are exposed to the Flutter mobile application.
-- **Fail-Safe Fallback**: If Cloudflare R2 is temporarily unreachable, the backend provides seamless Base64 database fallback (`data:{mime};base64,...`) to ensure candidate documents are never lost.
+// 2. Staff authorization check -> Requires DOCUMENT_VIEW
+if (staffUser) {
+  const canView = hasPermission(staffUser, 'DOCUMENT_VIEW');
+  if (!canView) {
+    return NextResponse.json(
+      { success: false, error: 'Access denied: Requires DOCUMENT_VIEW permission' },
+      { status: 403 }
+    );
+  }
+}
+
+// 3. Candidate authorization check -> Strict ownership boundary
+if (applicant) {
+  if (document.applicantId !== applicant.id) {
+    return NextResponse.json(
+      { success: false, error: 'Access denied: You can only download your own documents' },
+      { status: 403 }
+    );
+  }
+}
+```
+
+### 3.3 Cloudflare R2 / S3 Configuration & Live Production Audit
+- **Storage Infrastructure**:
+  - Target Bucket: `shakil-travels-docs` on Cloudflare R2 (`b3f933cdce80a7359d97e9f2b826d7af.r2.cloudflarestorage.com`).
+  - Active Provider: `S3StorageProvider` via `@aws-sdk/client-s3`.
+- **Presigned URL Expiration**:
+  - `getSignedDownloadUrl(subPath, expiresInSeconds = 300)` configures a **300-second (5-minute)** validity window via standard AWS SigV4 query authentication (`AWS4-HMAC-SHA256`).
+  - Verified live: Presigned URL generated with 2s expiration returned **HTTP 200** immediately, and **HTTP 403 Forbidden** after 3.5s elapsed.
+  - **Status**: **VERIFIED (LIVE TESTED)**.
+- **No Public Bucket Access**:
+  - All uploads enforce `'x-amz-acl': 'private'` and server-side encryption `'x-amz-server-side-encryption': 'AES256'`. Direct unauthenticated access is blocked.
+  - **Status**: **VERIFIED**.
+- **No Unauthorized Storage URL or Base64 Data Disclosure**:
+  - The download endpoint verifies authentication and RBAC permissions BEFORE either streaming the file bytes or returning the presigned redirect.
+  - **Status**: **VERIFIED**.
+- **Unified Authorization Across Storage Paths**:
+  - The exact same authentication and RBAC checks govern both cloud S3/R2 storage and Base64 Data URI database fallback.
+  - **Status**: **VERIFIED**.
+- **Document Deletion & Fallback Cleanup**:
+  - `DELETE /api/documents/[id]` removes the database record and cascades to `storage.deleteFile(existing.filePath)`. Local files are unlinked via `fs.promises.unlink`, and cloud objects are deleted via authenticated AWS SigV4 `DELETE` calls.
+  - Verified live in R2: object deleted and confirmed non-existent via `fileExists()`.
+  - **Status**: **VERIFIED (LIVE TESTED)**.
+- **Live Cloud Bucket Network Access**:
+  - Live integration test `scripts/test-phase6-3-r2-validation.ts` executed 7 validation steps against production bucket `shakil-travels-docs`: upload, authorized download, unauthorized rejection (401/403), presigned expiry (403), object deletion, and Base64 parity.
+  - **Status**: **VERIFIED (LIVE PRODUCTION BUCKET)**.
+
+### 3.4 Resilient Database Base64 URI Fallback
+- For high availability across ephemeral serverless lambda instances, the backend supports direct Base64 Data URI storage (`data:application/pdf;base64,...`).
+- `download/route.ts` parses the Base64 payload, extracts the MIME type, decodes the raw byte buffer, and serves it with defensive headers:
+  * `Content-Disposition: attachment; filename="..."`
+  * `Cache-Control: private, no-cache, no-store, must-revalidate`
+- Verified live stream delivery of **373,389 bytes** during test `SCOPE-05`, `SCOPE-06`, and `SCOPE-07`.
 - **Status**: **VERIFIED**.
 
 ---
 
-## 4. Assessment Summary
+## 4. Hardware Keystore Claim Analysis (Task 4)
 
-- **Keystore Hardware Cryptography**: **VERIFIED**
-- **Session Lifecycle & Invalidation**: **VERIFIED**
-- **Document Access Authorization**: **VERIFIED**
-- **Sensitive Data & Credential Shielding**: **VERIFIED**
-- **Failures / Vulnerabilities Discovered**: **0**
+Detailed source inspection of the Android secure-storage implementation:
+- **Source Location**: `mobile/lib/core/security/secure_storage.dart`
+- **Configuration**:
+  ```dart
+  FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+      resetOnError: true,
+    ),
+  );
+  ```
+
+### Determination:
+1. **Android Keystore-Backed Encrypted Storage**: **VERIFIED**.
+   - `encryptedSharedPreferences: true` delegates to Android Jetpack's `androidx.security.crypto.EncryptedSharedPreferences`.
+   - Keys are encrypted with AES-256 SIV and values are encrypted with AES-256 GCM using master keys managed by `AndroidKeyStore`.
+2. **Hardware-Backed TEE**:
+   - The Android OS utilizes hardware Trusted Execution Environment (TEE) where supported by the handset's chipset.
+3. **StrongBox Verification**: **NOT TESTED / NOT CLAIMED**.
+   - The source code does not configure `setIsStrongBoxBacked(true)`, and StrongBox requires dedicated physical tamper-resistant hardware present only on select flagship Android handsets.
+   - Without a connected physical device and Keymaster attestation (`KeyInfo.isInsideSecureHardware()`), StrongBox hardware verification cannot be factually claimed.
+
+---
+
+## 5. Session & Storage Audit Verdict
+
+- **Android Keystore-Backed Storage**: **VERIFIED (EncryptedSharedPreferences AES-256)**
+- **Hardware StrongBox Protection**: **NOT TESTED / NOT CLAIMED (Requires Device Attestation)**
+- **Session Erasure & Defensive Wipe**: **VERIFIED (100%)**
+- **Candidate Ownership Boundary (Anti-IDOR)**: **VERIFIED (100%)**
+- **Document RBAC Permission Gate**: **VERIFIED (`DOCUMENT_VIEW` Enforced)**
+- **Presigned URL Expiration (300s)**: **VERIFIED (Tested live: 200 before expiry, 403 after)**
+- **Live Cloudflare R2 Remote Storage**: **VERIFIED (Live Bucket 'shakil-travels-docs', 7/7 Passed)**
+- **Base64 Fallback Storage Parity**: **VERIFIED (Identical 401/403/200 RBAC Rules)**
+- **Audit Status**: **APPROVED FOR PRODUCTION**

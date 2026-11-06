@@ -9,7 +9,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const currentUser = await requirePermission('DOCUMENT_VERIFY');
+    const currentUser = await requirePermission('DOCUMENT_VERIFY', request);
     const { id } = await params;
     const body = await request.json();
 
@@ -87,7 +87,10 @@ export async function POST(
       message: status === 'VERIFIED' ? 'Document verified successfully' : 'Document marked as rejected',
     });
   } catch (error: any) {
-    if (error.name === 'AuthorizationError' || error.name === 'AuthenticationError') {
+    if (error.name === 'AuthenticationError') {
+      return NextResponse.json({ success: false, error: error.message }, { status: 401 });
+    }
+    if (error.name === 'AuthorizationError') {
       return NextResponse.json({ success: false, error: error.message }, { status: 403 });
     }
     console.error('Error verifying document:', error);

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { requireAuth } from '@/lib/rbac';
+import { requireAuth, requirePermission } from '@/lib/rbac';
 import { medicalResultSchema } from '@/lib/validations/processing';
 import { createAuditLog } from '@/lib/audit';
 
@@ -9,7 +9,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const currentUser = await requireAuth();
+    const currentUser = await requirePermission('MEDICAL_MANAGE', request);
     const { id } = await params;
     const body = await request.json();
 
@@ -119,7 +119,10 @@ export async function POST(
       data: updated,
     });
   } catch (error: any) {
-    if (error.name === 'AuthorizationError' || error.name === 'AuthenticationError') {
+    if (error.name === 'AuthenticationError') {
+      return NextResponse.json({ success: false, error: error.message }, { status: 401 });
+    }
+    if (error.name === 'AuthorizationError') {
       return NextResponse.json({ success: false, error: error.message }, { status: 403 });
     }
     console.error('Error recording medical result:', error);

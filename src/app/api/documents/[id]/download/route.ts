@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 import { getCurrentApplicant } from '@/lib/portal-auth';
+import { hasPermission } from '@/lib/rbac';
 import { storage } from '@/lib/storage';
 import { readFile } from 'fs/promises';
 import path from 'path';
@@ -22,25 +23,34 @@ export async function GET(
       return NextResponse.json({ success: false, error: 'Document not found' }, { status: 404 });
     }
 
-    // Dual authorization check:
-    // 1. Any logged-in staff or admin user
-    // 2. Or the candidate who owns this document
-    let isAuthorized = false;
-    const staffUser = await getCurrentUser();
-    if (staffUser) {
-      isAuthorized = true;
-    } else {
-      const applicant = await getCurrentApplicant();
-      if (applicant && document.applicantId === applicant.id) {
-        isAuthorized = true;
-      }
+    const staffUser = await getCurrentUser(request);
+    const applicant = await getCurrentApplicant(request);
+
+    // 1. Unauthenticated requests must return HTTP 401
+    if (!staffUser && !applicant) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthenticated: Please log in to download documents' },
+        { status: 401 }
+      );
     }
 
-    if (!isAuthorized) {
-      return NextResponse.json(
-        { success: false, error: 'Access denied: You do not have authorization to download this document' },
-        { status: 403 }
-      );
+    // 2. Staff authorization: must have explicit DOCUMENT_VIEW permission (or SUPER_ADMIN)
+    if (staffUser) {
+      const canView = hasPermission(staffUser, 'DOCUMENT_VIEW');
+      if (!canView) {
+        return NextResponse.json(
+          { success: false, error: 'Access denied: Requires DOCUMENT_VIEW permission' },
+          { status: 403 }
+        );
+      }
+    } else if (applicant) {
+      // 3. Candidate authorization: candidate can download only their own documents
+      if (document.applicantId !== applicant.id) {
+        return NextResponse.json(
+          { success: false, error: 'Access denied: You can only download your own documents' },
+          { status: 403 }
+        );
+      }
     }
 
     // 1. Direct Base64 Data URI decoding (100% reliable across serverless instances)

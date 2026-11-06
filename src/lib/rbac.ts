@@ -27,8 +27,8 @@ export function hasPermission(user: AuthUser | null, code: PermissionCode): bool
 /**
  * Server-side guard: Ensures valid authenticated session
  */
-export async function requireAuth(): Promise<AuthUser> {
-  const user = await getCurrentUser();
+export async function requireAuth(req?: Request | any): Promise<AuthUser> {
+  const user = await getCurrentUser(req);
   if (!user) {
     throw new AuthenticationError();
   }
@@ -38,8 +38,8 @@ export async function requireAuth(): Promise<AuthUser> {
 /**
  * Server-side guard: Ensures user is authenticated AND possesses the specific permission
  */
-export async function requirePermission(code: PermissionCode): Promise<AuthUser> {
-  const user = await requireAuth();
+export async function requirePermission(code: PermissionCode, req?: Request | any): Promise<AuthUser> {
+  const user = await requireAuth(req);
   if (!hasPermission(user, code)) {
     throw new AuthorizationError(`Access denied: requires ${code} permission`);
   }
@@ -49,8 +49,8 @@ export async function requirePermission(code: PermissionCode): Promise<AuthUser>
 /**
  * Server-side guard: Ensures user has one of the allowed roles, or is SUPER_ADMIN
  */
-export async function requireRole(allowedRoles: string[]): Promise<AuthUser> {
-  const user = await requireAuth();
+export async function requireRole(allowedRoles: string[], req?: Request | any): Promise<AuthUser> {
+  const user = await requireAuth(req);
   if (user.role.name === 'SUPER_ADMIN') {
     return user;
   }
@@ -63,8 +63,8 @@ export async function requireRole(allowedRoles: string[]): Promise<AuthUser> {
 /**
  * Server-side guard: Ensures user is explicitly SUPER_ADMIN
  */
-export async function requireSuperAdmin(): Promise<AuthUser> {
-  const user = await requireAuth();
+export async function requireSuperAdmin(req?: Request | any): Promise<AuthUser> {
+  const user = await requireAuth(req);
   if (user.role.name !== 'SUPER_ADMIN') {
     throw new AuthorizationError('Access denied: requires SUPER_ADMIN privilege');
   }

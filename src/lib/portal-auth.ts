@@ -85,25 +85,44 @@ export function clearPortalCookieOnResponse(response: NextResponse): NextRespons
 }
 
 
-export async function getCurrentApplicant(): Promise<any | null> {
+export async function getCurrentApplicant(req?: Request | any): Promise<any | null> {
   try {
     let token: string | undefined;
 
-    // 1. Support Authorization: Bearer <token> for mobile and API clients
-    try {
-      const headersList = await headers();
-      const authHeader = headersList.get('authorization');
-      if (authHeader && authHeader.startsWith('Bearer ')) {
-        token = authHeader.substring(7).trim();
-      }
-    } catch (_) {
-      // In contexts where headers() is unavailable, fall through
+    // 1. Check req if provided directly (fastest and test-safe)
+    if (req) {
+      try {
+        const authHeader = req.headers.get('authorization');
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          token = authHeader.substring(7).trim();
+        }
+        if (!token && req.cookies && typeof req.cookies.get === 'function') {
+          token = req.cookies.get(PORTAL_COOKIE_NAME)?.value;
+        }
+      } catch (_) {}
     }
 
-    // 2. Fall back to HTTP-only cookie for web browsers
+    // 2. Support Authorization: Bearer <token> for mobile and API clients via next/headers
     if (!token) {
-      const cookieStore = await cookies();
-      token = cookieStore.get(PORTAL_COOKIE_NAME)?.value;
+      try {
+        const headersList = await headers();
+        const authHeader = headersList.get('authorization');
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          token = authHeader.substring(7).trim();
+        }
+      } catch (_) {
+        // In contexts where headers() is unavailable, fall through
+      }
+    }
+
+    // 3. Fall back to HTTP-only cookie for web browsers
+    if (!token) {
+      try {
+        const cookieStore = await cookies();
+        token = cookieStore.get(PORTAL_COOKIE_NAME)?.value;
+      } catch (_) {
+        // In contexts where cookies() is unavailable, fall through
+      }
     }
 
     if (!token) return null;
@@ -130,8 +149,8 @@ export async function getCurrentApplicant(): Promise<any | null> {
   }
 }
 
-export async function requireApplicantAuth(): Promise<any> {
-  const applicant = await getCurrentApplicant();
+export async function requireApplicantAuth(req?: Request | any): Promise<any> {
+  const applicant = await getCurrentApplicant(req);
   if (!applicant) {
     throw new Error('Unauthenticated: Please log in to your applicant portal');
   }
