@@ -9,6 +9,30 @@ enum AccountType { candidate, staff, admin, none }
 class SecureStorageService {
   final FlutterSecureStorage _storage;
 
+  // In-memory fast cache to eliminate race conditions and hardware TEE latencies
+  static String? _cachedAuthToken;
+  static String? _cachedUserRole;
+  static AccountType _cachedAccountType = AccountType.none;
+
+  /// Warm in-memory session directly from memory
+  static void warmSession({required String token, required String role}) {
+    _cachedAuthToken = token;
+    _cachedUserRole = role.toUpperCase();
+    if (role.toUpperCase() == 'CANDIDATE') {
+      _cachedAccountType = AccountType.candidate;
+    } else if (role.toUpperCase() == 'ADMIN' || role.toUpperCase() == 'SUPER_ADMIN') {
+      _cachedAccountType = AccountType.admin;
+    } else {
+      _cachedAccountType = AccountType.staff;
+    }
+  }
+
+  static void resetCache() {
+    _cachedAuthToken = null;
+    _cachedUserRole = null;
+    _cachedAccountType = AccountType.none;
+  }
+
   SecureStorageService({FlutterSecureStorage? storage})
       : _storage = storage ??
             const FlutterSecureStorage(
@@ -16,7 +40,11 @@ class SecureStorageService {
                 encryptedSharedPreferences: true,
                 resetOnError: true,
               ),
-            );
+            ) {
+    if (storage != null) {
+      resetCache();
+    }
+  }
 
   // Active Session Pointer
   static const String _keyActiveAccountType = 'sgr_active_account_type';
@@ -46,16 +74,27 @@ class SecureStorageService {
     String? phone,
     String? email,
   }) async {
-    await Future.wait([
-      _storage.write(key: _keyActiveAccountType, value: 'CANDIDATE'),
-      _storage.write(key: _keyCandToken, value: token),
-      _storage.write(key: _keyCandId, value: candidateId),
-      if (applicantNumber != null)
-        _storage.write(key: _keyCandNumber, value: applicantNumber),
-      if (fullName != null) _storage.write(key: _keyCandName, value: fullName),
-      if (phone != null) _storage.write(key: _keyCandPhone, value: phone),
-      if (email != null) _storage.write(key: _keyCandEmail, value: email),
-    ]);
+    // Populate in-memory cache immediately
+    _cachedAuthToken = token;
+    _cachedUserRole = 'CANDIDATE';
+    _cachedAccountType = AccountType.candidate;
+
+    // Sequential writes to prevent Android EncryptedSharedPreferences concurrency crash
+    await _storage.write(key: _keyActiveAccountType, value: 'CANDIDATE');
+    await _storage.write(key: _keyCandToken, value: token);
+    await _storage.write(key: _keyCandId, value: candidateId);
+    if (applicantNumber != null) {
+      await _storage.write(key: _keyCandNumber, value: applicantNumber);
+    }
+    if (fullName != null) {
+      await _storage.write(key: _keyCandName, value: fullName);
+    }
+    if (phone != null) {
+      await _storage.write(key: _keyCandPhone, value: phone);
+    }
+    if (email != null) {
+      await _storage.write(key: _keyCandEmail, value: email);
+    }
   }
 
   /// Saves a verified Staff or Admin session
@@ -69,52 +108,81 @@ class SecureStorageService {
   }) async {
     final accountType =
         (role == 'SUPER_ADMIN' || role == 'ADMIN') ? 'ADMIN' : 'STAFF';
-    await Future.wait([
-      _storage.write(key: _keyActiveAccountType, value: accountType),
-      _storage.write(key: _keyStaffToken, value: token),
-      _storage.write(key: _keyStaffId, value: staffId),
-      _storage.write(key: _keyStaffRole, value: role),
-      _storage.write(key: _keyStaffName, value: fullName),
-      _storage.write(key: _keyStaffEmail, value: email),
-      _storage.write(key: _keyStaffPermissions, value: permissions.join(',')),
-    ]);
+
+    // Populate in-memory cache immediately
+    _cachedAuthToken = token;
+    _cachedUserRole = role.toUpperCase();
+    _cachedAccountType =
+        (accountType == 'ADMIN') ? AccountType.admin : AccountType.staff;
+
+    // Sequential writes
+    await _storage.write(key: _keyActiveAccountType, value: accountType);
+    await _storage.write(key: _keyStaffToken, value: token);
+    await _storage.write(key: _keyStaffId, value: staffId);
+    await _storage.write(key: _keyStaffRole, value: role);
+    await _storage.write(key: _keyStaffName, value: fullName);
+    await _storage.write(key: _keyStaffEmail, value: email);
+    await _storage.write(
+      key: _keyStaffPermissions,
+      value: permissions.join(','),
+    );
   }
 
   /// Retrieves the active account type (CANDIDATE, STAFF, ADMIN, NONE)
   Future<AccountType> getActiveAccountType() async {
+    if (_cachedAccountType != AccountType.none) {
+      return _cachedAccountType;
+    }
     final typeStr = await _storage.read(key: _keyActiveAccountType);
     switch (typeStr) {
       case 'CANDIDATE':
+        _cachedAccountType = AccountType.candidate;
         return AccountType.candidate;
       case 'STAFF':
+        _cachedAccountType = AccountType.staff;
         return AccountType.staff;
       case 'ADMIN':
+        _cachedAccountType = AccountType.admin;
         return AccountType.admin;
       default:
+        _cachedAccountType = AccountType.none;
         return AccountType.none;
     }
   }
 
   /// Retrieves the active authentication token based on currently active account
   Future<String?> getAuthToken() async {
+    if (_cachedAuthToken != null && _cachedAuthToken!.isNotEmpty) {
+      return _cachedAuthToken;
+    }
     final activeType = await getActiveAccountType();
     if (activeType == AccountType.candidate) {
-      return await _storage.read(key: _keyCandToken);
+      final token = await _storage.read(key: _keyCandToken);
+      _cachedAuthToken = token;
+      return token;
     } else if (activeType == AccountType.staff ||
         activeType == AccountType.admin) {
-      return await _storage.read(key: _keyStaffToken);
+      final token = await _storage.read(key: _keyStaffToken);
+      _cachedAuthToken = token;
+      return token;
     }
     return null;
   }
 
   /// Retrieves the active role name
   Future<String?> getUserRole() async {
+    if (_cachedUserRole != null && _cachedUserRole!.isNotEmpty) {
+      return _cachedUserRole;
+    }
     final activeType = await getActiveAccountType();
     if (activeType == AccountType.candidate) {
+      _cachedUserRole = 'CANDIDATE';
       return 'CANDIDATE';
     } else if (activeType == AccountType.staff ||
         activeType == AccountType.admin) {
-      return await _storage.read(key: _keyStaffRole);
+      final role = await _storage.read(key: _keyStaffRole);
+      _cachedUserRole = role;
+      return role;
     }
     return null;
   }
@@ -155,6 +223,10 @@ class SecureStorageService {
 
   /// Clears only the active session
   Future<void> clearActiveSession() async {
+    _cachedAuthToken = null;
+    _cachedUserRole = null;
+    _cachedAccountType = AccountType.none;
+
     final activeType = await getActiveAccountType();
     if (activeType == AccountType.candidate) {
       await clearCandidateSession();
@@ -169,34 +241,40 @@ class SecureStorageService {
 
   /// Clears candidate stored session
   Future<void> clearCandidateSession() async {
-    await Future.wait([
-      _storage.delete(key: _keyCandToken),
-      _storage.delete(key: _keyCandId),
-      _storage.delete(key: _keyCandNumber),
-      _storage.delete(key: _keyCandName),
-      _storage.delete(key: _keyCandPhone),
-      _storage.delete(key: _keyCandEmail),
-    ]);
+    _cachedAuthToken = null;
+    _cachedUserRole = null;
+    _cachedAccountType = AccountType.none;
+
+    await _storage.delete(key: _keyCandToken);
+    await _storage.delete(key: _keyCandId);
+    await _storage.delete(key: _keyCandNumber);
+    await _storage.delete(key: _keyCandName);
+    await _storage.delete(key: _keyCandPhone);
+    await _storage.delete(key: _keyCandEmail);
   }
 
   /// Clears staff/admin stored session
   Future<void> clearStaffSession() async {
-    await Future.wait([
-      _storage.delete(key: _keyStaffToken),
-      _storage.delete(key: _keyStaffId),
-      _storage.delete(key: _keyStaffRole),
-      _storage.delete(key: _keyStaffName),
-      _storage.delete(key: _keyStaffEmail),
-      _storage.delete(key: _keyStaffPermissions),
-    ]);
+    _cachedAuthToken = null;
+    _cachedUserRole = null;
+    _cachedAccountType = AccountType.none;
+
+    await _storage.delete(key: _keyStaffToken);
+    await _storage.delete(key: _keyStaffId);
+    await _storage.delete(key: _keyStaffRole);
+    await _storage.delete(key: _keyStaffName);
+    await _storage.delete(key: _keyStaffEmail);
+    await _storage.delete(key: _keyStaffPermissions);
   }
 
   /// Clears all sessions and tokens (full wipe)
   Future<void> clearAll() async {
-    await Future.wait([
-      clearCandidateSession(),
-      clearStaffSession(),
-      _storage.delete(key: _keyActiveAccountType),
-    ]);
+    _cachedAuthToken = null;
+    _cachedUserRole = null;
+    _cachedAccountType = AccountType.none;
+
+    await clearCandidateSession();
+    await clearStaffSession();
+    await _storage.delete(key: _keyActiveAccountType);
   }
 }

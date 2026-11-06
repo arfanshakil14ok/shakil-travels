@@ -336,6 +336,7 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json(
       {
         success: true,
+        token,
         message: 'Account registered successfully with profile photo',
         data: {
           applicant: {

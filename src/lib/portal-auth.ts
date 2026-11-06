@@ -99,6 +99,11 @@ export async function getCurrentApplicant(req?: Request | any): Promise<any | nu
         if (!token && req.cookies && typeof req.cookies.get === 'function') {
           token = req.cookies.get(PORTAL_COOKIE_NAME)?.value;
         }
+        if (!token && req.headers.get('cookie')) {
+          const cookieHeader = req.headers.get('cookie') || '';
+          const match = cookieHeader.match(new RegExp(`${PORTAL_COOKIE_NAME}=([^;]+)`));
+          if (match) token = match[1].trim();
+        }
       } catch (_) {}
     }
 

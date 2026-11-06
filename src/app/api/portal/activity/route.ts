@@ -4,7 +4,7 @@ import { requireApplicantAuth } from '@/lib/portal-auth';
 
 export async function GET(request: NextRequest) {
   try {
-    const applicant = await requireApplicantAuth();
+    const applicant = await requireApplicantAuth(request);
 
     const searchParams = request.nextUrl.searchParams;
     const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../shared/widgets/app_bottom_navigation.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/security/secure_storage.dart';
 import 'package:shakil_travels/features/auth/data/auth_repository.dart';
 import 'package:shakil_travels/features/auth/data/session_model.dart';
 import 'package:shakil_travels/features/candidate/data/candidate_repository.dart';
@@ -39,6 +40,10 @@ class _CandidateMainNavigationScreenState
   @override
   void initState() {
     super.initState();
+    SecureStorageService.warmSession(
+      token: widget.session.token,
+      role: widget.session.role,
+    );
     _currentIndex = widget.initialTabIndex;
     _repository =
         widget.repository ?? CandidateRepository(apiClient: ApiClient());

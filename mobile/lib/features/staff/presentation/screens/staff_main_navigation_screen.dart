@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/security/secure_storage.dart';
 import '../../../../shared/widgets/app_app_bar.dart';
 import '../../../../shared/widgets/app_bottom_navigation.dart';
 import '../../../../shared/widgets/app_card.dart';
@@ -43,6 +44,10 @@ class _StaffMainNavigationScreenState extends State<StaffMainNavigationScreen> {
   @override
   void initState() {
     super.initState();
+    SecureStorageService.warmSession(
+      token: widget.session.token,
+      role: widget.session.role,
+    );
     _currentIndex = widget.initialTabIndex;
     _repository = widget.repository ?? StaffRepository(apiClient: ApiClient());
     _authRepository =

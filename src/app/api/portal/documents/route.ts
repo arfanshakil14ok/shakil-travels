@@ -21,9 +21,9 @@ const createDocumentJsonSchema = z.object({
   passportNumber: z.string().optional().nullable(),
 });
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const applicant = await requireApplicantAuth();
+    const applicant = await requireApplicantAuth(request);
 
     const [documents, documentTypes] = await Promise.all([
       prisma.document.findMany({
@@ -58,7 +58,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const applicant = await requireApplicantAuth();
+    const applicant = await requireApplicantAuth(request);
 
     const rateCheck = checkRateLimit(`upload:${applicant.id}`, 20, 300);
     if (!rateCheck.success) {

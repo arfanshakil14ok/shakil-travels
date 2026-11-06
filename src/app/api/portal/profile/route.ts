@@ -28,9 +28,9 @@ const updateProfileSchema = z.object({
   preferredJobCategoryId: z.string().optional().nullable(),
 });
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const applicant = await requireApplicantAuth();
+    const applicant = await requireApplicantAuth(request);
 
     const fullApplicant = await prisma.applicant.findUnique({
       where: { id: applicant.id },
@@ -67,7 +67,7 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
-    const applicant = await requireApplicantAuth();
+    const applicant = await requireApplicantAuth(request);
     const body = await request.json();
 
     // Security: strictly block any attempt to modify protected system fields

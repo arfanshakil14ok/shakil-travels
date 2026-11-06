@@ -1,11 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { requireApplicantAuth } from '@/lib/portal-auth';
 import { getEffectiveStage } from '@/lib/pipeline-sync';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const applicant = await requireApplicantAuth();
+    const applicant = await requireApplicantAuth(request);
 
     const applications = await prisma.application.findMany({
       where: { applicantId: applicant.id },

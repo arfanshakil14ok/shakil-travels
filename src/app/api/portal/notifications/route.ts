@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { requireApplicantAuth } from '@/lib/portal-auth';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const applicant = await requireApplicantAuth();
+    const applicant = await requireApplicantAuth(request);
 
     const [notifications, unreadCount] = await Promise.all([
       prisma.notification.findMany({
@@ -35,7 +35,7 @@ export async function GET() {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const applicant = await requireApplicantAuth();
+    const applicant = await requireApplicantAuth(request);
     const body = await request.json();
     const { notificationId, markAllAsRead } = body;
 
