@@ -194,14 +194,16 @@ export const VISA_IMAGES = {
  * Popular Countries for Navigation Quick Menu
  */
 export const POPULAR_COUNTRIES_NAV = [
-  { name: 'Saudi Arabia', nameBn: 'সৌদি আরব', code: 'SA', slug: 'saudi-arabia', flag: 'https://flagcdn.com/w80/sa.png', image: COUNTRY_IMAGES.SA.src },
-  { name: 'UAE', nameBn: 'সংযুক্ত আরব আমিরাত', code: 'AE', slug: 'united-arab-emirates', flag: 'https://flagcdn.com/w80/ae.png', image: COUNTRY_IMAGES.AE.src },
-  { name: 'Qatar', nameBn: 'কাতার', code: 'QA', slug: 'qatar', flag: 'https://flagcdn.com/w80/qa.png', image: COUNTRY_IMAGES.QA.src },
-  { name: 'Kuwait', nameBn: 'কুয়েত', code: 'KW', slug: 'kuwait', flag: 'https://flagcdn.com/w80/kw.png', image: COUNTRY_IMAGES.KW.src },
-  { name: 'Oman', nameBn: 'ওমান', code: 'OM', slug: 'oman', flag: 'https://flagcdn.com/w80/om.png', image: COUNTRY_IMAGES.OM.src },
-  { name: 'Singapore', nameBn: 'সিঙ্গাপুর', code: 'SG', slug: 'singapore', flag: 'https://flagcdn.com/w80/sg.png', image: COUNTRY_IMAGES.SG.src },
-  { name: 'Malaysia', nameBn: 'মালয়েশিয়া', code: 'MY', slug: 'malaysia', flag: 'https://flagcdn.com/w80/my.png', image: COUNTRY_IMAGES.MY.src },
-  { name: 'Japan', nameBn: 'জাপান', code: 'JP', slug: 'japan', flag: 'https://flagcdn.com/w80/jp.png', image: COUNTRY_IMAGES.JP.src },
+  { name: 'Malaysia', nameBn: 'মালয়েশিয়া', code: 'MY', slug: 'malaysia', flag: 'https://flagcdn.com/w80/my.png', image: COUNTRY_IMAGES.MY.src, jobCount: 13 },
+  { name: 'Mauritius', nameBn: 'মরিশাস', code: 'MU', slug: 'mauritius', flag: 'https://flagcdn.com/w80/mu.png', image: COUNTRY_IMAGES.MU.src, jobCount: 9 },
+  { name: 'Mongolia', nameBn: 'মঙ্গোলিয়া', code: 'MN', slug: 'mongolia', flag: 'https://flagcdn.com/w80/mn.png', image: COUNTRY_IMAGES.MN.src, jobCount: 5 },
+  { name: 'Saudi Arabia', nameBn: 'সৌদি আরব', code: 'SA', slug: 'saudi-arabia', flag: 'https://flagcdn.com/w80/sa.png', image: COUNTRY_IMAGES.SA.src, jobCount: 1 },
+  { name: 'UAE', nameBn: 'সংযুক্ত আরব আমিরাত', code: 'AE', slug: 'uae', flag: 'https://flagcdn.com/w80/ae.png', image: COUNTRY_IMAGES.AE.src, jobCount: 1 },
+  { name: 'Qatar', nameBn: 'কাতার', code: 'QA', slug: 'qatar', flag: 'https://flagcdn.com/w80/qa.png', image: COUNTRY_IMAGES.QA.src, jobCount: 1 },
+  { name: 'Kuwait', nameBn: 'কুয়েত', code: 'KW', slug: 'kuwait', flag: 'https://flagcdn.com/w80/kw.png', image: COUNTRY_IMAGES.KW.src, jobCount: 0 },
+  { name: 'Oman', nameBn: 'ওমান', code: 'OM', slug: 'oman', flag: 'https://flagcdn.com/w80/om.png', image: COUNTRY_IMAGES.OM.src, jobCount: 0 },
+  { name: 'Singapore', nameBn: 'সিঙ্গাপুর', code: 'SG', slug: 'singapore', flag: 'https://flagcdn.com/w80/sg.png', image: COUNTRY_IMAGES.SG.src, jobCount: 0 },
+  { name: 'Japan', nameBn: 'জাপান', code: 'JP', slug: 'japan', flag: 'https://flagcdn.com/w80/jp.png', image: COUNTRY_IMAGES.JP.src, jobCount: 1 },
 ];
 
 /**

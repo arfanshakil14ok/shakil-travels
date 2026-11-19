@@ -31,7 +31,36 @@ const ANIMATED_PHRASES = [
   '১০০% বৈধ ও নিরাপদ অভিবাসন',
 ];
 
-export const HeroSection: React.FC = () => {
+interface HeroSectionProps {
+  countries?: Array<{
+    id?: string;
+    code: string;
+    name: string;
+    slug?: string | null;
+    flag?: string | null;
+    _count?: { jobs?: number };
+    jobsCount?: number;
+  }>;
+}
+
+const COUNTRY_NAME_BN: Record<string, string> = {
+  MY: 'মালয়েশিয়া',
+  MU: 'মরিশাস',
+  MN: 'মঙ্গোলিয়া',
+  SA: 'সৌদি আরব',
+  AE: 'সংযুক্ত আরব আমিরাত',
+  QA: 'কাতার',
+  KW: 'কুয়েত',
+  OM: 'ওমান',
+  SG: 'সিঙ্গাপুর',
+  JP: 'জাপান',
+  KR: 'দক্ষিণ কোরিয়া',
+  RO: 'রোমানিয়া',
+  PL: 'পোল্যান্ড',
+  PT: 'পর্তুগাল',
+};
+
+export const HeroSection: React.FC<HeroSectionProps> = ({ countries }) => {
   const router = useRouter();
   const [keyword, setKeyword] = useState('');
   const [selectedCountry, setSelectedCountry] = useState('');
@@ -60,6 +89,33 @@ export const HeroSection: React.FC = () => {
     if (selectedCountry) params.set('country', selectedCountry);
     router.push(`/jobs?${params.toString()}`);
   };
+
+  const destinationList = React.useMemo(() => {
+    if (countries && countries.length > 0) {
+      const mapped = countries.map((c) => {
+        const code = c.code.toUpperCase();
+        const nav = POPULAR_COUNTRIES_NAV.find((p) => p.code === code);
+        const count = c._count?.jobs ?? c.jobsCount ?? (nav?.jobCount || 0);
+        return {
+          code,
+          name: c.name,
+          nameBn: nav?.nameBn || COUNTRY_NAME_BN[code] || c.name,
+          slug: c.slug || nav?.slug || code.toLowerCase(),
+          flag: c.flag || nav?.flag || `https://flagcdn.com/w80/${code.toLowerCase()}.png`,
+          jobCount: count,
+        };
+      });
+
+      return mapped.sort((a, b) => {
+        if (a.jobCount > 0 && b.jobCount === 0) return -1;
+        if (a.jobCount === 0 && b.jobCount > 0) return 1;
+        if (a.jobCount !== b.jobCount) return b.jobCount - a.jobCount;
+        return 0;
+      });
+    }
+
+    return POPULAR_COUNTRIES_NAV;
+  }, [countries]);
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-[#D9E8F9] via-[#E8F1FA] via-[#F0F6FC] to-[#D6E7F8] text-[#172B45] pt-12 sm:pt-16 lg:pt-20 pb-12 sm:pb-16 border-b border-[#C8DCF0]">
@@ -174,21 +230,35 @@ export const HeroSection: React.FC = () => {
                 <span>সম্ভাব্য কর্মসংস্থান গন্তব্য:</span>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                {POPULAR_COUNTRIES_NAV.slice(0, 7).map((c) => (
+                {destinationList.slice(0, 8).map((c) => (
                   <Link
                     key={c.code}
                     href={`/jobs?country=${c.slug}`}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/90 backdrop-blur-xs hover:bg-white border border-[#CBDDF0] hover:border-[#102B50]/40 text-xs font-medium text-[#172B45] hover:-translate-y-0.5 transition-all duration-200 shadow-2xs group"
+                    className={cn(
+                      'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition-all duration-200 shadow-2xs group hover:-translate-y-0.5',
+                      c.jobCount > 0
+                        ? 'bg-white hover:bg-emerald-50/70 border-emerald-300 text-[#102B50] font-bold'
+                        : 'bg-white/90 backdrop-blur-xs hover:bg-white border-[#CBDDF0] hover:border-[#102B50]/40 text-[#172B45] font-medium'
+                    )}
                   >
-                    <div className="relative w-4 h-3 rounded-xs overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform duration-200">
+                    <div className="relative w-4.5 h-3 rounded-xs overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform duration-200 border border-slate-200 shadow-2xs">
                       <Image src={c.flag} alt={c.name} fill className="object-cover" />
                     </div>
                     <span>{c.nameBn}</span>
+                    {c.jobCount > 0 ? (
+                      <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-emerald-100 text-emerald-900 font-sans">
+                        {c.jobCount}টি চাকরি
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-slate-400 font-sans">
+                        শীঘ্রই
+                      </span>
+                    )}
                   </Link>
                 ))}
                 <Link
                   href="/countries"
-                  className="text-xs font-semibold text-[#102B50] hover:text-[#0B1D35] inline-flex items-center gap-0.5 ml-1 transition-colors hover:translate-x-0.5 duration-200"
+                  className="text-xs font-bold text-[#102B50] hover:text-[#0B1D35] inline-flex items-center gap-1 ml-1 px-2.5 py-1.5 rounded-lg hover:bg-white/80 transition-all duration-200"
                 >
                   সকল দেশ <ArrowRight className="w-3 h-3" />
                 </Link>

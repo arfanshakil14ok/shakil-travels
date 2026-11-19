@@ -89,7 +89,7 @@ export default async function PublicHomePage() {
   return (
     <div className="space-y-0">
       {/* 1. Hero Section (এনিমেটেড লাইভ টেক্সটসহ) */}
-      <HeroSection />
+      <HeroSection countries={countries} />
 
       {/* 2. জব সেকশন (হিরো সেকশন এর নিচে থাকবে জব সেকশন) */}
       <JobsPreviewSection jobs={serializedJobs} maxDisplay={6} />
