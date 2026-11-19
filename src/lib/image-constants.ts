@@ -151,6 +151,14 @@ export const CATEGORY_IMAGES: Record<string, ImageAsset> = {
     src: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80',
     alt: 'Information technology network administration and software workstation',
   },
+  retail: {
+    src: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=800&q=80',
+    alt: 'Modern supermarket retail aisles and super shop merchandising staff',
+  },
+  hotel: {
+    src: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80',
+    alt: 'Luxury international hotel housekeeping and guest room service',
+  },
 };
 
 export const DEFAULT_CATEGORY_IMAGE: ImageAsset = {
@@ -255,7 +263,13 @@ export function getJobCategoryImage(categoryName?: string | null, jobTitle?: str
   if (query.includes('construct') || query.includes('civil') || query.includes('mason') || query.includes('carpenter')) {
     return CATEGORY_IMAGES.construction;
   }
-  if (query.includes('factory') || query.includes('manufactur') || query.includes('assembl')) {
+  if (query.includes('retail') || query.includes('shop') || query.includes('store') || query.includes('pharmacy') || query.includes('market') || query.includes('super')) {
+    return CATEGORY_IMAGES.retail;
+  }
+  if (query.includes('housekeep') || query.includes('cleaning') || query.includes('room')) {
+    return CATEGORY_IMAGES.hotel;
+  }
+  if (query.includes('factory') || query.includes('manufactur') || query.includes('assembl') || query.includes('part') || query.includes('brake') || query.includes('aluminum') || query.includes('brewery')) {
     return CATEGORY_IMAGES.manufacturing;
   }
   if (query.includes('agri') || query.includes('farm') || query.includes('harvest')) {
