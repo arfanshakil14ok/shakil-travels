@@ -20,6 +20,7 @@ import prisma from '@/lib/prisma';
 import { getCountryFlagUrl, getCountryImage, getJobImage } from '@/lib/image-constants';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { JobCard, JobCardData } from '@/components/jobs/job-card';
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const country = await prisma.country.findFirst({
@@ -50,7 +51,7 @@ export default async function CountryPublicDetailPage({
         where: { status: 'PUBLISHED' },
         include: {
           jobCategory: true,
-          employer: { select: { companyName: true } },
+          employer: { select: { companyName: true, companyNameLocal: true, verificationStatus: true } },
         },
         orderBy: { createdAt: 'desc' },
       },
@@ -237,57 +238,21 @@ export default async function CountryPublicDetailPage({
               Currently no published job circulars for {country.name}. Please check back shortly or register your profile with us.
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {country.jobs.map((job) => {
-                const jobImg = getJobImage(job);
-                return (
-                  <div
-                    key={job.id}
-                    className="overflow-hidden rounded-2xl border border-slate-200 hover:border-emerald-500 hover:shadow-xl transition-all duration-300 flex flex-col justify-between bg-white group hover:-translate-y-1"
-                  >
-                    {/* Image Header */}
-                    <div className="relative h-36 w-full bg-slate-900 overflow-hidden">
-                      <Image
-                        src={jobImg.src}
-                        alt={job.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                      <div className="absolute top-2.5 right-2.5 bg-navy-950/80 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
-                        {job.vacancyCount || 1} Vacancies
-                      </div>
-                      <div className="absolute bottom-2.5 left-3 right-3 text-white">
-                        <span className="text-[10px] uppercase font-bold text-emerald-300 block mb-0.5">
-                          {job.jobCategory?.name || 'General'}
-                        </span>
-                        <h3 className="font-bold text-white text-sm line-clamp-1 group-hover:text-emerald-300 transition-colors">
-                          {job.title}
-                        </h3>
-                      </div>
-                    </div>
-
-                    <div className="p-4 space-y-3 flex-1 flex flex-col justify-between text-xs">
-                      <div className="space-y-2 text-slate-600">
-                        <div className="text-[11px] text-slate-500 truncate">
-                          {job.employer?.companyName || 'Verified Foreign Company'}
-                        </div>
-
-                        {job.salaryMin && (
-                          <div className="p-2 bg-emerald-50 border border-emerald-100 rounded-lg font-bold text-emerald-800 text-xs">
-                            Salary: {job.currency || ''} {Number(job.salaryMin).toLocaleString()}/month
-                          </div>
-                        )}
-                      </div>
-
-                      <Link href={`/jobs/${job.slug}`} className="block pt-1">
-                        <Button size="sm" className="w-full text-xs flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
-                          View & Apply <ArrowRight className="w-3.5 h-3.5" />
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                );
+                const jobCardData: JobCardData = {
+                  ...job,
+                  salaryMin: job.salaryMin ? Number(job.salaryMin) : null,
+                  salaryMax: job.salaryMax ? Number(job.salaryMax) : null,
+                  country: {
+                    id: country.id,
+                    name: country.name,
+                    code: country.code,
+                    flag: country.flag,
+                    slug: country.slug,
+                  },
+                };
+                return <JobCard key={job.id} job={jobCardData} />;
               })}
             </div>
           )}

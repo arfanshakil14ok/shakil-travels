@@ -389,93 +389,93 @@ export const TRADE_JOB_IMAGES: Record<string, ImageAsset> = {
 export const LOCAL_JOB_IMAGES: Record<string, ImageAsset> = {
   // 13 Malaysia Jobs (Cropped from user circular)
   caring_pharmacy: {
-    src: '/uploads/jobs/my-caring-pharmacy.jpg',
+    src: '/images/jobs/my-caring-pharmacy.jpg',
     alt: 'CARING Pharmacy Retail Storefront Malaysia',
   },
   skyworlds_hotel: {
-    src: '/uploads/jobs/my-skyworlds-hotel.jpg',
+    src: '/images/jobs/my-skyworlds-hotel.jpg',
     alt: 'SkyWorlds Hotel Resorts World Genting Malaysia',
   },
   notion_vtec: {
-    src: '/uploads/jobs/my-notion-vtec.jpg',
+    src: '/images/jobs/my-notion-vtec.jpg',
     alt: 'Notion VTec Berhad Precision Parts Factory Malaysia',
   },
   mr_diy: {
-    src: '/uploads/jobs/my-mr-diy.jpg',
+    src: '/images/jobs/my-mr-diy.jpg',
     alt: 'MR. D.I.Y. Non-Food Super Shop Storefront Malaysia',
   },
   lotuss: {
-    src: '/uploads/jobs/my-lotuss.jpg',
+    src: '/images/jobs/my-lotuss.jpg',
     alt: "Lotus's Supermarket Hypermarket Crew Malaysia",
   },
   oldtown: {
-    src: '/uploads/jobs/my-oldtown-coffee.jpg',
+    src: '/images/jobs/my-oldtown-coffee.jpg',
     alt: 'OldTown White Coffee Cafe Restaurant Malaysia',
   },
   big_pharmacy: {
-    src: '/uploads/jobs/my-big-pharmacy.jpg',
+    src: '/images/jobs/my-big-pharmacy.jpg',
     alt: 'BIG Pharmacy Retail Storefront Malaysia',
   },
   burung_hantu: {
-    src: '/uploads/jobs/my-burung-hantu.jpg',
+    src: '/images/jobs/my-burung-hantu.jpg',
     alt: 'Restoran Nasi Lemak Burung Hantu Malaysia',
   },
   speedmart: {
-    src: '/uploads/jobs/my-99speedmart.jpg',
+    src: '/images/jobs/my-99speedmart.jpg',
     alt: '99 Speedmart Supermarket Staff Malaysia',
   },
   carlsberg: {
-    src: '/uploads/jobs/my-carlsberg.jpg',
+    src: '/images/jobs/my-carlsberg.jpg',
     alt: 'Carlsberg Brewery Beverage Packaging Plant Malaysia',
   },
   alpha_brake: {
-    src: '/uploads/jobs/my-alpha-brake.jpg',
+    src: '/images/jobs/my-alpha-brake.jpg',
     alt: 'Alpha Brake Sdn. Bhd. Car Parts Factory Malaysia',
   },
   tpoc: {
-    src: '/uploads/jobs/my-tpoc-medical.jpg',
+    src: '/images/jobs/my-tpoc-medical.jpg',
     alt: 'TPOC Medical Equipment & Packaging Plant Malaysia',
   },
   empire_aluminum: {
-    src: '/uploads/jobs/my-empire-aluminum.jpg',
+    src: '/images/jobs/my-empire-aluminum.jpg',
     alt: 'Empire Aluminum Extrusion & Profiles Factory Malaysia',
   },
 
   // 9 Mauritius Jobs (Cropped from user circular)
   bengali_chef: {
-    src: '/uploads/jobs/mu-bengali-chef.jpg',
+    src: '/images/jobs/mu-bengali-chef.jpg',
     alt: 'বাবুর্চি (বাংলা খাবার) - শেফ কুক মরিশাস',
   },
   ice_cream: {
-    src: '/uploads/jobs/mu-ice-cream-maker.jpg',
+    src: '/images/jobs/mu-ice-cream-maker.jpg',
     alt: 'আইসক্রিম মেকার - মরিশাস',
   },
   furniture: {
-    src: '/uploads/jobs/mu-furniture-carpenter.jpg',
+    src: '/images/jobs/mu-furniture-carpenter.jpg',
     alt: 'ফার্নিচার মেকার ও কাঠের কার্পেন্টার - মরিশাস',
   },
   spray_painter: {
-    src: '/uploads/jobs/mu-spray-painter.jpg',
+    src: '/images/jobs/mu-spray-painter.jpg',
     alt: 'ফার্নিচার ও উড স্প্রে পেইন্টার - মরিশাস',
   },
   decorator: {
-    src: '/uploads/jobs/mu-event-decorator.jpg',
+    src: '/images/jobs/mu-event-decorator.jpg',
     alt: 'ইভেন্ট ও স্টেজ ডেকোরেটর - মরিশাস',
   },
   car_denting: {
-    src: '/uploads/jobs/mu-car-denting.jpg',
+    src: '/images/jobs/mu-car-denting.jpg',
     alt: 'অটোমোবাইল গাড়ী ডেন্টিং টেকনিশিয়ান - মরিশাস',
   },
   car_painting: {
-    src: '/uploads/jobs/mu-car-painting.jpg',
+    src: '/images/jobs/mu-car-painting.jpg',
     alt: 'অটোমোবাইল গাড়ী পেইন্টিং মেকানিক - মরিশাস',
   },
   bobcat: {
-    src: '/uploads/jobs/mu-bobcat-operator.jpg',
+    src: '/images/jobs/mu-bobcat-operator.jpg',
     alt: 'বোবকাট ও স্কিড লোডার অপারেটর - মরিশাস',
   },
   mobile_tech: {
-    src: '/uploads/jobs/mu-mobile-technician.jpg',
+    src: '/images/jobs/mu-mobile-technician.jpg',
     alt: 'মোবাইল টেকনিশিয়ান (ডিপ্লোমা সনদ) - মরিশাস',
   },
 };

@@ -59,7 +59,23 @@ interface JobCardProps {
 
 export const JobCard: React.FC<JobCardProps> = ({ job, className }) => {
   const jobImg = getJobImage(job);
+  const [imgSrc, setImgSrc] = React.useState(jobImg.src);
+  const [hasError, setHasError] = React.useState(false);
   const flagUrl = getCountryFlagUrl(job.country?.code);
+
+  React.useEffect(() => {
+    setImgSrc(jobImg.src);
+    setHasError(false);
+  }, [jobImg.src]);
+
+  const handleImageError = () => {
+    const fallback = getCountryImage(job.country?.code, job.country?.slug || job.country?.name);
+    if (fallback && fallback.src !== imgSrc) {
+      setImgSrc(fallback.src);
+    } else {
+      setHasError(true);
+    }
+  };
 
   const formatSalary = (min?: number | string | null, max?: number | string | null, cur?: string | null) => {
     const currency = cur || 'BDT';
@@ -93,13 +109,20 @@ export const JobCard: React.FC<JobCardProps> = ({ job, className }) => {
     >
       {/* Visual Header with Trade / Job Matching Photo */}
       <div className="relative h-44 w-full bg-[#0B1D35] overflow-hidden">
-        <Image
-          src={jobImg.src}
-          alt={`${job.country?.name || 'Destination'} - ${job.title}`}
-          fill
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          className="object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
-        />
+        {!hasError ? (
+          <Image
+            src={imgSrc}
+            alt={`${job.country?.name || 'Destination'} - ${job.title}`}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
+            onError={handleImageError}
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-[#102B50] via-[#0B1D35] to-[#172B45] flex items-center justify-center">
+            <BriefcaseBusiness className="w-12 h-12 text-white/20" />
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-[#0B1D35]/95 via-[#0B1D35]/40 to-transparent" />
 
         {/* Top-Left: Country Vector Flag & Name Badge */}

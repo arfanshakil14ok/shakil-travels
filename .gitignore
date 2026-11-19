@@ -47,6 +47,9 @@ uploads/private/*
 public/uploads/
 public/uploads/*
 !public/uploads/.gitkeep
+!public/uploads/jobs
+!public/uploads/jobs/*
+!public/uploads/*.jpg
 
 # Embedded database runtime data & snapshots
 .postgres_data/
