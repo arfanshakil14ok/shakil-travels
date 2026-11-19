@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { getJobCategoryImage, getCountryFlagUrl, getCountryImage } from '@/lib/image-constants';
+import { getJobCategoryImage, getCountryFlagUrl, getCountryImage, getJobImage } from '@/lib/image-constants';
 
 export interface JobCardData {
   id: string;
@@ -58,8 +58,7 @@ interface JobCardProps {
 }
 
 export const JobCard: React.FC<JobCardProps> = ({ job, className }) => {
-  const categoryImg = getJobCategoryImage(job.jobCategory?.name, job.title);
-  const countryImg = getCountryImage(job.country?.code, job.country?.slug || job.country?.name);
+  const jobImg = getJobImage(job);
   const flagUrl = getCountryFlagUrl(job.country?.code);
 
   const formatSalary = (min?: number | string | null, max?: number | string | null, cur?: string | null) => {
@@ -92,10 +91,10 @@ export const JobCard: React.FC<JobCardProps> = ({ job, className }) => {
     <Card
       className={`overflow-hidden bg-white border border-[#E4EAF1] hover:border-[#102B50] hover:shadow-lg transition-all duration-300 flex flex-col justify-between group rounded-xl ${className || ''}`}
     >
-      {/* Visual Header with Destination Country Landmark Photo */}
+      {/* Visual Header with Trade / Job Matching Photo */}
       <div className="relative h-44 w-full bg-[#0B1D35] overflow-hidden">
         <Image
-          src={countryImg.src}
+          src={jobImg.src}
           alt={`${job.country?.name || 'Destination'} - ${job.title}`}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

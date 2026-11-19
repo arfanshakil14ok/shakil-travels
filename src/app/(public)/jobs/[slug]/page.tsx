@@ -28,7 +28,7 @@ import {
 import prisma from '@/lib/prisma';
 import { BRAND } from '@/config/brand';
 import { Button } from '@/components/ui/button';
-import { getJobCategoryImage, getCountryFlagUrl, getCountryImage } from '@/lib/image-constants';
+import { getJobCategoryImage, getCountryFlagUrl, getCountryImage, getJobImage } from '@/lib/image-constants';
 import { getCurrentApplicant } from '@/lib/portal-auth';
 import { getCurrentUser } from '@/lib/auth';
 import { calculateMatch } from '@/lib/matching';
@@ -121,7 +121,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     }
   }
 
-  const categoryImg = getJobCategoryImage(job.jobCategory?.name, job.title);
+  const jobImg = getJobImage(job);
   const flagUrl = getCountryFlagUrl(job.country?.code);
   const countryImg = getCountryImage(job.country?.code, job.country?.slug || job.country?.name);
 
@@ -172,7 +172,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
           {/* Top Banner Image */}
           <div className="relative h-48 sm:h-64 w-full bg-slate-900">
             <Image
-              src={countryImg.src}
+              src={jobImg.src}
               alt={`${job.country.name} - ${job.title}`}
               fill
               priority

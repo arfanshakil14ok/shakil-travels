@@ -23,7 +23,7 @@ import { useLanguage } from '@/context/language-context';
 import { EmptyState } from '@/components/ui/empty-state';
 import { LoadingState } from '@/components/ui/loading-state';
 import { useToast } from '@/components/ui/toast';
-import { getCountryImage, getCountryFlagUrl } from '@/lib/image-constants';
+import { getCountryImage, getCountryFlagUrl, getJobImage } from '@/lib/image-constants';
 import { JobApplyWizardModal } from '@/components/portal/job-apply-wizard-modal';
 
 function PortalJobsContent() {
@@ -237,7 +237,7 @@ function PortalJobsContent() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {jobs.map((job) => {
-            const countryImg = getCountryImage(job.country?.code, job.country?.slug || job.country?.name);
+            const jobImg = getJobImage(job);
             const flagUrl = getCountryFlagUrl(job.country?.code);
 
             return (
@@ -245,10 +245,10 @@ function PortalJobsContent() {
                 key={job.id}
                 className="bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-xs flex flex-col justify-between hover:border-emerald-500 hover:shadow-xl hover:-translate-y-1 transition-all group"
               >
-                {/* Visual Header with Destination Country Landmark Photo */}
+                {/* Visual Header with Trade / Job Matching Photo */}
                 <div className="relative h-44 w-full bg-slate-900 overflow-hidden">
                   <Image
-                    src={countryImg.src}
+                    src={jobImg.src}
                     alt={`${job.country?.name || 'Destination'} - ${job.title}`}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

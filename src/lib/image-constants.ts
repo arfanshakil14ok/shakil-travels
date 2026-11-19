@@ -94,6 +94,10 @@ export const COUNTRY_IMAGES: Record<string, ImageAsset> = {
     src: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=800&q=80',
     alt: 'Croatia European Mediterranean architecture and employment hubs',
   },
+  MU: {
+    src: 'https://images.unsplash.com/photo-1589556264800-08ae9e129a8c?auto=format&fit=crop&w=800&q=80',
+    alt: 'Mauritius tropical coastline and Port Louis commercial district',
+  },
 };
 
 export const DEFAULT_COUNTRY_IMAGE: ImageAsset = {
@@ -221,6 +225,7 @@ export function getCountryImage(countryCode?: string | null, slugOrName?: string
     if (s.includes('romania') || s.includes('রোমানিয়া') || s === 'ro') return COUNTRY_IMAGES.RO;
     if (s.includes('australia') || s.includes('অস্ট্রেলিয়া') || s === 'au') return COUNTRY_IMAGES.AU;
     if (s.includes('croatia') || s.includes('ক্রোয়েশিয়া') || s === 'hr') return COUNTRY_IMAGES.HR;
+    if (s.includes('mauritius') || s.includes('মরিশাস') || s === 'mu') return COUNTRY_IMAGES.MU;
   }
 
   return DEFAULT_COUNTRY_IMAGE;
@@ -284,6 +289,224 @@ export function getJobCategoryImage(categoryName?: string | null, jobTitle?: str
   if (query.includes('it') || query.includes('computer') || query.includes('admin')) {
     return CATEGORY_IMAGES.it_admin;
   }
+
+  return DEFAULT_CATEGORY_IMAGE;
+}
+
+/**
+ * Dedicated Trade & Job Specific High-Resolution Imagery
+ */
+export const TRADE_JOB_IMAGES: Record<string, ImageAsset> = {
+  // Malaysia Specific Matches
+  pharmacy: {
+    src: 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?auto=format&fit=crop&w=800&q=80',
+    alt: 'Modern retail pharmacy medicine store, products display and sales counter',
+  },
+  housekeeping: {
+    src: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80',
+    alt: 'Luxury resort hotel housekeeping, room attendant and bed making',
+  },
+  parts_factory: {
+    src: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80',
+    alt: 'Precision metal and electronic components parts factory production operator',
+  },
+  super_shop_nonfood: {
+    src: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=800&q=80',
+    alt: 'Retail home improvement, hardware and non-food super shop aisles',
+  },
+  supermarket_hypermarket: {
+    src: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=800&q=80',
+    alt: 'Modern supermarket hypermarket merchandise and display shelves',
+  },
+  coffee_shop: {
+    src: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80',
+    alt: 'Coffee shop cafe waiter, espresso brewing and dining service',
+  },
+  restaurant_dining: {
+    src: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80',
+    alt: 'Traditional restaurant dining hall service and kitchen crew',
+  },
+  grocery_food: {
+    src: 'https://images.unsplash.com/photo-1534723452862-4c874018d66d?auto=format&fit=crop&w=800&q=80',
+    alt: 'Grocery supermarket food items, packaged merchandise and store aisles',
+  },
+  brewery_factory: {
+    src: 'https://images.unsplash.com/photo-1584225064785-c62a8b43d148?auto=format&fit=crop&w=800&q=80',
+    alt: 'Automated beverage bottling line and brewery packaging plant',
+  },
+  car_brake_factory: {
+    src: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=800&q=80',
+    alt: 'Automotive car brake disc rotor and automotive parts manufacturing',
+  },
+  medical_equipment: {
+    src: 'https://images.unsplash.com/photo-1584744982491-665216d95f8b?auto=format&fit=crop&w=800&q=80',
+    alt: 'Sterile cleanroom medical equipment and healthcare devices packaging',
+  },
+  aluminum_factory: {
+    src: 'https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?auto=format&fit=crop&w=800&q=80',
+    alt: 'Heavy aluminum profiles extrusion, fabrication and metal finishing',
+  },
+
+  // Mauritius Specific Matches
+  furniture_carpenter: {
+    src: 'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?auto=format&fit=crop&w=800&q=80',
+    alt: 'Skilled furniture carpenter crafting wooden chairs and cabinetry',
+  },
+  spray_painter: {
+    src: 'https://images.unsplash.com/photo-1562259949-e8e7689d7828?auto=format&fit=crop&w=800&q=80',
+    alt: 'Furniture spray painter applying fine lacquer wood finish with spray gun',
+  },
+  event_decorator: {
+    src: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80',
+    alt: 'Luxury event and wedding hall stage floral and lighting decorator',
+  },
+  car_denting: {
+    src: 'https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=800&q=80',
+    alt: 'Automotive vehicle body denting, sheet metal panel beating repair',
+  },
+  car_painting: {
+    src: 'https://images.unsplash.com/photo-1625047509168-a7026f36de04?auto=format&fit=crop&w=800&q=80',
+    alt: 'Automobile spray booth paint technician finishing car exterior body',
+  },
+  bobcat_operator: {
+    src: 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=800&q=80',
+    alt: 'Bobcat skid steer loader machine operator on construction earthwork site',
+  },
+  mobile_technician: {
+    src: 'https://images.unsplash.com/photo-1597740985671-2a8a3b80532e?auto=format&fit=crop&w=800&q=80',
+    alt: 'Certified mobile phone repair technician servicing smartphone motherboard',
+  },
+  ice_cream_maker: {
+    src: 'https://images.unsplash.com/photo-1501443762994-82bd5dace89a?auto=format&fit=crop&w=800&q=80',
+    alt: 'Artisan ice cream gelato maker scooping delicious fresh gelato desserts',
+  },
+  bengali_chef: {
+    src: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&w=800&q=80',
+    alt: 'Professional culinary chef cooking authentic Bengali cuisine dishes',
+  },
+};
+
+/**
+ * High-accuracy helper to resolve real matching job imagery based on trade, designation and employer
+ */
+export function getJobImage(job?: {
+  title?: string | null;
+  slug?: string | null;
+  jobCategory?: { name?: string | null } | null;
+  country?: { code?: string | null; slug?: string | null; name?: string | null } | null;
+} | null): ImageAsset {
+  if (!job) return DEFAULT_CATEGORY_IMAGE;
+
+  const query = `${job.title || ''} ${job.slug || ''} ${job.jobCategory?.name || ''}`.toLowerCase();
+
+  // Car Brake Factory (check before general parts)
+  if (query.includes('brake') || query.includes('ব্রেক')) {
+    return TRADE_JOB_IMAGES.car_brake_factory;
+  }
+
+  // Car Denting
+  if (query.includes('ডেন্টিং') || query.includes('denting') || query.includes('panel beater')) {
+    return TRADE_JOB_IMAGES.car_denting;
+  }
+
+  // Car Painting (check before general spray painter)
+  if (
+    query.includes('গাড়ী পেইন্টিং') ||
+    query.includes('গাড়ীর পেইন্টিং') ||
+    query.includes('car paint') ||
+    query.includes('auto paint') ||
+    query.includes('vehicle paint') ||
+    query.includes('automotive spray') ||
+    query.includes('automotive vehicle spray')
+  ) {
+    return TRADE_JOB_IMAGES.car_painting;
+  }
+
+  // Wood & Furniture Spray Painter
+  if (query.includes('স্প্রে') || query.includes('spray')) {
+    return TRADE_JOB_IMAGES.spray_painter;
+  }
+
+  // Mobile Phone Technician (exclude automobile/অটোমোবাইল)
+  if (
+    query.includes('phone') ||
+    query.includes('ফোন') ||
+    (query.includes('মোবাইল') && !query.includes('অটোমোবাইল')) ||
+    (query.includes('mobile') && !query.includes('automobile'))
+  ) {
+    return TRADE_JOB_IMAGES.mobile_technician;
+  }
+
+  // Ice Cream Maker
+  if (query.includes('আইসক্রিম') || query.includes('ice cream') || query.includes('gelato')) {
+    return TRADE_JOB_IMAGES.ice_cream_maker;
+  }
+
+  // Bengali Chef / Babuর্চি
+  if (query.includes('বাবুর্চি') || query.includes('বাংলা খাবার') || query.includes('bengali') || query.includes('cook') || (query.includes('chef') && !query.includes('assistant'))) {
+    return TRADE_JOB_IMAGES.bengali_chef;
+  }
+
+  // Furniture Carpenter
+  if (query.includes('ফার্নিচার') || query.includes('furniture') || query.includes('কার্পেন্টার') || query.includes('carpenter') || query.includes('wood')) {
+    return TRADE_JOB_IMAGES.furniture_carpenter;
+  }
+
+  // Bobcat Machine Operator
+  if (query.includes('বোবকাট') || query.includes('bobcat') || query.includes('loader') || query.includes('skid')) {
+    return TRADE_JOB_IMAGES.bobcat_operator;
+  }
+
+  // Event & Stage Decorator
+  if (query.includes('ডেকোরেটর') || query.includes('decorator') || query.includes('stage') || query.includes('event')) {
+    return TRADE_JOB_IMAGES.event_decorator;
+  }
+
+  // Malaysia Specific Trade Keywords
+  if (query.includes('pharmacy') || query.includes('ফার্মেসি') || query.includes('caring') || query.includes('big pharmacy')) {
+    return TRADE_JOB_IMAGES.pharmacy;
+  }
+  if (query.includes('housekeep') || query.includes('হাউসকিপার') || query.includes('skyworlds') || query.includes('genting')) {
+    return TRADE_JOB_IMAGES.housekeeping;
+  }
+  if (query.includes('precision') || query.includes('notion') || (query.includes('parts') && query.includes('factory')) || query.includes('পার্টস')) {
+    return TRADE_JOB_IMAGES.parts_factory;
+  }
+  if (query.includes('mr diy') || query.includes('diy') || query.includes('non-food') || query.includes('নন-ফুড')) {
+    return TRADE_JOB_IMAGES.super_shop_nonfood;
+  }
+  if (query.includes('lotus') || query.includes('swopno') || query.includes('hypermarket') || (query.includes('super shop') && query.includes('crew'))) {
+    return TRADE_JOB_IMAGES.supermarket_hypermarket;
+  }
+  if (query.includes('coffee') || query.includes('oldtown') || query.includes('কফি') || query.includes('waiter') || query.includes('ওয়েটার')) {
+    return TRADE_JOB_IMAGES.coffee_shop;
+  }
+  if (query.includes('burung hantu') || query.includes('বুরং হান্তু') || query.includes('nasi lemak')) {
+    return TRADE_JOB_IMAGES.restaurant_dining;
+  }
+  if (query.includes('speedmart') || query.includes('99') || (query.includes('food') && query.includes('shop')) || query.includes('ফুড')) {
+    return TRADE_JOB_IMAGES.grocery_food;
+  }
+  if (query.includes('brewery') || query.includes('carlsberg') || query.includes('beer') || query.includes('bear') || query.includes('ব্রিউয়ারি')) {
+    return TRADE_JOB_IMAGES.brewery_factory;
+  }
+  if (query.includes('brake') || query.includes('ব্রেক') || query.includes('alpha brake')) {
+    return TRADE_JOB_IMAGES.car_brake_factory;
+  }
+  if (query.includes('medical') || query.includes('tpoc') || query.includes('মেডিকেল')) {
+    return TRADE_JOB_IMAGES.medical_equipment;
+  }
+  if (query.includes('aluminum') || query.includes('অ্যালুমিনিয়াম') || query.includes('extrusion') || query.includes('empire')) {
+    return TRADE_JOB_IMAGES.aluminum_factory;
+  }
+
+  // Fallback to Category
+  const cat = getJobCategoryImage(job.jobCategory?.name, job.title);
+  if (cat && cat !== DEFAULT_CATEGORY_IMAGE) return cat;
+
+  // Fallback to Country
+  const country = getCountryImage(job.country?.code, job.country?.slug || job.country?.name);
+  if (country && country !== DEFAULT_COUNTRY_IMAGE) return country;
 
   return DEFAULT_CATEGORY_IMAGE;
 }
