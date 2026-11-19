@@ -17,7 +17,7 @@ import {
   Banknote,
 } from 'lucide-react';
 import prisma from '@/lib/prisma';
-import { getCountryFlagUrl, getCountryImage, getJobCategoryImage } from '@/lib/image-constants';
+import { getCountryFlagUrl, getCountryImage, getJobImage } from '@/lib/image-constants';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
@@ -239,7 +239,7 @@ export default async function CountryPublicDetailPage({
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {country.jobs.map((job) => {
-                const categoryImg = getJobCategoryImage(job.jobCategory?.name, job.title);
+                const jobImg = getJobImage(job);
                 return (
                   <div
                     key={job.id}
@@ -248,7 +248,7 @@ export default async function CountryPublicDetailPage({
                     {/* Image Header */}
                     <div className="relative h-36 w-full bg-slate-900 overflow-hidden">
                       <Image
-                        src={categoryImg.src}
+                        src={jobImg.src}
                         alt={job.title}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"

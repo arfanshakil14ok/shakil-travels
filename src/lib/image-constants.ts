@@ -386,6 +386,100 @@ export const TRADE_JOB_IMAGES: Record<string, ImageAsset> = {
   },
 };
 
+export const LOCAL_JOB_IMAGES: Record<string, ImageAsset> = {
+  // 13 Malaysia Jobs (Cropped from user circular)
+  caring_pharmacy: {
+    src: '/uploads/jobs/my-caring-pharmacy.jpg',
+    alt: 'CARING Pharmacy Retail Storefront Malaysia',
+  },
+  skyworlds_hotel: {
+    src: '/uploads/jobs/my-skyworlds-hotel.jpg',
+    alt: 'SkyWorlds Hotel Resorts World Genting Malaysia',
+  },
+  notion_vtec: {
+    src: '/uploads/jobs/my-notion-vtec.jpg',
+    alt: 'Notion VTec Berhad Precision Parts Factory Malaysia',
+  },
+  mr_diy: {
+    src: '/uploads/jobs/my-mr-diy.jpg',
+    alt: 'MR. D.I.Y. Non-Food Super Shop Storefront Malaysia',
+  },
+  lotuss: {
+    src: '/uploads/jobs/my-lotuss.jpg',
+    alt: "Lotus's Supermarket Hypermarket Crew Malaysia",
+  },
+  oldtown: {
+    src: '/uploads/jobs/my-oldtown-coffee.jpg',
+    alt: 'OldTown White Coffee Cafe Restaurant Malaysia',
+  },
+  big_pharmacy: {
+    src: '/uploads/jobs/my-big-pharmacy.jpg',
+    alt: 'BIG Pharmacy Retail Storefront Malaysia',
+  },
+  burung_hantu: {
+    src: '/uploads/jobs/my-burung-hantu.jpg',
+    alt: 'Restoran Nasi Lemak Burung Hantu Malaysia',
+  },
+  speedmart: {
+    src: '/uploads/jobs/my-99speedmart.jpg',
+    alt: '99 Speedmart Supermarket Staff Malaysia',
+  },
+  carlsberg: {
+    src: '/uploads/jobs/my-carlsberg.jpg',
+    alt: 'Carlsberg Brewery Beverage Packaging Plant Malaysia',
+  },
+  alpha_brake: {
+    src: '/uploads/jobs/my-alpha-brake.jpg',
+    alt: 'Alpha Brake Sdn. Bhd. Car Parts Factory Malaysia',
+  },
+  tpoc: {
+    src: '/uploads/jobs/my-tpoc-medical.jpg',
+    alt: 'TPOC Medical Equipment & Packaging Plant Malaysia',
+  },
+  empire_aluminum: {
+    src: '/uploads/jobs/my-empire-aluminum.jpg',
+    alt: 'Empire Aluminum Extrusion & Profiles Factory Malaysia',
+  },
+
+  // 9 Mauritius Jobs (Cropped from user circular)
+  bengali_chef: {
+    src: '/uploads/jobs/mu-bengali-chef.jpg',
+    alt: 'বাবুর্চি (বাংলা খাবার) - শেফ কুক মরিশাস',
+  },
+  ice_cream: {
+    src: '/uploads/jobs/mu-ice-cream-maker.jpg',
+    alt: 'আইসক্রিম মেকার - মরিশাস',
+  },
+  furniture: {
+    src: '/uploads/jobs/mu-furniture-carpenter.jpg',
+    alt: 'ফার্নিচার মেকার ও কাঠের কার্পেন্টার - মরিশাস',
+  },
+  spray_painter: {
+    src: '/uploads/jobs/mu-spray-painter.jpg',
+    alt: 'ফার্নিচার ও উড স্প্রে পেইন্টার - মরিশাস',
+  },
+  decorator: {
+    src: '/uploads/jobs/mu-event-decorator.jpg',
+    alt: 'ইভেন্ট ও স্টেজ ডেকোরেটর - মরিশাস',
+  },
+  car_denting: {
+    src: '/uploads/jobs/mu-car-denting.jpg',
+    alt: 'অটোমোবাইল গাড়ী ডেন্টিং টেকনিশিয়ান - মরিশাস',
+  },
+  car_painting: {
+    src: '/uploads/jobs/mu-car-painting.jpg',
+    alt: 'অটোমোবাইল গাড়ী পেইন্টিং মেকানিক - মরিশাস',
+  },
+  bobcat: {
+    src: '/uploads/jobs/mu-bobcat-operator.jpg',
+    alt: 'বোবকাট ও স্কিড লোডার অপারেটর - মরিশাস',
+  },
+  mobile_tech: {
+    src: '/uploads/jobs/mu-mobile-technician.jpg',
+    alt: 'মোবাইল টেকনিশিয়ান (ডিপ্লোমা সনদ) - মরিশাস',
+  },
+};
+
 /**
  * High-accuracy helper to resolve real matching job imagery based on trade, designation and employer
  */
@@ -399,112 +493,106 @@ export function getJobImage(job?: {
 
   const query = `${job.title || ''} ${job.slug || ''} ${job.jobCategory?.name || ''}`.toLowerCase();
 
-  // Car Brake Factory (check before general parts)
-  if (query.includes('brake') || query.includes('ব্রেক')) {
-    return TRADE_JOB_IMAGES.car_brake_factory;
+  // 1. Exact Malaysian Company / Job Match (using cropped official circular photos)
+  if (query.includes('brake') || query.includes('ব্রেক') || query.includes('alpha brake')) {
+    return LOCAL_JOB_IMAGES.alpha_brake;
+  }
+  if (query.includes('caring') || (query.includes('pharmacy') && query.includes('salesman'))) {
+    return LOCAL_JOB_IMAGES.caring_pharmacy;
+  }
+  if (query.includes('skyworld') || query.includes('genting') || query.includes('housekeep') || query.includes('হাউসকিপার')) {
+    return LOCAL_JOB_IMAGES.skyworlds_hotel;
+  }
+  if (query.includes('notion') || (query.includes('parts') && query.includes('factory')) || query.includes('পার্টস')) {
+    return LOCAL_JOB_IMAGES.notion_vtec;
+  }
+  if (query.includes('mr diy') || query.includes('mrdiy') || query.includes('diy') || query.includes('non-food') || query.includes('নন-ফুড')) {
+    return LOCAL_JOB_IMAGES.mr_diy;
+  }
+  if (query.includes('lotus') || query.includes('swopno') || query.includes('স্বপ্ন') || (query.includes('super shop') && query.includes('crew'))) {
+    return LOCAL_JOB_IMAGES.lotuss;
+  }
+  if (query.includes('oldtown') || query.includes('coffee') || query.includes('কফি') || query.includes('waiter') || query.includes('ওয়েটার')) {
+    return LOCAL_JOB_IMAGES.oldtown;
+  }
+  if (query.includes('big pharmacy') || (query.includes('pharmacy') && (query.includes('shop') || query.includes('market') || query.includes('মার্কেট')))) {
+    return LOCAL_JOB_IMAGES.big_pharmacy;
+  }
+  if (query.includes('burung hantu') || query.includes('বুরং হান্তু') || query.includes('nasi lemak')) {
+    return LOCAL_JOB_IMAGES.burung_hantu;
+  }
+  if (query.includes('99') || query.includes('speedmart') || (query.includes('food') && query.includes('item')) || (query.includes('ফুড') && query.includes('আইটেম'))) {
+    return LOCAL_JOB_IMAGES.speedmart;
+  }
+  if (query.includes('carlsberg') || query.includes('brewery') || query.includes('beer') || query.includes('bear') || query.includes('ব্রিউয়ারি')) {
+    return LOCAL_JOB_IMAGES.carlsberg;
+  }
+  if (query.includes('tpoc') || query.includes('medical') || query.includes('মেডিকেল')) {
+    return LOCAL_JOB_IMAGES.tpoc;
+  }
+  if (query.includes('empire') || query.includes('aluminum') || query.includes('অ্যালুমিনিয়াম')) {
+    return LOCAL_JOB_IMAGES.empire_aluminum;
   }
 
-  // Car Denting
+  // 2. Exact Mauritius Job Match (using cropped official circular photos)
+  if (query.includes('বাবুর্চি') || query.includes('বাংলা খাবার') || query.includes('bengali') || query.includes('cook') || (query.includes('chef') && !query.includes('assistant'))) {
+    return LOCAL_JOB_IMAGES.bengali_chef;
+  }
+  if (query.includes('আইসক্রিম') || query.includes('ice cream') || query.includes('gelato')) {
+    return LOCAL_JOB_IMAGES.ice_cream;
+  }
   if (query.includes('ডেন্টিং') || query.includes('denting') || query.includes('panel beater')) {
-    return TRADE_JOB_IMAGES.car_denting;
+    return LOCAL_JOB_IMAGES.car_denting;
   }
-
-  // Car Painting (check before general spray painter)
   if (
     query.includes('গাড়ী পেইন্টিং') ||
     query.includes('গাড়ীর পেইন্টিং') ||
     query.includes('car paint') ||
     query.includes('auto paint') ||
     query.includes('vehicle paint') ||
-    query.includes('automotive spray') ||
-    query.includes('automotive vehicle spray')
+    query.includes('automotive spray')
   ) {
-    return TRADE_JOB_IMAGES.car_painting;
+    return LOCAL_JOB_IMAGES.car_painting;
   }
-
-  // Wood & Furniture Spray Painter
   if (query.includes('স্প্রে') || query.includes('spray')) {
-    return TRADE_JOB_IMAGES.spray_painter;
+    return LOCAL_JOB_IMAGES.spray_painter;
   }
-
-  // Mobile Phone Technician (exclude automobile/অটোমোবাইল)
   if (
     query.includes('phone') ||
     query.includes('ফোন') ||
     (query.includes('মোবাইল') && !query.includes('অটোমোবাইল')) ||
     (query.includes('mobile') && !query.includes('automobile'))
   ) {
-    return TRADE_JOB_IMAGES.mobile_technician;
+    return LOCAL_JOB_IMAGES.mobile_tech;
   }
-
-  // Ice Cream Maker
-  if (query.includes('আইসক্রিম') || query.includes('ice cream') || query.includes('gelato')) {
-    return TRADE_JOB_IMAGES.ice_cream_maker;
-  }
-
-  // Bengali Chef / Babuর্চি
-  if (query.includes('বাবুর্চি') || query.includes('বাংলা খাবার') || query.includes('bengali') || query.includes('cook') || (query.includes('chef') && !query.includes('assistant'))) {
-    return TRADE_JOB_IMAGES.bengali_chef;
-  }
-
-  // Furniture Carpenter
   if (query.includes('ফার্নিচার') || query.includes('furniture') || query.includes('কার্পেন্টার') || query.includes('carpenter') || query.includes('wood')) {
-    return TRADE_JOB_IMAGES.furniture_carpenter;
+    return LOCAL_JOB_IMAGES.furniture;
   }
-
-  // Bobcat Machine Operator
   if (query.includes('বোবকাট') || query.includes('bobcat') || query.includes('loader') || query.includes('skid')) {
-    return TRADE_JOB_IMAGES.bobcat_operator;
+    return LOCAL_JOB_IMAGES.bobcat;
   }
-
-  // Event & Stage Decorator
   if (query.includes('ডেকোরেটর') || query.includes('decorator') || query.includes('stage') || query.includes('event')) {
-    return TRADE_JOB_IMAGES.event_decorator;
+    return LOCAL_JOB_IMAGES.decorator;
   }
 
-  // Malaysia Specific Trade Keywords
-  if (query.includes('pharmacy') || query.includes('ফার্মেসি') || query.includes('caring') || query.includes('big pharmacy')) {
-    return TRADE_JOB_IMAGES.pharmacy;
-  }
-  if (query.includes('housekeep') || query.includes('হাউসকিপার') || query.includes('skyworlds') || query.includes('genting')) {
-    return TRADE_JOB_IMAGES.housekeeping;
-  }
-  if (query.includes('precision') || query.includes('notion') || (query.includes('parts') && query.includes('factory')) || query.includes('পার্টস')) {
-    return TRADE_JOB_IMAGES.parts_factory;
-  }
-  if (query.includes('mr diy') || query.includes('diy') || query.includes('non-food') || query.includes('নন-ফুড')) {
-    return TRADE_JOB_IMAGES.super_shop_nonfood;
-  }
-  if (query.includes('lotus') || query.includes('swopno') || query.includes('hypermarket') || (query.includes('super shop') && query.includes('crew'))) {
-    return TRADE_JOB_IMAGES.supermarket_hypermarket;
-  }
-  if (query.includes('coffee') || query.includes('oldtown') || query.includes('কফি') || query.includes('waiter') || query.includes('ওয়েটার')) {
-    return TRADE_JOB_IMAGES.coffee_shop;
-  }
-  if (query.includes('burung hantu') || query.includes('বুরং হান্তু') || query.includes('nasi lemak')) {
-    return TRADE_JOB_IMAGES.restaurant_dining;
-  }
-  if (query.includes('speedmart') || query.includes('99') || (query.includes('food') && query.includes('shop')) || query.includes('ফুড')) {
-    return TRADE_JOB_IMAGES.grocery_food;
-  }
-  if (query.includes('brewery') || query.includes('carlsberg') || query.includes('beer') || query.includes('bear') || query.includes('ব্রিউয়ারি')) {
-    return TRADE_JOB_IMAGES.brewery_factory;
-  }
-  if (query.includes('brake') || query.includes('ব্রেক') || query.includes('alpha brake')) {
-    return TRADE_JOB_IMAGES.car_brake_factory;
-  }
-  if (query.includes('medical') || query.includes('tpoc') || query.includes('মেডিকেল')) {
-    return TRADE_JOB_IMAGES.medical_equipment;
-  }
-  if (query.includes('aluminum') || query.includes('অ্যালুমিনিয়াম') || query.includes('extrusion') || query.includes('empire')) {
-    return TRADE_JOB_IMAGES.aluminum_factory;
+  // 3. Fallback to trade image constants
+  if (TRADE_JOB_IMAGES) {
+    if (query.includes('crane') || query.includes('heavy') || query.includes('operator')) {
+      return CATEGORY_IMAGES.heavy_equipment;
+    }
+    if (query.includes('electr')) {
+      return CATEGORY_IMAGES.electrician;
+    }
+    if (query.includes('caregiver')) {
+      return CATEGORY_IMAGES.caregiver;
+    }
   }
 
-  // Fallback to Category
+  // 4. Fallback to Category
   const cat = getJobCategoryImage(job.jobCategory?.name, job.title);
   if (cat && cat !== DEFAULT_CATEGORY_IMAGE) return cat;
 
-  // Fallback to Country
+  // 5. Fallback to Country
   const country = getCountryImage(job.country?.code, job.country?.slug || job.country?.name);
   if (country && country !== DEFAULT_COUNTRY_IMAGE) return country;
 
