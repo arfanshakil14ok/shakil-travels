@@ -98,6 +98,10 @@ export const COUNTRY_IMAGES: Record<string, ImageAsset> = {
     src: 'https://images.unsplash.com/photo-1589556264800-08ae9e129a8c?auto=format&fit=crop&w=800&q=80',
     alt: 'Mauritius tropical coastline and Port Louis commercial district',
   },
+  MN: {
+    src: '/images/jobs/mn-country-mongolia.jpg',
+    alt: 'Mongolia Ulaanbaatar and scenic landscapes and employment hubs',
+  },
 };
 
 export const DEFAULT_COUNTRY_IMAGE: ImageAsset = {
@@ -226,6 +230,7 @@ export function getCountryImage(countryCode?: string | null, slugOrName?: string
     if (s.includes('australia') || s.includes('অস্ট্রেলিয়া') || s === 'au') return COUNTRY_IMAGES.AU;
     if (s.includes('croatia') || s.includes('ক্রোয়েশিয়া') || s === 'hr') return COUNTRY_IMAGES.HR;
     if (s.includes('mauritius') || s.includes('মরিশাস') || s === 'mu') return COUNTRY_IMAGES.MU;
+    if (s.includes('mongolia') || s.includes('মঙ্গোলিয়া') || s.includes('মঙ্গলিয়া') || s === 'mn') return COUNTRY_IMAGES.MN;
   }
 
   return DEFAULT_COUNTRY_IMAGE;
@@ -478,6 +483,32 @@ export const LOCAL_JOB_IMAGES: Record<string, ImageAsset> = {
     src: '/images/jobs/mu-mobile-technician.jpg',
     alt: 'মোবাইল টেকনিশিয়ান (ডিপ্লোমা সনদ) - মরিশাস',
   },
+
+  // Mongolia Jobs
+  mn_factory_worker: {
+    src: '/images/jobs/mn-factory-worker.jpg',
+    alt: 'মঙ্গোলিয়া ফ্যাক্টরি ওয়ার্কার (Factory Worker - Production & Packaging)',
+  },
+  mn_mason: {
+    src: '/images/jobs/mn-construction-mason.jpg',
+    alt: 'মঙ্গোলিয়া দক্ষ কন্সট্রাকশন টেকনিক্যাল ওয়ার্কার - মেসন (Mason)',
+  },
+  mn_welder: {
+    src: '/images/jobs/mn-construction-welder.jpg',
+    alt: 'মঙ্গোলিয়া দক্ষ কন্সট্রাকশন টেকনিক্যাল ওয়ার্কার - ওয়েল্ডার (Welder)',
+  },
+  mn_plumber: {
+    src: '/images/jobs/mn-construction-plumber.jpg',
+    alt: 'মঙ্গোলিয়া দক্ষ কন্সট্রাকশন টেকনিক্যাল ওয়ার্কার - প্লামবার (Plumber)',
+  },
+  mn_electrician: {
+    src: '/images/jobs/mn-construction-electrician.jpg',
+    alt: 'মঙ্গোলিয়া দক্ষ কন্সট্রাকশন টেকনিক্যাল ওয়ার্কার - ইলেকট্রিশিয়ান (Electrician)',
+  },
+  mn_construction: {
+    src: '/images/jobs/mn-construction-technical.jpg',
+    alt: 'মঙ্গোলিয়া দক্ষ কন্সট্রাকশন টেকনিক্যাল ওয়ার্কার (Skilled Construction Technical Worker)',
+  },
 };
 
 /**
@@ -575,7 +606,34 @@ export function getJobImage(job?: {
     return LOCAL_JOB_IMAGES.decorator;
   }
 
-  // 3. Fallback to trade image constants
+  // 3. Exact Mongolia Job Match
+  if (
+    query.includes('mongolia') ||
+    query.includes('মঙ্গোলিয়া') ||
+    query.includes('মঙ্গলিয়া') ||
+    job.country?.code === 'MN'
+  ) {
+    if (query.includes('মেসন') || query.includes('mason') || query.includes('রাজমিস্ত্রি')) {
+      return LOCAL_JOB_IMAGES.mn_mason;
+    }
+    if (query.includes('ওয়েল্ডার') || query.includes('ওয়েল্ডার') || query.includes('welder') || query.includes('ঝালাই')) {
+      return LOCAL_JOB_IMAGES.mn_welder;
+    }
+    if (query.includes('প্লামবার') || query.includes('plumber') || query.includes('পাইপ')) {
+      return LOCAL_JOB_IMAGES.mn_plumber;
+    }
+    if (query.includes('ইলেকট্রিশিয়ান') || query.includes('ইলেকট্রিশিয়ান') || query.includes('electrician') || query.includes('বিদ্যুৎ')) {
+      return LOCAL_JOB_IMAGES.mn_electrician;
+    }
+    if (query.includes('টেকনিক্যাল') || query.includes('technical') || query.includes('কন্সট্রাকশন') || query.includes('construction')) {
+      return LOCAL_JOB_IMAGES.mn_construction;
+    }
+    if (query.includes('factory') || query.includes('ফ্যাক্টরি') || query.includes('worker') || query.includes('ওয়ার্কার')) {
+      return LOCAL_JOB_IMAGES.mn_factory_worker;
+    }
+  }
+
+  // 4. Fallback to trade image constants
   if (TRADE_JOB_IMAGES) {
     if (query.includes('crane') || query.includes('heavy') || query.includes('operator')) {
       return CATEGORY_IMAGES.heavy_equipment;

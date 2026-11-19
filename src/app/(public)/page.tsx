@@ -50,7 +50,7 @@ export default async function PublicHomePage() {
         },
       },
       orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }],
-      take: 6,
+      take: 100,
     });
 
     // Fetch destination countries

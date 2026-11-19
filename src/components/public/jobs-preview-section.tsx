@@ -35,6 +35,21 @@ export const JobsPreviewSection: React.FC<JobsPreviewSectionProps> = ({
   const [selectedCountry, setSelectedCountry] = useState<string>('ALL');
   const [localSearch, setLocalSearch] = useState<string>('');
 
+  const HIGHLIGHT_CODES = useMemo(() => ['MU', 'MY', 'MN'], []);
+
+  const getCountryDisplayName = (code: string, originalName: string) => {
+    const c = code.toUpperCase();
+    if (c === 'MU') return 'মরিশাস (Mauritius)';
+    if (c === 'MY') return 'মালয়েশিয়া (Malaysia)';
+    if (c === 'MN') return 'মঙ্গোলিয়া (Mongolia)';
+    if (c === 'SA') return 'সৌদি আরব (Saudi Arabia)';
+    if (c === 'AE') return 'ইউএই (UAE)';
+    if (c === 'QA') return 'কাতার (Qatar)';
+    if (c === 'JP') return 'জাপান (Japan)';
+    if (c === 'SG') return 'সিঙ্গাপুর (Singapore)';
+    return originalName;
+  };
+
   // Extract unique categories
   const categories = useMemo(() => {
     const set = new Set<string>();
@@ -44,16 +59,36 @@ export const JobsPreviewSection: React.FC<JobsPreviewSectionProps> = ({
     return Array.from(set);
   }, [jobs]);
 
-  // Extract unique countries
+  // Extract unique countries with job count and highlight priority
   const countryList = useMemo(() => {
-    const map = new Map<string, { code: string; name: string }>();
+    const map = new Map<string, { code: string; name: string; displayName: string; count: number; isHighlighted: boolean }>();
     jobs.forEach((j) => {
       if (j.country?.code && j.country?.name) {
-        map.set(j.country.code, { code: j.country.code, name: j.country.name });
+        const code = j.country.code.toUpperCase();
+        const existing = map.get(code);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          map.set(code, {
+            code,
+            name: j.country.name,
+            displayName: getCountryDisplayName(code, j.country.name),
+            count: 1,
+            isHighlighted: HIGHLIGHT_CODES.includes(code),
+          });
+        }
       }
     });
-    return Array.from(map.values());
-  }, [jobs]);
+
+    return Array.from(map.values()).sort((a, b) => {
+      const idxA = HIGHLIGHT_CODES.indexOf(a.code);
+      const idxB = HIGHLIGHT_CODES.indexOf(b.code);
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+      return b.count - a.count;
+    });
+  }, [jobs, HIGHLIGHT_CODES]);
 
   // Dynamic filter
   const filteredJobs = useMemo(() => {
@@ -64,7 +99,7 @@ export const JobsPreviewSection: React.FC<JobsPreviewSectionProps> = ({
     }
 
     if (selectedCountry !== 'ALL') {
-      list = list.filter((j) => j.country?.code === selectedCountry);
+      list = list.filter((j) => j.country?.code?.toUpperCase() === selectedCountry.toUpperCase());
     }
 
     if (localSearch.trim()) {
@@ -75,6 +110,24 @@ export const JobsPreviewSection: React.FC<JobsPreviewSectionProps> = ({
           j.country?.name.toLowerCase().includes(q) ||
           j.jobCategory?.name.toLowerCase().includes(q)
       );
+    }
+
+    // When "সকল দেশ" is selected without filters on homepage, ensure a balanced preview across highlighted countries
+    if (selectedCountry === 'ALL' && selectedCategory === 'ALL' && !localSearch.trim() && maxDisplay <= 12) {
+      const mnJobs = list.filter((j) => j.country?.code?.toUpperCase() === 'MN');
+      const myJobs = list.filter((j) => j.country?.code?.toUpperCase() === 'MY');
+      const muJobs = list.filter((j) => j.country?.code?.toUpperCase() === 'MU');
+
+      const interleaved: any[] = [];
+      interleaved.push(...mnJobs.slice(0, 2));
+      interleaved.push(...myJobs.slice(0, 2));
+      interleaved.push(...muJobs.slice(0, 2));
+
+      if (interleaved.length < maxDisplay) {
+        const remaining = list.filter((j) => !interleaved.some((ij) => ij.id === j.id));
+        interleaved.push(...remaining.slice(0, maxDisplay - interleaved.length));
+      }
+      return interleaved.slice(0, maxDisplay);
     }
 
     return list.slice(0, maxDisplay);
@@ -124,26 +177,42 @@ export const JobsPreviewSection: React.FC<JobsPreviewSectionProps> = ({
                 onClick={() => setSelectedCountry('ALL')}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
                   selectedCountry === 'ALL'
-                    ? 'bg-navy-950 text-white shadow-xs'
-                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                    ? 'bg-navy-950 text-white shadow-xs ring-2 ring-navy-950/20'
+                    : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
                 }`}
               >
-                সকল দেশ
+                সকল দেশ ({jobs.length})
               </button>
               {countryList.map((c) => (
                 <button
                   key={c.code}
                   onClick={() => setSelectedCountry(c.code)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
                     selectedCountry === c.code
-                      ? 'bg-navy-950 text-white shadow-xs'
-                      : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                      ? 'bg-navy-950 text-white shadow-xs ring-2 ring-emerald-500/30'
+                      : c.isHighlighted
+                      ? 'bg-emerald-50/90 text-emerald-950 hover:bg-emerald-100 border border-emerald-400/80 shadow-2xs font-extrabold'
+                      : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
                   }`}
                 >
-                  <div className="relative w-4 h-3 rounded-xs overflow-hidden flex-shrink-0">
+                  <div className="relative w-4.5 h-3.5 rounded-xs overflow-hidden flex-shrink-0 shadow-2xs border border-black/10">
                     <Image src={getCountryFlagUrl(c.code)} alt={c.name} fill className="object-cover" />
                   </div>
-                  <span>{c.name}</span>
+                  <span>{c.displayName}</span>
+                  <span
+                    className={`text-[10px] px-1.5 py-0.2 rounded-md font-sans font-bold ${
+                      selectedCountry === c.code
+                        ? 'bg-white/20 text-white'
+                        : c.isHighlighted
+                        ? 'bg-emerald-200/80 text-emerald-900'
+                        : 'bg-slate-100 text-slate-700'
+                    }`}
+                  >
+                    {c.count}
+                  </span>
+                  {c.isHighlighted && selectedCountry !== c.code && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-0.5" />
+                  )}
                 </button>
               ))}
             </div>
